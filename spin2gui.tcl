@@ -256,6 +256,7 @@ proc setHighlightingSpin {w} {
     set color(numbers) DeepPink
     set color(operators) green
     set color(strings)  red
+    set color(varnames) DarkGreen
     set color(preprocessor) cyan
     set keywordsbase [list Con Obj Dat Var Pub Pri Quit Exit Repeat While Until If Then Else Return Abort Long Word Byte]
     foreach i $keywordsbase {
@@ -305,7 +306,9 @@ menu .mbar.help -tearoff 0
 .mbar.edit add command -label "Cut" -accelerator "^X" -command {event generate [focus] <<Cut>>}
 .mbar.edit add command -label "Copy" -accelerator "^C" -command {event generate [focus] <<Copy>>}
 .mbar.edit add command -label "Paste" -accelerator "^V" -command {event generate [focus] <<Paste>>}
-
+.mbar.edit add separator
+.mbar.edit add command -label "Font" -command { tk fontchooser show }
+    
 .mbar add cascade -menu .mbar.run -label Run
 .mbar.run add command -label "Run on device" -accelerator "^R" -command { doRun }
 
@@ -317,12 +320,17 @@ menu .mbar.help -tearoff 0
 wm title . "Spin 2 GUI"
 
 grid columnconfigure . {0 1} -weight 1
-grid rowconfigure . 0 -weight 1
+grid rowconfigure . 1 -weight 1
 frame .orig
 frame .bot
+frame .toolbar -bd 1 -relief raised
 
-grid .orig -column 0 -row 0 -columnspan 1 -rowspan 1 -sticky nsew
-grid .bot -column 0 -row 1 -columnspan 2 -sticky nsew
+grid .toolbar -column 0 -row 0 -columnspan 2 -sticky nsew
+grid .orig -column 0 -row 1 -columnspan 2 -rowspan 1 -sticky nsew
+grid .bot -column 0 -row 2 -columnspan 2 -sticky nsew
+
+button .toolbar.compile -text "Compile"
+grid .toolbar.compile -sticky nsew
 
 scrollbar .orig.v -orient vertical -command {.orig.txt yview}
 scrollbar .orig.h -orient horizontal -command {.orig.txt xview}
@@ -345,6 +353,8 @@ grid .bot.h          -sticky nsew
 grid rowconfigure .bot .bot.txt -weight 1
 grid columnconfigure .bot .bot.txt -weight 1
 
+tk fontchooser configure -parent .
+bind .orig.txt <FocusIn> [list fontchooserFocus .orig.txt]
 
 bind . <Control-n> { newSpinFile }
 bind . <Control-o> { loadSpinFile }
@@ -358,6 +368,13 @@ autoscroll::autoscroll .bot.v
 autoscroll::autoscroll .bot.h
 
 
+proc fontchooserFocus {w} {
+    tk fontchooser configure -font [$w cget -font] -command [list fontchooserFontSelection $w]
+}
+
+proc fontchooserFontSelection {w font args} {
+    $w configure -font [font actual $font]
+}
 
 ###############################################################################
 # Term for a simple terminal interface
