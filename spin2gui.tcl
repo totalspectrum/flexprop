@@ -17,7 +17,9 @@ set datamem hub
 set PASMFILE ""
 
 # provide some default settings
-set config(library) ""
+set config(library) "."
+set config(spinext) ".spin"
+set config(lastdir) "."
 
 # configuration settings
 proc config_open {} {
@@ -219,11 +221,15 @@ proc newSpinFile {} {
 proc loadSpinFile {} {
     global SPINFILE
     global SpinTypes
+    global config
+    
     checkChanges
-    set filename [tk_getOpenFile -filetypes $SpinTypes -defaultextension ".spin2" ]
+    set filename [tk_getOpenFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $config(lastdir) ]
     if { [string length $filename] == 0 } {
 	return
     }
+    set config(lastdir) [file dirname $filename]
+    set config(spinext) [file extension $filename]
     loadFileToWindow $filename .orig.txt
     .orig.txt highlight 1.0 end
     ctext::comments .orig.txt
@@ -238,12 +244,15 @@ proc saveSpinFile {} {
     global SPINFILE
     global PASMFILE
     global SpinTypes
+    global config
     
     if { [string length $SPINFILE] == 0 } {
-	set filename [tk_getSaveFile -initialfile $SPINFILE -filetypes $SpinTypes -defaultextension ".spin" ]
+	set filename [tk_getSaveFile -initialfile $SPINFILE -filetypes $SpinTypes -defaultextension $config(spinext) ]
 	if { [string length $filename] == 0 } {
 	    return
 	}
+	set config(lastdir) [file dirname $filename]
+	set config(spinext) [file extension $filename]
 	set SPINFILE $filename
 	set PASMFILE ""
     }
@@ -255,10 +264,13 @@ proc saveSpinFile {} {
 proc saveSpinAs {} {
     global SPINFILE
     global SpinTypes
-    set filename [tk_getSaveFile -filetypes $SpinTypes -defaultextension ".spin" ]
+    global config
+    set filename [tk_getSaveFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $config(lastdir) ]
     if { [string length $filename] == 0 } {
 	return
     }
+    set config(lastdir) [file dirname $filename]
+    set config(spinext) [file extension $filename]
     set SPINFILE $filename
     set PASMFILE ""
     wm title . $SPINFILE
