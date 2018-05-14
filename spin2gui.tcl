@@ -14,8 +14,10 @@ set PORT "COM1"
 set makeBinary 1
 set codemem hub
 set datamem hub
-set LIBRARY ""
 set PASMFILE ""
+
+# provide some default settings
+set config(library) ""
 
 # configuration settings
 proc config_open {} {
@@ -144,7 +146,7 @@ proc tagerrors { w } {
 proc regenOutput { spinfile } {
     global COMPILE
     global PASMFILE
-    global LIBRARY
+    global config
     global makeBinary
     global codemem
     global datamem
@@ -160,8 +162,8 @@ proc regenOutput { spinfile } {
 
     set cmdline [list $COMPILE]
 
-    if { $LIBRARY ne "" } {
-	set cmdline [concat $cmdline [list -L $LIBRARY]]
+    if { $config(library) ne "" } {
+	set cmdline [concat $cmdline [list -L $config(library)]]
     }
     if { $makeBinary == 1 } {
 	set binfile [file rootname $PASMFILE]
@@ -200,8 +202,8 @@ proc checkChanges {} {
 }
 
 proc getLibrary {} {
-    global LIBRARY
-    set LIBRARY [tk_chooseDirectory -title "Choose Spin library directory"]
+    global config
+    set config(library) [tk_chooseDirectory -title "Choose Spin library directory" -initialdir $config(library) ]
 }
 
 proc newSpinFile {} {
@@ -415,6 +417,10 @@ bind . <Control-o> { loadSpinFile }
 bind . <Control-s> { saveSpinFile }
 bind . <Control-q> { exitProgram }
 bind . <Control-r> { doRun }
+
+wm protocol . WM_DELETE_WINDOW {
+    exitProgram
+}
 
 autoscroll::autoscroll .orig.v
 autoscroll::autoscroll .orig.h
