@@ -1,8 +1,10 @@
 #!/usr/bin/wish
 
 package require Tk
-package require ctext
+#package require ctext
 package require autoscroll
+
+source ctext/ctext.tcl
 
 set COMPILE "./bin/fastspin"
 set PORT ""
@@ -168,7 +170,9 @@ proc loadSpinFile {} {
     }
     loadFileToWindow $filename .orig.txt
     .orig.txt highlight 1.0 end
-    regenOutput $filename
+    ctext::comments .orig.txt
+    
+#    regenOutput $filename
     set SPINFILE $filename
     set PASMFILE ""
     wm title . $SPINFILE
@@ -246,11 +250,11 @@ proc doHelp {} {
 #
 # set up syntax highlighting for a given ctext widget
 proc setHighlightingSpin {w} {
+    set color(comments) grey
     set color(keywords) DarkBlue
     set color(brackets) purple
     set color(numbers) DeepPink
     set color(operators) green
-    set color(comments) grey
     set color(strings)  red
     set color(preprocessor) cyan
     set keywordsbase [list Con Obj Dat Var Pub Pri Quit Exit Repeat While Until If Then Else Return Abort Long Word Byte]
@@ -261,21 +265,23 @@ proc setHighlightingSpin {w} {
 	lappend keywordslower [string tolower $i]
     }
     set keywords [concat $keywordsbase $keywordsupper $keywordslower]
-    
+
     ctext::addHighlightClass $w keywords $color(keywords) $keywords
 
     ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \$ 
     ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \%
-    ctext::addHighlightClassForRegexp $w numbers $color(numbers) {[0-9]+}
+#    ctext::addHighlightClassForRegexp $w numbers $color(numbers) {[0-9][0-9_]*}
 
     ctext::addHighlightClassForSpecialChars $w brackets $color(brackets) {[]()}
     ctext::addHighlightClassForSpecialChars $w operators $color(operators) {+-=><!@~\*/&:|}
 
-    ctext::addHighlightClassForRegexp $w comments $color(comments) {\'[^\n\r]*}
-    ctext::addHighlightClassForRegexp $w comments $color(comments) {\{[^\}]*}
-    
     ctext::addHighlightClassForRegexp $w strings $color(strings) {"(\\"||^"])*"}
-    ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {\#[a-z]+}
+    ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {^\#[a-z]+}
+
+    ctext::addHighlightClassForRegexp $w comments $color(comments) {\'[^\n\r]*}
+    ctext::enableComments $w
+    $w tag configure _cComment -foreground $color(comments)
+    $w tag raise _cComment
 }
 
 menu .mbar
