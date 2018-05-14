@@ -5,17 +5,11 @@ package require ctext
 package require autoscroll
 
 set COMPILE "./bin/fastspin"
-set OUTPUT "--asm"
-set EXT ".pasm"
 set PORT ""
-set makeBinary 0
+set makeBinary 1
 set codemem hub
 set datamem hub
-set gasmode 1
-set casemode 0
 set LIBRARY ""
-set cseoptimize 0
-set usectypes 0
 
 #
 # read a file and return its text
@@ -42,15 +36,10 @@ proc uread {name} {
 # reset anything associated with the output file and configuration
 #
 proc resetOutputVars { } {
-    global OUTPUT
-    global EXT
     global SPINFILE
     global PASMFILE
     
     set PASMFILE ""
-    if { [string length $SPINFILE] != 0 } {
-	regenOutput $SPINFILE
-    }
 }
 
 # exit the program
@@ -73,7 +62,6 @@ proc saveFileFromWindow { fname win } {
     puts -nonewline $fp $file_data
     close $fp
     $win edit modified false
-    regenOutput $fname
 }
 
 #
@@ -100,54 +88,29 @@ proc tagerrors { w } {
 proc regenOutput { spinfile } {
     global COMPILE
     global PASMFILE
-    global OUTPUT
-    global EXT
     global LIBRARY
     global makeBinary
     global codemem
     global datamem
-    global gasmode
-    global casemode
-    global cseoptimize
-    global usectypes
     
     set outname $PASMFILE
     if { [string length $outname] == 0 } {
 	set dirname [file dirname $spinfile]
 	set outname [file rootname $spinfile]
-	set outname "$outname$EXT"
-	set PASMFILE $outname
+	set PASMFILE "$outname.p2asm"
     }
     set errout ""
     set status 0
-    if { $EXT eq ".pasm" } {
-	set cmdline [list $COMPILE --noheader -g $OUTPUT --code=$codemem --data=$datamem]
-	if { $cseoptimize ne 0 } {
-	    set cmdline [concat $cmdline [list --cse]]
-	}
-    } else {
-	set cmdline [list $COMPILE --noheader $OUTPUT]
-	if { $gasmode ne 0 } {
-	    set cmdline [concat $cmdline [list --gas]]
-	}
-	if { $casemode ne 0 } {
-	    set cmdline [concat $cmdline [list --normalize]]
-	}
-	if { $usectypes ne 0 } {
-	    set cmdline [concat $cmdline [list --ctypes]]
-	}
-    }
+
+    set cmdline [list $COMPILE]
+
     if { $LIBRARY ne "" } {
 	set cmdline [concat $cmdline [list -L $LIBRARY]]
     }
     if { $makeBinary == 1 } {
 	set binfile [file rootname $PASMFILE]
 	set binfile "$binfile.binary"
-	if { $EXT eq ".pasm" } {
-	    set cmdline [concat $cmdline [list --binary -o $binfile $spinfile]]
-	} else {
-	    set cmdline [concat $cmdline [list --binary -O -o $binfile $spinfile]]
-	}
+	set cmdline [concat $cmdline [list -o $binfile $spinfile]]
     } else {
 	set cmdline [concat $cmdline [list -o $PASMFILE $spinfile]]
     }
@@ -283,9 +246,9 @@ proc doHelp {} {
 #
 # set up syntax highlighting for a given ctext widget
 proc setHighlightingSpin {w} {
-    set color(keywords) blue
+    set color(keywords) DarkBlue
     set color(brackets) purple
-    set color(numbers) DarkPink
+    set color(numbers) DeepPink
     set color(operators) green
     set color(comments) grey
     set color(strings)  red
@@ -300,9 +263,17 @@ proc setHighlightingSpin {w} {
     set keywords [concat $keywordsbase $keywordsupper $keywordslower]
     
     ctext::addHighlightClass $w keywords $color(keywords) $keywords
-    ctext::addHighlightClassForSpecialChars $w brackets $color(brackets) {[](){}}
+
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \$ 
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \%
+    ctext::addHighlightClassForRegexp $w numbers $color(numbers) {[0-9]+}
+
+    ctext::addHighlightClassForSpecialChars $w brackets $color(brackets) {[]()}
     ctext::addHighlightClassForSpecialChars $w operators $color(operators) {+-=><!@~\*/&:|}
+
     ctext::addHighlightClassForRegexp $w comments $color(comments) {\'[^\n\r]*}
+    ctext::addHighlightClassForRegexp $w comments $color(comments) {\{[^\}]*}
+    
     ctext::addHighlightClassForRegexp $w strings $color(strings) {"(\\"||^"])*"}
     ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {\#[a-z]+}
 }
