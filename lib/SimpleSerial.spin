@@ -19,8 +19,12 @@ VAR
   long bitcycles
    
 PUB start(baudrate)
+  pause(1)
   bitcycles := clkfreq / baudrate
   return 1
+  
+PUB pause(n)
+  waitcnt(CNT + n*clkfreq)
   
 PUB tx(c) | val, nextcnt
   OUT[txpin] := 1

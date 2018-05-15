@@ -13,13 +13,14 @@ set COMPILE "./bin/fastspin"
 set makeBinary 1
 set codemem hub
 set datamem hub
+set ROOTDIR [file dirname [file normalize [info script]]]
 
 # provide some default settings
 set config(library) "./lib"
 set config(spinext) ".spin"
 set config(lastdir) "."
-set config(compilecmd) "%D/bin/fastspin -L %L %S"
-set config(runcmd) "%D/bin/loadp2 %B -t"
+set config(compilecmd) "%D/bin/fastspin -2 -L %L %S"
+set config(runcmd) "xterm -fs 14 -e %D/bin/loadp2 %B -t"
 
 # configuration settings
 proc config_open {} {
@@ -418,15 +419,18 @@ proc fontchooserFontSelection {w font args} {
 proc mapPercent {str} {
     global SPINFILE
     global BINFILE
+    global ROOTDIR
     global config
     
-    set percentmap [ list "%%" "%" "%D" "." "%L" $config(library) "%S" $SPINFILE "%B" $BINFILE ]
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%L" $config(library) "%S" $SPINFILE "%B" $BINFILE ]
     set result [string map $percentmap $str]
     return $result
 }
 
 proc doCompile {} {
     global config
+    global BINFILE
+    global SPINFILE
     
     set status 0
     set cmdstr [mapPercent $config(compilecmd)]
@@ -441,6 +445,28 @@ proc doCompile {} {
     tagerrors .bot.txt
     if { $status != 0 } {
 	tk_messageBox -icon error -type ok -message "Compilation failed" -detail "see compiler output window for details"
+	set BINFILE ""
+    } else {
+	set BINFILE [file rootname $SPINFILE]
+	set BINFILE "$BINFILE.binary"
+    }
+    return $status
+}
+
+proc doJustRun {} {
+    global config
+    global BINFILE
+    
+    set cmdstr [mapPercent $config(runcmd)]
+    .bot.txt replace 1.0 end "$cmdstr\n"
+
+    set runcmd [list exec -ignorestderr]
+    set runcmd [concat $runcmd $cmdstr]
+    lappend runcmd "&"
+
+    if {[catch $runcmd errout options]} {
+	.bot.txt insert 2.0 $errout
+	tagerrors .bot.txt
     }
 }
 
@@ -454,8 +480,16 @@ proc doLoadRun {} {
 	return
     }
     set BINFILE $filename
-    set cmdstr [mapPercent $config(runcmd)]
-    .bot.txt replace 1.0 end "$cmdstr\n"
+    doJustRun
+}
+
+proc doCompileRun {} {
+    set status [doCompile]
+    if { $status eq 0 } {
+	doJustRun
+#    } else {
+#	.bot.txt replace 1.0 end "status=$status\n"
+    }
 }
 
 set cmddialoghelptext {
