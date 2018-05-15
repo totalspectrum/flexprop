@@ -1,8 +1,8 @@
 #!/usr/bin/wish
 
 package require Tk
-#package require ctext
 package require autoscroll
+#package require ctext
 
 source ctext/ctext.tcl
 
@@ -10,16 +10,16 @@ source ctext/ctext.tcl
 set CONFIG_FILE "~/.spin2gui.config"
 
 set COMPILE "./bin/fastspin"
-set PORT "COM1"
 set makeBinary 1
 set codemem hub
 set datamem hub
 set PASMFILE ""
 
 # provide some default settings
-set config(library) "."
+set config(library) "./lib"
 set config(spinext) ".spin"
 set config(lastdir) "."
+set config(compilecmd) "%F/bin/fastspin -L %L -q %S"
 
 # configuration settings
 proc config_open {} {
@@ -189,7 +189,7 @@ proc regenOutput { spinfile } {
 }
 
 set SpinTypes {
-    {{Spin2 files}   {.spin2} }
+    {{Spin2 files}   {.spin2 .spin} }
     {{Spin files}   {.spin} }
     {{All files}    *}
 }
@@ -235,7 +235,6 @@ proc loadSpinFile {} {
     .orig.txt highlight 1.0 end
     ctext::comments .orig.txt
     
-#    regenOutput $filename
     set SPINFILE $filename
     set PASMFILE ""
     wm title . $SPINFILE
@@ -398,7 +397,7 @@ grid .toolbar -column 0 -row 0 -columnspan 2 -sticky nsew
 grid .orig -column 0 -row 1 -columnspan 2 -rowspan 1 -sticky nsew
 grid .bot -column 0 -row 2 -columnspan 2 -sticky nsew
 
-button .toolbar.compile -text "Compile"
+button .toolbar.compile -text "Compile" -command doCompile
 grid .toolbar.compile -sticky nsew
 
 scrollbar .orig.v -orient vertical -command {.orig.txt yview}
@@ -451,20 +450,39 @@ proc fontchooserFontSelection {w font args} {
     $w configure -font [font actual $font]
 }
 
-##### main #######
+### utility: compile the program
+
+proc doCompile {} {
+    global SPINFILE
+    global config
+
+    set status 0
+    set percentmap [list "%%" "%" "%F" "." "%L" $config(library) "%S" $SPINFILE]
+    set cmdstr [string map $percentmap $config(compilecmd)]
+    set runcmd [list exec -ignorestderr]
+    set runcmd [concat $runcmd $cmdstr]
+    lappend runcmd 2>@1
+    if {[catch $runcmd errout options]} {
+	set status 1
+    }
+    .bot.txt replace 1.0 end "$cmdstr\n"
+    .bot.txt insert 2.0 $errout
+    tagerrors .bot.txt
+    if { $status != 0 } {
+	tk_messageBox -icon error -type ok -message "Compilation failed" -detail "see compiler output window for details"
+    }
+}
 
 proc doRun {} {
     global makeBinary
     global PASMFILE
     global SPINFILE
-    global PORT
     
     set makeBinary 1
     regenOutput $SPINFILE
     set binfile [file rootname $PASMFILE]
     set binfile "$binfile.binary"
 
-    set PORT [exec bin/propeller-load -Q]
     exec bin/propeller-load -r $binfile
  }
 
