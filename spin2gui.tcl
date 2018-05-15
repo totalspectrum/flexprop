@@ -65,7 +65,7 @@ proc config_open {} {
 	    }
 	    font {
 		# restore font
-		.orig.txt configure -font [lindex $data 1]
+		.main.txt configure -font [lindex $data 1]
 	    }
 	    default {
 		set config([lindex $data 0]) [lindex $data 1]
@@ -82,7 +82,7 @@ proc config_save {} {
     set fp [open $CONFIG_FILE w]
     puts $fp "# spin2gui config info"
     puts $fp "geometry\t[winfo geometry [winfo toplevel .]]"
-    puts $fp "font\t\{[.orig.txt cget -font]\}"
+    puts $fp "font\t\{[.main.txt cget -font]\}"
     foreach i [array names config] {
 	if {$i != ""} {
 	    puts $fp "$i\t\{$config($i)\}"
@@ -189,7 +189,7 @@ set BinTypes {
 
 proc checkChanges {} {
     global SPINFILE
-    if {[.orig.txt edit modified]==1} {
+    if {[.main.txt edit modified]==1} {
 	set answer [tk_messageBox -icon question -type yesno -message "Save file $SPINFILE?" -default yes]
 	if { $answer eq yes } {
 	    saveSpinFile
@@ -207,8 +207,8 @@ proc newSpinFile {} {
     set SPINFILE ""
     set BINFILE ""
     checkChanges
-    wm title . "New File"
-    .orig.txt delete 1.0 end
+    .main.label configure -text "New File"
+    .main.txt delete 1.0 end
     .bot.txt delete 1.0 end
 }
 
@@ -225,14 +225,14 @@ proc loadSpinFile {} {
     }
     set config(lastdir) [file dirname $filename]
     set config(spinext) [file extension $filename]
-    loadFileToWindow $filename .orig.txt
-    .orig.txt highlight 1.0 end
-    ctext::comments .orig.txt
-    ctext::linemapUpdate .orig.txt
+    loadFileToWindow $filename .main.txt
+    .main.txt highlight 1.0 end
+    ctext::comments .main.txt
+    ctext::linemapUpdate .main.txt
     
     set SPINFILE $filename
     set BINFILE ""
-    wm title . $SPINFILE
+    .main.label configure -text $SPINFILE
 }
 
 proc saveSpinFile {} {
@@ -252,8 +252,8 @@ proc saveSpinFile {} {
 	set BINFILE ""
     }
     
-    saveFileFromWindow $SPINFILE .orig.txt
-    wm title . $SPINFILE
+    saveFileFromWindow $SPINFILE .main.txt
+    .main.label configure -text $SPINFILE
 }
 
 proc saveSpinAs {} {
@@ -269,7 +269,7 @@ proc saveSpinAs {} {
     set config(spinext) [file extension $filename]
     set SPINFILE $filename
     set BINFILE ""
-    wm title . $SPINFILE
+    .main.label configure -text $SPINFILE
     saveSpinFile
 }
 
@@ -308,7 +308,7 @@ proc doHelp {} {
     grid columnconfigure .help.f .help.f.txt -weight 1
 
     loadFileToWindow README.txt .help.f.txt
-    wm title .help "Spin Converter help"
+    wm title .help "Spin2GUI Help"
 }
 
 #
@@ -391,12 +391,12 @@ wm title . "Spin 2 GUI"
 
 grid columnconfigure . {0 1} -weight 1
 grid rowconfigure . 1 -weight 1
-frame .orig
+frame .main
 frame .bot
 frame .toolbar -bd 1 -relief raised
 
 grid .toolbar -column 0 -row 0 -columnspan 2 -sticky nsew
-grid .orig -column 0 -row 1 -columnspan 2 -rowspan 1 -sticky nsew
+grid .main -column 0 -row 1 -columnspan 2 -rowspan 1 -sticky nsew
 grid .bot -column 0 -row 2 -columnspan 2 -sticky nsew
 
 button .toolbar.compile -text "Compile" -command doCompile
@@ -404,19 +404,19 @@ button .toolbar.runBinary -text "Run Binary" -command doLoadRun
 button .toolbar.compileRun -text "Compile & Run" -command doCompileRun
 grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun -sticky nsew
 
-scrollbar .orig.v -orient vertical -command {.orig.txt yview}
-scrollbar .orig.h -orient horizontal -command {.orig.txt xview}
-ctext .orig.txt -wrap none -xscroll {.orig.h set} -yscrollcommand {.orig.v set} -undo 1
-label .orig.label -background DarkGrey -foreground white -text "Spin"
-grid .orig.label       -sticky nsew
-grid .orig.txt .orig.v -sticky nsew
-grid .orig.h           -sticky nsew
-grid rowconfigure .orig .orig.txt -weight 1
-grid columnconfigure .orig .orig.txt -weight 1
+scrollbar .main.v -orient vertical -command {.main.txt yview}
+scrollbar .main.h -orient horizontal -command {.main.txt xview}
+ctext .main.txt -wrap none -xscroll {.main.h set} -yscrollcommand {.main.v set} -undo 1
+label .main.label -background DarkGrey -foreground white -text "New File"
+grid .main.label       -sticky nsew
+grid .main.txt .main.v -sticky nsew
+grid .main.h           -sticky nsew
+grid rowconfigure .main .main.txt -weight 1
+grid columnconfigure .main .main.txt -weight 1
 
 scrollbar .bot.v -orient vertical -command {.bot.txt yview}
 scrollbar .bot.h -orient horizontal -command {.bot.txt xview}
-text .bot.txt -wrap none -xscroll {.bot.h set} -yscroll {.bot.v set} -height 4
+text .bot.txt -wrap none -xscroll {.bot.h set} -yscroll {.bot.v set} -height 8
 label .bot.label -background DarkGrey -foreground white -text "Compiler Output"
 
 grid .bot.label      -sticky nsew
@@ -426,7 +426,7 @@ grid rowconfigure .bot .bot.txt -weight 1
 grid columnconfigure .bot .bot.txt -weight 1
 
 tk fontchooser configure -parent .
-bind .orig.txt <FocusIn> [list fontchooserFocus .orig.txt]
+bind .main.txt <FocusIn> [list fontchooserFocus .main.txt]
 
 bind . <Control-n> { newSpinFile }
 bind . <Control-o> { loadSpinFile }
@@ -438,8 +438,8 @@ wm protocol . WM_DELETE_WINDOW {
     exitProgram
 }
 
-autoscroll::autoscroll .orig.v
-autoscroll::autoscroll .orig.h
+autoscroll::autoscroll .main.v
+autoscroll::autoscroll .main.h
 autoscroll::autoscroll .bot.v
 autoscroll::autoscroll .bot.h
 
@@ -596,11 +596,11 @@ proc doRunOptions {} {
     wm title .runopts "Executable Paths"
 }
 
-setHighlightingSpin .orig.txt
+setHighlightingSpin .main.txt
 
 
 if { $::argc > 0 } {
-    loadFileToWindow $argv .orig.txt
+    loadFileToWindow $argv .main.txt
 } else {
     set SPINFILE ""
 }
