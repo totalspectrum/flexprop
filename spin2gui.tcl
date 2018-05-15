@@ -16,12 +16,32 @@ set datamem hub
 set ROOTDIR [file dirname [file normalize [info script]]]
 
 # provide some default settings
+proc setShadowP1Defaults {} {
+    global shadow
+
+    set shadow(compilecmd) "%D/bin/fastspin -L %L %S"
+    set shadow(runcmd) "xterm -fs 14 -e %D/bin/propeller-load %B -r -t"
+}
+proc setShadowP2Defaults {} {
+    global shadow
+
+    set shadow(compilecmd) "%D/bin/fastspin -2 -L %L %S"
+    set shadow(runcmd) "xterm -fs 14 -e %D/bin/loadp2 %B -t"
+}
+proc copyShadowToConfig {} {
+    global config
+    global shadow
+    set config(compilecmd) $shadow(compilecmd)
+    set config(runcmd) $shadow(runcmd)
+}
+
 set config(library) "./lib"
 set config(spinext) ".spin"
 set config(lastdir) "."
-set config(compilecmd) "%D/bin/fastspin -2 -L %L %S"
-set config(runcmd) "xterm -fs 14 -e %D/bin/loadp2 %B -t"
-
+    
+setShadowP2Defaults
+copyShadowToConfig
+    
 # configuration settings
 proc config_open {} {
     global config
@@ -77,6 +97,7 @@ proc config_save {} {
 #
 proc uread {name} {
     set encoding ""
+    set len [file size $name]
     set f [open $name r]
     gets $f line
     if {[regexp \xFE\xFF $line] || [regexp \xFF\xFE $line]} {
@@ -84,11 +105,14 @@ proc uread {name} {
 	set encoding unicode
     }
     seek $f 0 start ;# rewind
-    set text [read $f [file size $name]]
+    set text [read $f $len]
+#    puts "read $len bytes"
     close $f
     if {$encoding=="unicode"} {
 	regsub -all "\uFEFF|\uFFFE" $text "" text
     }
+#    set len [string len $text]
+#    puts "len is $len"
     return $text
 }
 
@@ -112,7 +136,8 @@ proc exitProgram { } {
 # load a file into a text (or ctext) window
 proc loadFileToWindow { fname win } {
     set file_data [uread $fname]
-    $win replace 1.0 end $file_data
+    $win delete 1.0 end
+    $win insert end $file_data
     $win edit modified false
 }
 
@@ -120,7 +145,16 @@ proc loadFileToWindow { fname win } {
 proc saveFileFromWindow { fname win } {
     set fp [open $fname w]
     set file_data [$win get 1.0 end]
-    puts -nonewline $fp $file_data
+
+    # HACK: the text widget inserts an extra \n at end of file
+    set file_data [string trimright $file_data]
+    
+    set len [string len $file_data]
+    #puts " writing $len bytes"
+
+    # we trimmed away all the \n above, so put one back here
+    # by leaving off the -nonewline to puts
+    puts $fp $file_data
     close $fp
     $win edit modified false
 }
@@ -194,6 +228,7 @@ proc loadSpinFile {} {
     loadFileToWindow $filename .orig.txt
     .orig.txt highlight 1.0 end
     ctext::comments .orig.txt
+    ctext::linemapUpdate .orig.txt
     
     set SPINFILE $filename
     set BINFILE ""
@@ -338,10 +373,12 @@ menu .mbar.help -tearoff 0
 .mbar.edit add separator
 .mbar.edit add command -label "Font" -command { tk fontchooser show }
     
-.mbar add cascade -menu .mbar.run -label Run
-.mbar.run add command -label "Run on device" -accelerator "^R" -command { doCompileRun }
+.mbar add cascade -menu .mbar.run -label Commands
+.mbar.run add command -label "Compile" -command { doCompile }
+.mbar.run add command -label "Run binary on device" -command { doLoadRun }
+.mbar.run add command -label "Compile and run" -accelerator "^R" -command { doCompileRun }
 .mbar.run add separator
-.mbar.run add command -label "Commands..." -command { doRunOptions }
+.mbar.run add command -label "Configure Commands..." -command { doRunOptions }
 .mbar add cascade -menu .mbar.help -label Help
 .mbar.help add command -label "Help" -command { doHelp }
 .mbar.help add separator
@@ -433,6 +470,7 @@ proc doCompile {} {
     global SPINFILE
     
     set status 0
+    saveSpinFile
     set cmdstr [mapPercent $config(compilecmd)]
     set runcmd [list exec -ignorestderr]
     set runcmd [concat $runcmd $cmdstr]
@@ -500,27 +538,57 @@ set cmddialoghelptext {
     %B = Replace with current binary file name
     %% = Insert a % character
 }
+proc copyShadowClose {w} {
+    copyShadowToConfig
+    wm withdraw $w
+}
+
 proc doRunOptions {} {
     global config
+    global shadow
     global cmddialoghelptext
     
+    set shadow(compilecmd) $config(compilecmd)
+    set shadow(runcmd) $config(runcmd)
+    
     if {[winfo exists .runopts]} {
+	if {![winfo viewable .runopts]} {
+	    wm deiconify .runopts
+	    set shadow(compilecmd) $config(compilecmd)
+	    set shadow(runcmd) $config(runcmd)
+	}
 	raise .runopts
 	return
     }
+
     toplevel .runopts
     label .runopts.toplabel -text $cmddialoghelptext
     ttk::labelframe .runopts.a -text "Compile command"
-    entry .runopts.a.compiletext -width 32 -textvariable config(compilecmd)
+    entry .runopts.a.compiletext -width 32 -textvariable shadow(compilecmd)
 
     ttk::labelframe .runopts.b -text "Run command"
-    entry .runopts.b.runtext -width 32 -textvariable config(runcmd)
+    entry .runopts.b.runtext -width 32 -textvariable shadow(runcmd)
 
+    frame .runopts.change
+    frame .runopts.end
+
+    button .runopts.change.p2 -text "P2 defaults" -command setShadowP2Defaults
+    button .runopts.change.p1 -text "P1 defaults" -command setShadowP1Defaults
+    
+    button .runopts.end.ok -text " OK " -command {copyShadowClose .runopts}
+    button .runopts.end.cancel -text " Cancel " -command {wm withdraw .runopts}
+    
     grid .runopts.toplabel
     grid .runopts.a
     grid .runopts.b
+    grid .runopts.change
+    grid .runopts.end
+    
     grid .runopts.a.compiletext
     grid .runopts.b.runtext
+
+    grid .runopts.change.p2 .runopts.change.p1
+    grid .runopts.end.ok .runopts.end.cancel
     
     wm title .runopts "Executable Paths"
 }
