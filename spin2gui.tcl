@@ -371,7 +371,10 @@ menu .mbar.help -tearoff 0
 .mbar.edit add command -label "Copy" -accelerator "^C" -command {event generate [focus] <<Copy>>}
 .mbar.edit add command -label "Paste" -accelerator "^V" -command {event generate [focus] <<Paste>>}
 .mbar.edit add separator
-.mbar.edit add command -label "Font" -command { tk fontchooser show }
+.mbar.edit add command -label "Undo" -accelerator "^Z" -command {event generate [focus] <<Undo>>}
+.mbar.edit add command -label "Redo" -accelerator "^Y" -command {event generate [focus] <<Redo>>}
+.mbar.edit add separator
+.mbar.edit add command -label "Select Font..." -command { tk fontchooser show }
     
 .mbar add cascade -menu .mbar.run -label Commands
 .mbar.run add command -label "Compile" -command { doCompile }
@@ -403,7 +406,7 @@ grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun -sticky nsew
 
 scrollbar .orig.v -orient vertical -command {.orig.txt yview}
 scrollbar .orig.h -orient horizontal -command {.orig.txt xview}
-ctext .orig.txt -wrap none -xscroll {.orig.h set} -yscrollcommand {.orig.v set}
+ctext .orig.txt -wrap none -xscroll {.orig.h set} -yscrollcommand {.orig.v set} -undo 1
 label .orig.label -background DarkGrey -foreground white -text "Spin"
 grid .orig.label       -sticky nsew
 grid .orig.txt .orig.v -sticky nsew
