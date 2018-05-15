@@ -195,8 +195,9 @@ set SpinTypes {
 }
 
 proc checkChanges {} {
+    global SPINFILE
     if {[.orig.txt edit modified]==1} {
-	set answer [tk_messageBox -icon question -type yesno -message "Save old spin file?" -default yes]
+	set answer [tk_messageBox -icon question -type yesno -message "Save file $SPINFILE?" -default yes]
 	if { $answer eq yes } {
 	    saveSpinFile
 	}
@@ -348,7 +349,7 @@ proc setHighlightingSpin {w} {
     ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {^\#[a-z]+}
 
     ctext::addHighlightClassForRegexp $w comments $color(comments) {\'[^\n\r]*}
-    ctext::enableComments $w
+#    ctext::enableComments $w
     $w tag configure _cComment -foreground $color(comments)
     $w tag raise _cComment
 }
