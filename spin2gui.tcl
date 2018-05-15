@@ -179,6 +179,7 @@ proc newSpinFile {} {
 
 proc loadSpinFile {} {
     global SPINFILE
+    global BINFILE
     global SpinTypes
     global config
     
@@ -338,7 +339,8 @@ menu .mbar.help -tearoff 0
     
 .mbar add cascade -menu .mbar.run -label Run
 .mbar.run add command -label "Run on device" -accelerator "^R" -command { doCompileRun }
-
+.mbar.run add separator
+.mbar.run add command -label "Commands..." -command { doRunOptions }
 .mbar add cascade -menu .mbar.help -label Help
 .mbar.help add command -label "Help" -command { doHelp }
 .mbar.help add separator
@@ -456,6 +458,38 @@ proc doLoadRun {} {
     .bot.txt replace 1.0 end "$cmdstr\n"
 }
 
+set cmddialoghelptext {
+  Strings for various commands
+  Some special % escapes:
+    %D = Replace with directory of spin2gui executable  
+    %S = Replace with current Spin file name
+    %B = Replace with current binary file name
+    %% = Insert a % character
+}
+proc doRunOptions {} {
+    global config
+    global cmddialoghelptext
+    
+    if {[winfo exists .runopts]} {
+	raise .runopts
+	return
+    }
+    toplevel .runopts
+    label .runopts.toplabel -text $cmddialoghelptext
+    ttk::labelframe .runopts.a -text "Compile command"
+    entry .runopts.a.compiletext -width 32 -textvariable config(compilecmd)
+
+    ttk::labelframe .runopts.b -text "Run command"
+    entry .runopts.b.runtext -width 32 -textvariable config(runcmd)
+
+    grid .runopts.toplabel
+    grid .runopts.a
+    grid .runopts.b
+    grid .runopts.a.compiletext
+    grid .runopts.b.runtext
+    
+    wm title .runopts "Executable Paths"
+}
 
 setHighlightingSpin .orig.txt
 
