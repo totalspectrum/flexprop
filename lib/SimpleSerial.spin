@@ -43,7 +43,7 @@ PUB str(s) | c
 '' we do this by finding the remainder repeatedly
 '' this gives us the digits in reverse order
 '' so we store them in a buffer; the worst case
-'' buffer size needed is 32 (for base 2 with sign flag)
+'' buffer size needed is 32 (for base 2)
 ''
 ''
 '' signflag indicates how to handle the sign of the

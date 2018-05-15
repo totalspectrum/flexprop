@@ -13,13 +13,13 @@ set COMPILE "./bin/fastspin"
 set makeBinary 1
 set codemem hub
 set datamem hub
-set PASMFILE ""
 
 # provide some default settings
 set config(library) "./lib"
 set config(spinext) ".spin"
 set config(lastdir) "."
-set config(compilecmd) "%F/bin/fastspin -L %L -q %S"
+set config(compilecmd) "%D/bin/fastspin -L %L %S"
+set config(runcmd) "%D/bin/loadp2 %B -t"
 
 # configuration settings
 proc config_open {} {
@@ -96,9 +96,9 @@ proc uread {name} {
 #
 proc resetOutputVars { } {
     global SPINFILE
-    global PASMFILE
+    global BINFILE
     
-    set PASMFILE ""
+    set BINFILE ""
 }
 
 # exit the program
@@ -141,56 +141,14 @@ proc tagerrors { w } {
     $w tag configure errtxt -foreground red
 }
 
-#
-# recreate the compiled output
-# spinfile is the name of the output file
-#
-proc regenOutput { spinfile } {
-    global COMPILE
-    global PASMFILE
-    global config
-    global makeBinary
-    global codemem
-    global datamem
-    
-    set outname $PASMFILE
-    if { [string length $outname] == 0 } {
-	set dirname [file dirname $spinfile]
-	set outname [file rootname $spinfile]
-	set PASMFILE "$outname.p2asm"
-    }
-    set errout ""
-    set status 0
-
-    set cmdline [list $COMPILE]
-
-    if { $config(library) ne "" } {
-	set cmdline [concat $cmdline [list -L $config(library)]]
-    }
-    if { $makeBinary == 1 } {
-	set binfile [file rootname $PASMFILE]
-	set binfile "$binfile.binary"
-	set cmdline [concat $cmdline [list -o $binfile $spinfile]]
-    } else {
-	set cmdline [concat $cmdline [list -o $PASMFILE $spinfile]]
-    }
-    .bot.txt replace 1.0 end "$cmdline\n"
-    set runcmd [list exec -ignorestderr]
-    set runcmd [concat $runcmd $cmdline]
-    lappend runcmd 2>@1
-    if {[catch $runcmd errout options]} {
-	set status 1
-    }
-    .bot.txt insert 2.0 $errout
-    tagerrors .bot.txt
-    if { $status != 0 } {
-	tk_messageBox -icon error -type ok -message "Compilation failed" -detail "see compiler output window for details"
-    }
-}
-
 set SpinTypes {
     {{Spin2 files}   {.spin2 .spin} }
     {{Spin files}   {.spin} }
+    {{All files}    *}
+}
+
+set BinTypes {
+    {{Binary files}   {.binary .bin} }
     {{All files}    *}
 }
 
@@ -212,7 +170,7 @@ proc getLibrary {} {
 proc newSpinFile {} {
     global SPINFILE
     set SPINFILE ""
-    set PASMFILE ""
+    set BINFILE ""
     checkChanges
     wm title . "New File"
     .orig.txt delete 1.0 end
@@ -236,13 +194,13 @@ proc loadSpinFile {} {
     ctext::comments .orig.txt
     
     set SPINFILE $filename
-    set PASMFILE ""
+    set BINFILE ""
     wm title . $SPINFILE
 }
 
 proc saveSpinFile {} {
     global SPINFILE
-    global PASMFILE
+    global BINFILE
     global SpinTypes
     global config
     
@@ -254,7 +212,7 @@ proc saveSpinFile {} {
 	set config(lastdir) [file dirname $filename]
 	set config(spinext) [file extension $filename]
 	set SPINFILE $filename
-	set PASMFILE ""
+	set BINFILE ""
     }
     
     saveFileFromWindow $SPINFILE .orig.txt
@@ -263,6 +221,7 @@ proc saveSpinFile {} {
 
 proc saveSpinAs {} {
     global SPINFILE
+    global BINFILE
     global SpinTypes
     global config
     set filename [tk_getSaveFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $config(lastdir) ]
@@ -272,15 +231,15 @@ proc saveSpinAs {} {
     set config(lastdir) [file dirname $filename]
     set config(spinext) [file extension $filename]
     set SPINFILE $filename
-    set PASMFILE ""
+    set BINFILE ""
     wm title . $SPINFILE
     saveSpinFile
 }
 
 set aboutMsg {
 GUI tool for .spin2
-Version 3.8    
-Copyright 2011-2018 Total Spectrum Software Inc.
+Version 1.0    
+Copyright 2018 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
 output will be correct.    
@@ -378,7 +337,7 @@ menu .mbar.help -tearoff 0
 .mbar.edit add command -label "Font" -command { tk fontchooser show }
     
 .mbar add cascade -menu .mbar.run -label Run
-.mbar.run add command -label "Run on device" -accelerator "^R" -command { doRun }
+.mbar.run add command -label "Run on device" -accelerator "^R" -command { doCompileRun }
 
 .mbar add cascade -menu .mbar.help -label Help
 .mbar.help add command -label "Help" -command { doHelp }
@@ -398,7 +357,9 @@ grid .orig -column 0 -row 1 -columnspan 2 -rowspan 1 -sticky nsew
 grid .bot -column 0 -row 2 -columnspan 2 -sticky nsew
 
 button .toolbar.compile -text "Compile" -command doCompile
-grid .toolbar.compile -sticky nsew
+button .toolbar.runBinary -text "Run Binary" -command doLoadRun
+button .toolbar.compileRun -text "Compile & Run" -command doCompileRun
+grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun -sticky nsew
 
 scrollbar .orig.v -orient vertical -command {.orig.txt yview}
 scrollbar .orig.h -orient horizontal -command {.orig.txt xview}
@@ -428,7 +389,7 @@ bind . <Control-n> { newSpinFile }
 bind . <Control-o> { loadSpinFile }
 bind . <Control-s> { saveSpinFile }
 bind . <Control-q> { exitProgram }
-bind . <Control-r> { doRun }
+bind . <Control-r> { doCompileRun }
 
 wm protocol . WM_DELETE_WINDOW {
     exitProgram
@@ -452,13 +413,21 @@ proc fontchooserFontSelection {w font args} {
 
 ### utility: compile the program
 
-proc doCompile {} {
+proc mapPercent {str} {
     global SPINFILE
+    global BINFILE
     global config
+    
+    set percentmap [ list "%%" "%" "%D" "." "%L" $config(library) "%S" $SPINFILE "%B" $BINFILE ]
+    set result [string map $percentmap $str]
+    return $result
+}
 
+proc doCompile {} {
+    global config
+    
     set status 0
-    set percentmap [list "%%" "%" "%F" "." "%L" $config(library) "%S" $SPINFILE]
-    set cmdstr [string map $percentmap $config(compilecmd)]
+    set cmdstr [mapPercent $config(compilecmd)]
     set runcmd [list exec -ignorestderr]
     set runcmd [concat $runcmd $cmdstr]
     lappend runcmd 2>@1
@@ -473,18 +442,19 @@ proc doCompile {} {
     }
 }
 
-proc doRun {} {
-    global makeBinary
-    global PASMFILE
-    global SPINFILE
+proc doLoadRun {} {
+    global config
+    global BINFILE
+    global BinTypes
     
-    set makeBinary 1
-    regenOutput $SPINFILE
-    set binfile [file rootname $PASMFILE]
-    set binfile "$binfile.binary"
-
-    exec bin/propeller-load -r $binfile
- }
+    set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $config(lastdir)]
+    if { [string length $filename] == 0 } {
+	return
+    }
+    set BINFILE $filename
+    set cmdstr [mapPercent $config(runcmd)]
+    .bot.txt replace 1.0 end "$cmdstr\n"
+}
 
 
 setHighlightingSpin .orig.txt
