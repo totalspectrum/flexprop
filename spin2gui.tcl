@@ -446,6 +446,7 @@ autoscroll::autoscroll .bot.h
 # actually read in our config info
 config_open
 
+# font configuration stuff
 proc fontchooserFocus {w} {
     tk fontchooser configure -font [$w cget -font] -command [list fontchooserFontSelection $w]
 }
@@ -499,7 +500,7 @@ proc doJustRun {} {
     global BINFILE
     
     set cmdstr [mapPercent $config(runcmd)]
-    .bot.txt replace 1.0 end "$cmdstr\n"
+    .bot.txt insert end "$cmdstr\n"
 
     set runcmd [list exec -ignorestderr]
     set runcmd [concat $runcmd $cmdstr]
@@ -521,15 +522,15 @@ proc doLoadRun {} {
 	return
     }
     set BINFILE $filename
+    .bot.txt delete 1.0 end
     doJustRun
 }
 
 proc doCompileRun {} {
     set status [doCompile]
     if { $status eq 0 } {
+	.bot.txt insert end "\n"
 	doJustRun
-#    } else {
-#	.bot.txt replace 1.0 end "status=$status\n"
     }
 }
 
