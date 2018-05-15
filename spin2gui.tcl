@@ -307,7 +307,7 @@ proc doHelp {} {
     grid rowconfigure .help.f .help.f.txt -weight 1
     grid columnconfigure .help.f .help.f.txt -weight 1
 
-    loadFileToWindow README.txt .help.f.txt
+    loadFileToWindow "doc/help.txt" .help.f.txt
     wm title .help "Spin2GUI Help"
 }
 
@@ -357,10 +357,10 @@ menu .mbar.run -tearoff 0
 menu .mbar.help -tearoff 0
 
 .mbar add cascade -menu .mbar.file -label File
-.mbar.file add command -label "New Spin File" -accelerator "^N" -command { newSpinFile }
-.mbar.file add command -label "Open Spin..." -accelerator "^O" -command { loadSpinFile }
-.mbar.file add command -label "Save Spin" -accelerator "^S" -command { saveSpinFile }
-.mbar.file add command -label "Save Spin As..." -command { saveSpinAs }
+.mbar.file add command -label "New Spin File..." -accelerator "^N" -command { newSpinFile }
+.mbar.file add command -label "Open Spin File..." -accelerator "^O" -command { loadSpinFile }
+.mbar.file add command -label "Save Spin File" -accelerator "^S" -command { saveSpinFile }
+.mbar.file add command -label "Save File As..." -command { saveSpinAs }
 .mbar.file add separator
 .mbar.file add command -label "Library directory..." -command { getLibrary }
 .mbar.file add separator

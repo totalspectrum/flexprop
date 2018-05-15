@@ -1,0 +1,46 @@
+Spin2gui help
+=============
+
+Menus
+----
+
+The File menu should be pretty self explanatory. You can create a new
+file with "New Spin file..." or open an existing one with "Open Spin
+file...". At present it is only possible to work with one file at a
+time, and that file is the one that will be compiled.
+
+The "Library directory..." entry allows you to pick a directory that
+will be searched for OBJ declarations automatically. It defaults to
+the lib directory in the spin2gui distribution.
+
+The Edit menu is again pretty self-explanatory. The Undo/Redo
+functionality is quite limited; only one level of Redo is reliable,
+and trying to Redo again will produce unpredictable results.
+
+"Select Font..." allows you to change the font used for the main
+editor window.
+
+The Commands menu allow you to compile, run a binary, or both compile
+and run. The current file (the one in the editor window) is always the
+one compiled, so it should be your top level Spin file. It will be
+saved automatically before any compilation.
+
+Run Binary allows you to choose a binary that you compiled off-line
+(or that was compiled earlier) and run it on the device.
+
+Configuring Commands
+--------------------
+You can change the commands used here for compiling and running
+programs. Since the commands are flexible, you can acutally use
+spin2gui for compiling and running programs on the P1. The "P1
+defaults" button sets the commands for this (you will need to supply
+propeller-load.exe yourself). "P2 defaults" restores the settings to
+the original Prop2 development.
+
+Config File
+-----------
+Settings for spin2gui are saved in a file called ".spin2gui.config" in
+the HOME directory of the user (usually something like
+C:\Users\MyName). If something gets really messed up, deleting that
+file will restore spin2gui to its default state.
+
