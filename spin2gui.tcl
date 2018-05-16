@@ -2,9 +2,9 @@
 
 package require Tk
 package require autoscroll
-#package require ctext
+package require ctext
 
-source ctext/ctext.tcl
+#source ctext/ctext.tcl
 
 # global variables
 set CONFIG_FILE "~/.spin2gui.config"
@@ -13,20 +13,28 @@ set COMPILE "./bin/fastspin"
 set makeBinary 1
 set codemem hub
 set datamem hub
-set ROOTDIR [file dirname [file normalize [info script]]]
+set ROOTDIR [file dirname $::argv0]
 
+if { $tcl_platform(platform) == "windows" } {
+    set WINPREFIX "cmd.exe /c start"
+} else {
+    set WINPREFIX "xterm -fs 14 -e"
+}
 # provide some default settings
 proc setShadowP1Defaults {} {
     global shadow
-
+    global WINPREFIX
+    
     set shadow(compilecmd) "%D/bin/fastspin -L %L %S"
-    set shadow(runcmd) "xterm -fs 14 -e %D/bin/propeller-load %B -r -t"
+    if ($tcl_platform[
+    set shadow(runcmd) "$WINPREFIX %D/bin/propeller-load %B -r -t"
 }
 proc setShadowP2Defaults {} {
     global shadow
-
+    global WINPREFIX
+    
     set shadow(compilecmd) "%D/bin/fastspin -2 -L %L %S"
-    set shadow(runcmd) "xterm -fs 14 -e %D/bin/loadp2 %B -t"
+    set shadow(runcmd) "$WINPREFIX %D/bin/loadp2 %B -t"
 }
 proc copyShadowToConfig {} {
     global config
