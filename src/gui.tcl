@@ -1,10 +1,11 @@
-#!/usr/bin/wish
-
-package require Tk
-package require autoscroll
-package require ctext
-
-#source ctext/ctext.tcl
+# Simple GUI for Spin
+# Copyright 2018 Total Spectrum Software
+# Distributed under the terms of the MIT license;
+# see License.txt for details.
+#
+#
+# The guts of the interpreter
+#
 
 # global variables
 set CONFIG_FILE "~/.spin2gui.config"
@@ -114,13 +115,10 @@ proc uread {name} {
     }
     seek $f 0 start ;# rewind
     set text [read $f $len]
-#    puts "read $len bytes"
     close $f
     if {$encoding=="unicode"} {
 	regsub -all "\uFEFF|\uFFFE" $text "" text
     }
-#    set len [string len $text]
-#    puts "len is $len"
     return $text
 }
 
@@ -195,6 +193,9 @@ set BinTypes {
     {{All files}    *}
 }
 
+#
+# see if anything has changed in the main text window
+#
 proc checkChanges {} {
     global SPINFILE
     if {[.main.txt edit modified]==1} {
@@ -214,7 +215,7 @@ proc newSpinFile {} {
     global SPINFILE
     set SPINFILE ""
     set BINFILE ""
-    checkChanges
+    checkChanges .main.txt
     .main.label configure -text "New File"
     .main.txt delete 1.0 end
     .bot.txt delete 1.0 end
@@ -361,9 +362,9 @@ proc setHighlightingSpin {w} {
     ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {^\#[a-z]+}
 
     ctext::addHighlightClassForRegexp $w comments $color(comments) {\'[^\n\r]*}
-#    ctext::enableComments $w
-#    $w tag configure _cComment -foreground $color(comments)
-#    $w tag raise _cComment
+    ctext::enableComments $w
+    $w tag configure _cComment -foreground $color(comments)
+    $w tag raise _cComment
 }
 
 menu .mbar
