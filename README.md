@@ -15,6 +15,10 @@ Not much to say here; I hope the menus will be self explanatory. Use the `File` 
 
 Only the Windows executable is provided. For other platforms, grab the source code and run `gui.tcl`. You will need Tcl/Tk installed, but it is available for most versions of Unix (including Mac OS X).
 
+### Modifying the GUI
+
+The scripts used are in the `src` subdirectory, so you can customize them to your heart's content. The main `spin2gui.exe` program is basically just the Tcl/Tk interpreter (from the FreeWrap project) with a tiny startup script that reads `src/gui.tcl`.
+
 ## Features
 
 The main advantage of spin2gui over PNut (the "official" development tool for the Prop2) is that PNut doesn't yet support a high level language, whereas spin2gui does. You can basically write ordinary Spin code, with Prop2 assembly code in the DAT section (instead of Prop1 assembly code). This makes prototyping your applications much easier.
@@ -23,7 +27,7 @@ The Spin code is compiled to P2 assembler by fastspin. This is somewhat differen
 
 ### Preprocessor
 
-Like openspin, bstc, and homespun, fastspin supports a basic preprocessor with such commands as `#define`, `#ifdef`, `#else`, and `#endif`. Note that while compiling for the Prop2 the define `__P2__` is automatically defined. See the file `samples/SimpleSerial` for an example of how to write code that will work on both Prop1 and Prop2 using these defines.
+Like openspin, bstc, and homespun, fastspin supports a basic preprocessor with such commands as `#define`, `#ifdef`, `#else`, and `#endif`. Note that while compiling for the Prop2 the define `__P2__` is automatically defined. See the file `samples/SimpleSerial` for an example of how to write code that will work on both Prop1 and Prop2 using the preprocessor.
 
 ### Inline assembly
 
