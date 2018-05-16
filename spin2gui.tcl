@@ -328,9 +328,9 @@ proc setHighlightingSpin {w} {
     set color(numbers) DeepPink
     set color(operators) green
     set color(strings)  red
-    set color(varnames) DarkGreen
+    set color(varnames) black
     set color(preprocessor) cyan
-    set keywordsbase [list Con Obj Dat Var Pub Pri Quit Exit Repeat While Until If Then Else Return Abort Long Word Byte]
+    set keywordsbase [list Con Obj Dat Var Pub Pri Quit Exit Repeat While Until If Then Else Return Abort Long Word Byte Asm Endasm String]
     foreach i $keywordsbase {
 	lappend keywordsupper [string toupper $i]
     }
@@ -339,11 +339,20 @@ proc setHighlightingSpin {w} {
     }
     set keywords [concat $keywordsbase $keywordsupper $keywordslower]
 
-    ctext::addHighlightClass $w keywords $color(keywords) $keywords
-
     ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \$ 
     ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \%
-#    ctext::addHighlightClassForRegexp $w numbers $color(numbers) {[0-9][0-9_]*}
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 0
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 1
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 2
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 3
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 4
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 5
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 6
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 7
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 8
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 9
+
+    ctext::addHighlightClass $w keywords $color(keywords) $keywords
 
     ctext::addHighlightClassForSpecialChars $w brackets $color(brackets) {[]()}
     ctext::addHighlightClassForSpecialChars $w operators $color(operators) {+-=><!@~\*/&:|}
@@ -353,8 +362,8 @@ proc setHighlightingSpin {w} {
 
     ctext::addHighlightClassForRegexp $w comments $color(comments) {\'[^\n\r]*}
 #    ctext::enableComments $w
-    $w tag configure _cComment -foreground $color(comments)
-    $w tag raise _cComment
+#    $w tag configure _cComment -foreground $color(comments)
+#    $w tag raise _cComment
 }
 
 menu .mbar
