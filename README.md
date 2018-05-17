@@ -35,9 +35,9 @@ fastspin allows simple inline assembly between the keywords `asm` and `endasm`. 
 
 ### Multiple assignment
 
-fastspin also supports assignment of multiple values, and functions which return multiple values. This is a feature which has been proposed for Spin2. For now only simple assignment (`:=`) of multiple values is permitted, and the variables to be assigned must be enclosed in parentheses. For example:
+fastspin also supports assignment of multiple values, and functions which return multiple values. This is a feature which has been proposed for Spin2. For now only simple assignment (`:=`) of multiple values is permitted. For example:
 ```
-   (a,b) := (b,a)
+   a,b := b,a
 ```
 exchanges the variables `a` and `b`.
 
@@ -49,5 +49,5 @@ PUB quotrem(a, b): q, r
 ```
 defines a function which returns two values (the quotient and remainder of `a` divided by `b`). It may be used like:
 ```
-  (val, digit) := quotrem(val, 10)
+  val, digit := quotrem(val, 10)
 ```
