@@ -27,7 +27,6 @@ proc setShadowP1Defaults {} {
     global WINPREFIX
     
     set shadow(compilecmd) "%D/bin/fastspin -L %L %S"
-    if ($tcl_platform[
     set shadow(runcmd) "$WINPREFIX %D/bin/propeller-load %B -r -t"
 }
 proc setShadowP2Defaults {} {
@@ -284,7 +283,7 @@ proc saveSpinAs {} {
 
 set aboutMsg {
 GUI tool for .spin2
-Version 1.0.2    
+Version 1.0.3    
 Copyright 2018 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that

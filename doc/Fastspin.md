@@ -133,6 +133,7 @@ which may modify the compilation:
   [ -b ]             output binary file format
   [ -e ]             output eeprom file format
   [ -c ]             output only DAT sections
+  [ -l ]             output DAT section as an annotated list file
   [ -f ]             output list of file names
   [ -q ]             quiet mode (suppress banner and non-error text)
   [ -p ]             disable the preprocessor
@@ -246,6 +247,44 @@ PUB divrem(x,y) : q, r
 This could later be used like:
 ```
   (a,digit) := divrem(a, 10)
+```
+It is also allowed to pass the multiple values returned from one function to
+another. So for example:
+```
+' function to double a 64 bit number
+PUB dbl64(ahi, alo): bhi, blo
+  bhi := ahi
+  blo := alo
+  asm
+    add blo, blo wc
+    addx bhi, bhi
+  endasm
+
+' function to quadruple a 64 bit number
+PUB quad64(ahi, alo)
+  return dbl64(dbl64(ahi, alo))
+```
+
+(7) fastspin permits function parameters to be given default values by adding `= X` after the parameter declaration, where `X` is a constant expression. For instance:
+```
+VAR
+  long a
+
+PUB inc(n=1)
+  a += n
+
+PUB main
+  inc(2) ' adds 2 to a
+  inc(1) ' adds 1 to a
+  inc    ' same as inc(1)
+  
+```
+The default values must, for now, be constant. Perhaps in the future this restriction will be relaxed, but there are some slightly tricky issues involving variable scope that must be resolved first.
+
+(8) fastspin accepts some Spin2 operators:
+```
+  a \ b   uses the value of a, but then sets a to b
+  x <=> y returns -1, 0, or 1 if x < y, x == y, or x > y
 ```
 
 Limitations
