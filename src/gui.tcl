@@ -230,7 +230,7 @@ proc browseFile {} {
     } else {
 	toplevel .browse
 	frame .browse.f
-	ctext .browse.f.txt -wrap none -yscroll { .browse.f.v set } -xscroll {.browse.f.h set }
+	ctext .browse.f.txt -wrap none -yscrollcommand { .browse.f.v set } -xscroll {.browse.f.h set }
 	scrollbar .browse.f.v -orient vertical -command { .browse.f.txt yview }
 	scrollbar .browse.f.h -orient horizontal -command { .browse.f.txt xview }
 	grid columnconfigure .browse {0 1} -weight 1
@@ -249,14 +249,13 @@ proc browseFile {} {
     set config(lastdir) [file dirname $filename]
 
     # make it read only
-    .browse.f.txt configure -state normal
     loadFileToWindow $filename .browse.f.txt
     .browse.f.txt highlight 1.0 end
     ctext::comments .browse.f.txt
     ctext::linemapUpdate .browse.f.txt
+    makeReadOnly .browse.f.txt
 
     wm title .browse $filename
-    .browse.f.txt configure -state disabled
 }
 
 proc loadSpinFile {} {
@@ -356,7 +355,7 @@ proc doHelp {} {
 
     loadFileToWindow "doc/help.txt" .help.f.txt
     wm title .help "Spin2GUI Help"
-    .help.f.txt configure -state disabled
+    makeReadOnly .help.f.txt
 }
 
 #
@@ -515,8 +514,6 @@ proc fontchooserFontSelection {w font args} {
     $w configure -font [font actual $font]
 }
 
-### utility: compile the program
-
 proc mapPercent {str} {
     global SPINFILE
     global BINFILE
@@ -527,6 +524,46 @@ proc mapPercent {str} {
     set result [string map $percentmap $str]
     return $result
 }
+
+### utility: make a window read only
+proc makeReadOnly {hWnd} {
+# Disable all key sequences for widget named in variable hWnd, except
+# the cursor navigation keys (regardless of the state ctrl/shift/etc.)
+# and Ctrl-C (Copy to Clipboard).
+    # from ActiveState Code >> Recipes
+    
+bind $hWnd <KeyPress> {
+    switch -- %K {
+        "Up" -
+        "Left" -
+        "Right" -
+        "Down" -
+        "Next" -
+        "Prior" -
+        "Home" -
+        "End" {
+        }
+
+        "c" -
+        "C" {
+            if {(%s & 0x04) == 0} {
+                break
+            }
+        }
+
+        default {
+            break
+        }
+    }
+}
+
+# Addendum: also a good idea disable the cut and paste events.
+
+bind $hWnd <<Paste>> "break"
+bind $hWnd <<Cut>> "break"
+}
+
+### utility: compile the program
 
 proc doCompile {} {
     global config
