@@ -220,6 +220,45 @@ proc newSpinFile {} {
     .bot.txt delete 1.0 end
 }
 
+# load a secondary file into a read-only window
+proc browseFile {} {
+    global config
+    global SpinTypes
+    
+    if {[winfo exists .browse]} {
+	raise .browse
+    } else {
+	toplevel .browse
+	frame .browse.f
+	ctext .browse.f.txt -wrap none -yscroll { .browse.f.v set } -xscroll {.browse.f.h set }
+	scrollbar .browse.f.v -orient vertical -command { .browse.f.txt yview }
+	scrollbar .browse.f.h -orient horizontal -command { .browse.f.txt xview }
+	grid columnconfigure .browse {0 1} -weight 1
+	grid .browse.f -sticky nsew
+	grid .browse.f.txt .browse.f.v -sticky nsew
+	grid .browse.f.h -sticky nsew
+	grid rowconfigure .browse.f .browse.f.txt -weight 1
+	grid columnconfigure .browse.f .browse.f.txt -weight 1
+
+	setHighlightingSpin .browse.f.txt
+    }
+    set filename [tk_getOpenFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $config(lastdir) -title "Browse File" ]
+    if { [string length $filename] == 0 } {
+	return
+    }
+    set config(lastdir) [file dirname $filename]
+
+    # make it read only
+    .browse.f.txt configure -state normal
+    loadFileToWindow $filename .browse.f.txt
+    .browse.f.txt highlight 1.0 end
+    ctext::comments .browse.f.txt
+    ctext::linemapUpdate .browse.f.txt
+
+    wm title .browse $filename
+    .browse.f.txt configure -state disabled
+}
+
 proc loadSpinFile {} {
     global SPINFILE
     global BINFILE
@@ -317,6 +356,7 @@ proc doHelp {} {
 
     loadFileToWindow "doc/help.txt" .help.f.txt
     wm title .help "Spin2GUI Help"
+    .help.f.txt configure -state disabled
 }
 
 #
@@ -378,6 +418,8 @@ menu .mbar.help -tearoff 0
 .mbar.file add command -label "Open Spin File..." -accelerator "^O" -command { loadSpinFile }
 .mbar.file add command -label "Save Spin File" -accelerator "^S" -command { saveSpinFile }
 .mbar.file add command -label "Save File As..." -command { saveSpinAs }
+.mbar.file add separator
+.mbar.file add command -label "Browse File..." -accelerator "^B" -command { browseFile }
 .mbar.file add separator
 .mbar.file add command -label "Library directory..." -command { getLibrary }
 .mbar.file add separator
@@ -448,6 +490,7 @@ bind .main.txt <FocusIn> [list fontchooserFocus .main.txt]
 bind . <Control-n> { newSpinFile }
 bind . <Control-o> { loadSpinFile }
 bind . <Control-s> { saveSpinFile }
+bind . <Control-b> { browseFile }
 bind . <Control-q> { exitProgram }
 bind . <Control-r> { doCompileRun }
 
