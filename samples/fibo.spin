@@ -9,12 +9,11 @@ OBJ
 PUB demo | i, n, t
   ser.start(115_200)
   repeat i from 6 to 46 step 10
-    ser.print( "fibo(", ser.dec(i), ") ")
     t := CNT
     n := fibolp(i)
     t := CNT - t
-    ser.print( ser.dec(t), " cycles, result = ", ser.dec(n), ser.nl)
-
+    ser.printf( "fibo(%d) = %d; cycles = %d%n", i, n, t )
+    
 PUB fibolp(n) : r | lastr
   r := 1
   lastr := 0

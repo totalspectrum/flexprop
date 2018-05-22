@@ -4,9 +4,6 @@
 '' this is for a very simple serial port
 '' (transmit only, and only on the default pin for now)
 ''
-'' note that it uses fastspin specific features
-''
-
 #ifdef __P2__
 #define OUT OUTB
 #define DIR DIRB
@@ -14,8 +11,6 @@
 #define OUT OUTA
 #define DIR DIRA
 #endif
-
-#define DEF string("")
 
 CON
   txpin = 30
@@ -43,29 +38,17 @@ PUB tx(c) | val, nextcnt
      val >>= 1
 
 PUB str(s) | c
-  if (s == 0)
-    return
   REPEAT WHILE ((c := byte[s++]) <> 0)
     tx(c)
 
 
-PUB print(a0 = DEF, a1 = DEF, a2 = DEF, a3 = DEF, a4 = DEF, a5 = DEF, a6 = DEF, a7 = DEF)
-  str(a0)
-  str(a1)
-  str(a2)
-  str(a3)
-  str(a4)
-  str(a5)
-  str(a7)
-  
 ''
 '' print an number with a given base
 '' we do this by finding the remainder repeatedly
 '' this gives us the digits in reverse order
 '' so we store them in a buffer; the worst case
-'' buffer size needed is 33 (for base 2 plus a 0)
-'' Note that we want to allow up to 8 numbers to be printed,
-'' so we use a circular buffer for handling the buffers
+'' buffer size needed is 32 (for base 2)
+''
 ''
 '' signflag indicates how to handle the sign of the
 '' number:
@@ -76,23 +59,10 @@ PUB print(a0 = DEF, a1 = DEF, a2 = DEF, a3 = DEF, a4 = DEF, a5 = DEF, a6 = DEF, 
 ''
 '' we will print at least prec digits
 ''
-CON
-  Max_Bytes_For_Num = 34
-  Buf_Limit = 4 * Max_Bytes_For_Num
-  
 VAR
-  long idx
-  byte permabuf[Buf_Limit]
-  byte buf[Max_Bytes_For_Num]
-  
-'' return a pointer to space for the next number
-PRI AllocSpace(n) : r
-  if idx + n => Buf_Limit
-    idx := 0
-  r := @permabuf[idx]
-  idx += n
-  
-PUB Num(val, base, signflag, digitsNeeded) | i, digit, r1, q1, ptr, j
+  byte buf[32]
+
+PUB Num(val, base = 10, signflag = 1, digitsNeeded = 0) | i, digit, r1, q1
 
   '' if signflag is nonzero, it indicates we should treat
   '' val as signed; if it is > 1, it is a character we should
@@ -102,7 +72,7 @@ PUB Num(val, base, signflag, digitsNeeded) | i, digit, r1, q1, ptr, j
       if (val < 0)
         signflag := "-"
 	val := -val
-
+	
   '' make sure we will not overflow our buffer
   if (digitsNeeded > 32)
     digitsNeeded := 32
@@ -133,33 +103,59 @@ PUB Num(val, base, signflag, digitsNeeded) | i, digit, r1, q1, ptr, j
     buf[i++] := digit
     --digitsNeeded
   while (val <> 0 or digitsNeeded > 0) and (i < 32)
-    
   if (signflag > 1)
-    buf[i++] := signflag
+    tx(signflag)
     
   '' now print the digits in reverse order
-  ptr := AllocSpace(i+1)
-  j := 0
   repeat while (i > 0)
-    byte[ptr][j++] := buf[--i]
-  byte[ptr][j] := 0
-  return ptr
-  
-'' return a string for a signed decimal number
-PUB dec(val)
-  return num(val, 10, 1, 0)
+    tx(buf[--i])
 
-'' return an unsigned decimal number with the specified
+'' print a signed decimal number
+PUB dec(val)
+  Num(val)
+
+'' print an unsigned decimal number with the specified
 '' number of digits; 0 means just use as many as we need
 PUB decuns(val, digits = 0)
-  return num(val, 10, 0, digits)
+  Num(val, 10, 0, digits)
 
-'' return a hex number with the specified number
+'' print a hex number with the specified number
 '' of digits; 0 means just use as many as we need
 PUB hex(val, digits = 8) | mask
-  return num(val, 16, 0, digits)
+  num(val, 16, 0, digits)
 
-'' return a newline string
+'' print a newline
 PUB nl
-  return string(13, 10)
+  tx(13)
+  tx(10)
 
+''
+'' formatted print
+''
+PUB printf(fmt = string(""), an=0, bn=0, cn=0, dn=0, en=0, fn=0) | c, valptr, val
+  valptr := @an
+  repeat
+    c := byte[fmt++]
+    if (c == 0)
+      quit
+    if (c <> "%")
+      tx(c)
+      next
+    c := byte[fmt++]
+    if (c == 0)
+      quit
+    if (c == "n")
+      tx(13)
+      tx(10)
+    else
+      if (c == "%")
+        tx(c)
+	next
+      val := long[valptr]
+      valptr += 4
+      case c
+	"d": dec(val)
+	"u": decuns(val)
+	"x": hex(val)
+	"s": str(val)
+        "c": tx(val)
