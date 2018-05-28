@@ -12,7 +12,7 @@ spin2gui.exe: spin2gui.tcl
 clean:
 	rm -rf spin2gui
 	rm -rf *.exe *.zip
-	rm -rf samples/*.elf samples/*.binary
+	rm -rf samples/*.elf samples/*.binary samples/*~
 	rm -rf samples/*.lst samples/*.pasm samples/*.p2asm
 	rm -rf samples/*.c samples/*.h samples/*.cpp
 
