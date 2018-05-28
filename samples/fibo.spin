@@ -4,7 +4,7 @@ CON
   _clkfreq = 80_000_000
 
 OBJ
-  ser: "NewSerial"
+  ser: "PrintfSerial"
 
 PUB demo | i, n, t
   ser.start(115_200)
