@@ -21,3 +21,5 @@ spin2gui_dir:
 	cp -r spin2gui.exe README.md License.txt doc lib samples src spin2gui
 	cp -r bin/*.exe spin2gui/bin
 	touch spin2gui_dir
+
+.PHONY: spin2gui_dir

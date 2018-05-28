@@ -9,12 +9,8 @@
 
 # global variables
 set CONFIG_FILE "~/.spin2gui.config"
-
-set COMPILE "./bin/fastspin"
-set makeBinary 1
-set codemem hub
-set datamem hub
 set ROOTDIR [file dirname $::argv0]
+set OPT "-O2"
 
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start"
@@ -26,14 +22,14 @@ proc setShadowP1Defaults {} {
     global shadow
     global WINPREFIX
     
-    set shadow(compilecmd) "%D/bin/fastspin -l -L %L %S"
+    set shadow(compilecmd) "%D/bin/fastspin -l %O -L %L %S"
     set shadow(runcmd) "$WINPREFIX %D/bin/propeller-load %B -r -t"
 }
 proc setShadowP2Defaults {} {
     global shadow
     global WINPREFIX
     
-    set shadow(compilecmd) "%D/bin/fastspin -2 -l -L %L %S"
+    set shadow(compilecmd) "%D/bin/fastspin -2 -l %O -L %L %S"
     set shadow(runcmd) "$WINPREFIX %D/bin/loadp2 %B -t"
 }
 proc copyShadowToConfig {} {
@@ -46,7 +42,8 @@ proc copyShadowToConfig {} {
 set config(library) "./lib"
 set config(spinext) ".spin"
 set config(lastdir) "."
-    
+set OPT "-O1"
+
 setShadowP2Defaults
 copyShadowToConfig
     
@@ -54,6 +51,7 @@ copyShadowToConfig
 proc config_open {} {
     global config
     global CONFIG_FILE
+    global OPT
     
     if {[file exists $CONFIG_FILE]} {
 	set fp [open $CONFIG_FILE r]
@@ -75,6 +73,10 @@ proc config_open {} {
 		# restore font
 		.main.txt configure -font [lindex $data 1]
 	    }
+	    opt {
+		# set optimize level
+		set OPT [lindex $data 1]
+	    }
 	    default {
 		set config([lindex $data 0]) [lindex $data 1]
 	    }
@@ -87,10 +89,12 @@ proc config_open {} {
 proc config_save {} {
     global config
     global CONFIG_FILE
+    global OPT
     set fp [open $CONFIG_FILE w]
     puts $fp "# spin2gui config info"
     puts $fp "geometry\t[winfo geometry [winfo toplevel .]]"
     puts $fp "font\t\{[.main.txt cget -font]\}"
+    puts $fp "opt\t\{$OPT\}"
     foreach i [array names config] {
 	if {$i != ""} {
 	    puts $fp "$i\t\{$config($i)\}"
@@ -424,6 +428,7 @@ menu .mbar
 . configure -menu .mbar
 menu .mbar.file -tearoff 0
 menu .mbar.edit -tearoff 0
+menu .mbar.options -tearoff 0
 menu .mbar.run -tearoff 0
 menu .mbar.help -tearoff 0
 
@@ -449,6 +454,11 @@ menu .mbar.help -tearoff 0
 .mbar.edit add separator
 .mbar.edit add command -label "Select Font..." -command { tk fontchooser show }
     
+.mbar add cascade -menu .mbar.options -label Options
+.mbar.options add radiobutton -label "No Optimization" -variable OPT -value "-O0"
+.mbar.options add radiobutton -label "Default Optimization" -variable OPT -value "-O1"
+.mbar.options add radiobutton -label "Full Optimization" -variable OPT -value "-O2"
+
 .mbar add cascade -menu .mbar.run -label Commands
 .mbar.run add command -label "Compile" -command { doCompile }
 .mbar.run add command -label "Run binary on device" -command { doLoadRun }
@@ -457,6 +467,7 @@ menu .mbar.help -tearoff 0
 .mbar.run add command -label "Open listing file" -accelerator "^L" -command { doListing }
 .mbar.run add separator
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
+
 .mbar add cascade -menu .mbar.help -label Help
 .mbar.help add command -label "Help" -command { doHelp }
 .mbar.help add separator
@@ -536,9 +547,10 @@ proc mapPercent {str} {
     global SPINFILE
     global BINFILE
     global ROOTDIR
+    global OPT
     global config
     
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%L" $config(library) "%S" $SPINFILE "%B" $BINFILE ]
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%L" $config(library) "%S" $SPINFILE "%B" $BINFILE "%O" $OPT ]
     set result [string map $percentmap $str]
     return $result
 }
@@ -666,6 +678,7 @@ set cmddialoghelptext {
     %D = Replace with directory of spin2gui executable  
     %S = Replace with current Spin file name
     %B = Replace with current binary file name
+    %O = Replace with optimization level
     %% = Insert a % character
 }
 proc copyShadowClose {w} {
