@@ -243,7 +243,7 @@ proc loadFileForBrowse {w filename} {
 	scrollbar $w.f.v -orient vertical -command $yvcmd
 	scrollbar $w.f.h -orient horizontal -command $xvcmd
 
-	grid columnconfigure $w {0 1} -weight 1
+	grid columnconfigure $w 0 -weight 1
 	grid rowconfigure $w 0 -weight 1
 	
 	grid $w.f -sticky nsew
@@ -363,7 +363,7 @@ proc doHelp {} {
     scrollbar .help.f.v -orient vertical -command { .help.f.txt yview }
     scrollbar .help.f.h -orient horizontal -command { .help.f.txt xview }
 
-    grid columnconfigure .help {0 1} -weight 1
+    grid columnconfigure .help 0 -weight 1
     grid rowconfigure .help 0 -weight 1
     grid .help.f -sticky nsew
     
