@@ -26,14 +26,14 @@ proc setShadowP1Defaults {} {
     global shadow
     global WINPREFIX
     
-    set shadow(compilecmd) "%D/bin/fastspin -L %L %S"
+    set shadow(compilecmd) "%D/bin/fastspin -l -L %L %S"
     set shadow(runcmd) "$WINPREFIX %D/bin/propeller-load %B -r -t"
 }
 proc setShadowP2Defaults {} {
     global shadow
     global WINPREFIX
     
-    set shadow(compilecmd) "%D/bin/fastspin -2 -L %L %S"
+    set shadow(compilecmd) "%D/bin/fastspin -2 -l -L %L %S"
     set shadow(runcmd) "$WINPREFIX %D/bin/loadp2 %B -t"
 }
 proc copyShadowToConfig {} {
@@ -221,41 +221,56 @@ proc newSpinFile {} {
 }
 
 # load a secondary file into a read-only window
+# the window should be named w
+proc loadFileForBrowse {w filename} {
+    set viewpos 0
+    if {[winfo exists $w]} {
+	raise $w
+	set viewpos [$w.f.txt yview]
+	set viewpos [lindex $viewpos 0]
+    } else {
+	toplevel $w
+	frame $w.f
+	set yscmd "$w.f.v set"
+	set xscmd "$w.f.h set"
+	set yvcmd "$w.f.txt yview"
+	set xvcmd "$w.f.txt xview"
+	ctext $w.f.txt -wrap none -yscrollcommand $yscmd -xscroll $xscmd
+	scrollbar $w.f.v -orient vertical -command $yvcmd
+	scrollbar $w.f.h -orient horizontal -command $xvcmd
+
+	grid columnconfigure $w {0 1} -weight 1
+	grid rowconfigure $w 0 -weight 1
+	
+	grid $w.f -sticky nsew
+	grid $w.f.txt $w.f.v -sticky nsew
+	grid $w.f.h -sticky nsew
+	grid rowconfigure $w.f $w.f.txt -weight 1
+	grid columnconfigure $w.f $w.f.txt -weight 1
+
+	setHighlightingSpin $w.f.txt
+    }
+    # make it read only
+    loadFileToWindow $filename $w.f.txt
+    $w.f.txt yview moveto $viewpos
+    $w.f.txt highlight 1.0 end
+    ctext::comments $w.f.txt
+    ctext::linemapUpdate $w.f.txt
+    makeReadOnly $w.f.txt
+
+    wm title $w $filename
+}
+
 proc browseFile {} {
     global config
     global SpinTypes
     
-    if {[winfo exists .browse]} {
-	raise .browse
-    } else {
-	toplevel .browse
-	frame .browse.f
-	ctext .browse.f.txt -wrap none -yscrollcommand { .browse.f.v set } -xscroll {.browse.f.h set }
-	scrollbar .browse.f.v -orient vertical -command { .browse.f.txt yview }
-	scrollbar .browse.f.h -orient horizontal -command { .browse.f.txt xview }
-	grid columnconfigure .browse {0 1} -weight 1
-	grid .browse.f -sticky nsew
-	grid .browse.f.txt .browse.f.v -sticky nsew
-	grid .browse.f.h -sticky nsew
-	grid rowconfigure .browse.f .browse.f.txt -weight 1
-	grid columnconfigure .browse.f .browse.f.txt -weight 1
-
-	setHighlightingSpin .browse.f.txt
-    }
     set filename [tk_getOpenFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $config(lastdir) -title "Browse File" ]
     if { [string length $filename] == 0 } {
 	return
     }
     set config(lastdir) [file dirname $filename]
-
-    # make it read only
-    loadFileToWindow $filename .browse.f.txt
-    .browse.f.txt highlight 1.0 end
-    ctext::comments .browse.f.txt
-    ctext::linemapUpdate .browse.f.txt
-    makeReadOnly .browse.f.txt
-
-    wm title .browse $filename
+    loadFileForBrowse .browse $filename
 }
 
 proc loadSpinFile {} {
@@ -321,7 +336,7 @@ proc saveSpinAs {} {
 
 set aboutMsg {
 GUI tool for .spin2
-Version 1.0.3    
+Version 1.0.4    
 Copyright 2018 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
@@ -439,6 +454,8 @@ menu .mbar.help -tearoff 0
 .mbar.run add command -label "Run binary on device" -command { doLoadRun }
 .mbar.run add command -label "Compile and run" -accelerator "^R" -command { doCompileRun }
 .mbar.run add separator
+.mbar.run add command -label "Open listing file" -accelerator "^L" -command { doListing }
+.mbar.run add separator
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
 .mbar add cascade -menu .mbar.help -label Help
 .mbar.help add command -label "Help" -command { doHelp }
@@ -492,6 +509,7 @@ bind . <Control-s> { saveSpinFile }
 bind . <Control-b> { browseFile }
 bind . <Control-q> { exitProgram }
 bind . <Control-r> { doCompileRun }
+bind . <Control-l> { doListing }
 
 wm protocol . WM_DELETE_WINDOW {
     exitProgram
@@ -588,8 +606,19 @@ proc doCompile {} {
     } else {
 	set BINFILE [file rootname $SPINFILE]
 	set BINFILE "$BINFILE.binary"
+	# load the listing if a listing window is open
+	if {[winfo exists .list]} {
+	    doListing
+	}
     }
     return $status
+}
+
+proc doListing {} {
+    global SPINFILE
+    set LSTFILE [file rootname $SPINFILE]
+    set LSTFILE "$LSTFILE.lst"
+    loadFileForBrowse .list $LSTFILE
 }
 
 proc doJustRun {} {

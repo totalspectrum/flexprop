@@ -1,4 +1,5 @@
 # By George Peter Staplin
+# Modified by Eric R. Smith
 # See also the README for a list of contributors
 # RCS: @(#) $Id: ctext.tcl,v 1.9 2011/04/18 19:49:48 andreas_kupries Exp $
 
