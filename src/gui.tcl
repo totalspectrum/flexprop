@@ -218,7 +218,7 @@ proc newSpinFile {} {
     global SPINFILE
     set SPINFILE ""
     set BINFILE ""
-    checkChanges .main.txt
+    checkChanges
     .main.label configure -text "New File"
     .main.txt delete 1.0 end
     .bot.txt delete 1.0 end
