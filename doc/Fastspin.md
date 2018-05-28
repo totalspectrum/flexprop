@@ -133,11 +133,14 @@ which may modify the compilation:
   [ -b ]             output binary file format
   [ -e ]             output eeprom file format
   [ -c ]             output only DAT sections
-  [ -l ]             output DAT section as an annotated list file
+  [ -l ]             output a .lst listing file
   [ -f ]             output list of file names
   [ -q ]             quiet mode (suppress banner and non-error text)
   [ -p ]             disable the preprocessor
-  [ -O ]             enable additional optimizations
+  [ -O[#] ]          set optimization level
+                       -O0 disable all optimization
+                       -O1 apply default optimization (same as no -O flag)
+		       -O2 apply all optimization (same as -O)
   [ -D <define> ]    add a define
   [ -2 ]             compile for Prop2
   [ --code=cog  ]    compile to run in COG memory instead of HUB
@@ -174,9 +177,9 @@ Symbol           | When Defined
 (this isn't exactly an extension anymore, since openspin has the same
 preprocessor).
 
-(2) @@@ operator: the @@@ operator returns the absolute hub address of
-a variable. This is the same as @ in Spin code, but in PASM code @
-returns only the address relative to the start of the DAT section.
+(2) `@@@` operator: the `@@@` operator returns the absolute hub address of
+a variable. This is the same as `@` in Spin code, but in PASM code `@`
+returns only the address relative to the start of the `DAT` section.
 
 (3) IF...THEN...ELSE expressions; you can use IF/THEN/ELSE in an expression, like:
 ```
@@ -195,19 +198,19 @@ r := (a) ? b : c
 ```
 In the latter form the parentheses around `a` are mandatory to avoid confusion with the random number operator `?`.
 
-(4) fastspin accepts inline assembly in PUB and PRI sections. Inline
+(4) fastspin accepts inline assembly in `PUB` and `PRI` sections. Inline
 assembly starts with `asm` and ends with `endasm`. The inline assembly
 is still somewhat limited; the only operands permitted are local
 variables of the containing function.
 
 Example:
-
-  PUB waitcnt2(newcnt, incr)
-    asm
-      waitcnt newcnt, incr
-    endasm
-    return newcnt
-
+```
+PUB waitcnt2(newcnt, incr)
+  asm
+    waitcnt newcnt, incr
+  endasm
+  return newcnt
+```
 waits until CNT reaches "newcnt", and returns "newcnt + incr".
   
 (5) The proposed Spin2 syntax for abstract object definitions and object pointers is accepted. A declaration like:
@@ -281,7 +284,21 @@ PUB main
 ```
 The default values must, for now, be constant. Perhaps in the future this restriction will be relaxed, but there are some slightly tricky issues involving variable scope that must be resolved first.
 
-(8) fastspin accepts some Spin2 operators:
+(8) If a default function parameter is declared as a string, and a string literal is passed to it, that string literal is transformed into a string constant. Normally Spin uses just the first character of a string literal when one is seen in an expression (outside of STRING). Basically fastspin inserts a `string` operator around the literal in this case. So for example in:
+```
+PUB write(msg = string(""))
+  '' do some stuff
+...
+  write(string("hello, world"))
+  write("hello, world")
+```
+the two calls to `write` will do the same thing. In regular Spin, and in fastspin in the case where the default value is not present on a parameter, the second call will actually be interpreted as:
+```
+  write($68)  ' $68 = ASCII value of "h"
+```
+which is probably not what was intended.
+
+(9) fastspin accepts some Spin2 operators:
 ```
   a \ b   uses the value of a, but then sets a to b
   x <=> y returns -1, 0, or 1 if x < y, x == y, or x > y

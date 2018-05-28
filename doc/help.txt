@@ -25,6 +25,10 @@ and run. The current file (the one in the editor window) is always the
 one compiled, so it should be your top level Spin file. It will be
 saved automatically before any compilation.
 
+The default configuration always creates a listing file (.lst), which
+you can load into a window by selecting "Open Listing File" under the
+Commands menu.
+
 Run Binary allows you to choose a binary that you compiled off-line
 (or that was compiled earlier) and run it on the device.
 
