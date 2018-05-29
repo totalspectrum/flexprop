@@ -83,7 +83,7 @@ proc config_open {} {
 	    }
 	    font {
 		# restore font
-		setfont .main.txt [lindex $data 1]
+		setfont .nb.main.txt [lindex $data 1]
 	    }
 	    opt {
 		# set optimize level
@@ -105,7 +105,7 @@ proc config_save {} {
     set fp [open $CONFIG_FILE w]
     puts $fp "# spin2gui config info"
     puts $fp "geometry\t[winfo geometry [winfo toplevel .]]"
-    puts $fp "font\t\{[.main.txt cget -font]\}"
+    puts $fp "font\t\{[.nb.main.txt cget -font]\}"
     puts $fp "opt\t\{$OPT\}"
     foreach i [array names config] {
 	if {$i != ""} {
@@ -214,7 +214,7 @@ set BinTypes {
 #
 proc checkChanges {} {
     global SPINFILE
-    if {[.main.txt edit modified]==1} {
+    if {[.nb.main.txt edit modified]==1} {
 	set answer [tk_messageBox -icon question -type yesno -message "Save file $SPINFILE?" -default yes]
 	if { $answer eq yes } {
 	    saveSpinFile
@@ -232,57 +232,54 @@ proc newSpinFile {} {
     set SPINFILE ""
     set BINFILE ""
     checkChanges
-    .main.label configure -text "New File"
-    .main.txt delete 1.0 end
+    .nb.main.txt delete 1.0 end
     .bot.txt delete 1.0 end
+    .nb tab .nb.main -text "New File"
 }
 
 # load a secondary file into a read-only window
-# the window should be named w
-proc loadFileForBrowse {w filename} {
+# the window name is w
+# its title is title
+proc loadFileForBrowse {w filename title} {
     global config
     set viewpos 0
-    if {![winfo exists .tabs]} {
-	CreateTabs
-    }
-    if {[winfo exists $w.f]} {
-	.tabs select $w
-	set viewpos [$w.f.txt yview]
+    if {[winfo exists $w]} {
+	.nb select $w
+	set viewpos [$w.txt yview]
 	set viewpos [lindex $viewpos 0]
     } else {
-	frame $w.f
-	set yscmd "$w.f.v set"
-	set xscmd "$w.f.h set"
-	set yvcmd "$w.f.txt yview"
-	set xvcmd "$w.f.txt xview"
-	set searchcmd "searchrep $w.f.txt 0"
-	
-	ctext $w.f.txt -wrap none -yscrollcommand $yscmd -xscroll $xscmd -tabstyle wordprocessor
-	scrollbar $w.f.v -orient vertical -command $yvcmd
-	scrollbar $w.f.h -orient horizontal -command $xvcmd
+	frame $w
+	set yscmd "$w.v set"
+	set xscmd "$w.h set"
+	set yvcmd "$w.txt yview"
+	set xvcmd "$w.txt xview"
+	set searchcmd "searchrep $w.txt 0"
 
-	grid columnconfigure $w 0 -weight 1
-	grid rowconfigure $w 0 -weight 1
-	
-	grid $w.f -sticky nsew
-	grid $w.f.txt $w.f.v -sticky nsew
-	grid $w.f.h -sticky nsew
-	grid rowconfigure $w.f $w.f.txt -weight 1
-	grid columnconfigure $w.f $w.f.txt -weight 1
+	.nb add $w -text "$title"
+	ctext $w.txt -wrap none -yscrollcommand $yscmd -xscroll $xscmd -tabstyle wordprocessor
+	scrollbar $w.v -orient vertical -command $yvcmd
+	scrollbar $w.h -orient horizontal -command $xvcmd
 
-	setHighlightingSpin $w.f.txt
-	bind $w.f.txt <Control-f> $searchcmd
+#	grid columnconfigure $w 0 -weight 1
+#	grid rowconfigure $w 0 -weight 1
+	
+#	grid $w -sticky nsew
+	grid $w.txt $w.v -sticky nsew
+	grid $w.h -sticky nsew
+	grid rowconfigure $w $w.txt -weight 1
+	grid columnconfigure $w $w.txt -weight 1
+
+	setHighlightingSpin $w.txt
+	bind $w.txt <Control-f> $searchcmd
     }
-    # make it read only
-    setfont $w.f.txt [.main.txt cget -font]
-    loadFileToWindow $filename $w.f.txt
-    $w.f.txt yview moveto $viewpos
-    $w.f.txt highlight 1.0 end
-    ctext::comments $w.f.txt
-    ctext::linemapUpdate $w.f.txt
-    makeReadOnly $w.f.txt
 
-#    wm title $w $filename
+    setfont $w.txt [.nb.main.txt cget -font]
+    loadFileToWindow $filename $w.txt
+    $w.txt yview moveto $viewpos
+    $w.txt highlight 1.0 end
+    ctext::comments $w.txt
+    ctext::linemapUpdate $w.txt
+#    makeReadOnly $w.txt
 }
 
 proc browseFile {} {
@@ -294,7 +291,7 @@ proc browseFile {} {
 	return
     }
     set config(lastdir) [file dirname $filename]
-    loadFileForBrowse .tabs.nb.browse $filename
+    loadFileForBrowse .nb.browse $filename "Browse"
 }
 
 proc loadSpinFile {} {
@@ -310,14 +307,14 @@ proc loadSpinFile {} {
     }
     set config(lastdir) [file dirname $filename]
     set config(spinext) [file extension $filename]
-    loadFileToWindow $filename .main.txt
-    .main.txt highlight 1.0 end
-    ctext::comments .main.txt
-    ctext::linemapUpdate .main.txt
+    loadFileToWindow $filename .nb.main.txt
+    .nb.main.txt highlight 1.0 end
+    ctext::comments .nb.main.txt
+    ctext::linemapUpdate .nb.main.txt
     
     set SPINFILE $filename
     set BINFILE ""
-    .main.label configure -text $SPINFILE
+    .nb tab .nb.main -text $SPINFILE
 }
 
 proc saveSpinFile {} {
@@ -337,8 +334,8 @@ proc saveSpinFile {} {
 	set BINFILE ""
     }
     
-    saveFileFromWindow $SPINFILE .main.txt
-    .main.label configure -text $SPINFILE
+    saveFileFromWindow $SPINFILE .nb.main.txt
+    .nb tab .nb.main -text $SPINFILE
 }
 
 proc saveSpinAs {} {
@@ -354,7 +351,7 @@ proc saveSpinAs {} {
     set config(spinext) [file extension $filename]
     set SPINFILE $filename
     set BINFILE ""
-    .main.label configure -text $SPINFILE
+    .nb tab .nb.main -text $SPINFILE
     saveSpinFile
 }
 
@@ -373,7 +370,7 @@ proc doAbout {} {
 }
 
 proc doHelp {} {
-    loadFileForBrowse .tabs.nb.help "doc/help.txt"
+    loadFileForBrowse .nb.help "doc/help.txt" "Help"
 }
 
 #
@@ -479,12 +476,15 @@ wm title . "Spin 2 GUI"
 
 grid columnconfigure . {0 1} -weight 1
 grid rowconfigure . 1 -weight 1
-frame .main
+ttk::notebook .nb
+frame .nb.main
 frame .bot
 frame .toolbar -bd 1 -relief raised
 
+.nb add .nb.main -text "New File"
+
 grid .toolbar -column 0 -row 0 -columnspan 2 -sticky nsew
-grid .main -column 0 -row 1 -columnspan 2 -rowspan 1 -sticky nsew
+grid .nb -column 0 -row 1 -columnspan 2 -rowspan 1 -sticky nsew
 grid .bot -column 0 -row 2 -columnspan 2 -sticky nsew
 
 button .toolbar.compile -text "Compile" -command doCompile
@@ -492,15 +492,14 @@ button .toolbar.runBinary -text "Run Binary" -command doLoadRun
 button .toolbar.compileRun -text "Compile & Run" -command doCompileRun
 grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun -sticky nsew
 
-scrollbar .main.v -orient vertical -command {.main.txt yview}
-scrollbar .main.h -orient horizontal -command {.main.txt xview}
-ctext .main.txt -wrap none -xscroll {.main.h set} -yscrollcommand {.main.v set} -undo 1 -tabstyle wordprocessor
-label .main.label -background DarkGrey -foreground white -text "New File"
-grid .main.label       -sticky nsew
-grid .main.txt .main.v -sticky nsew
-grid .main.h           -sticky nsew
-grid rowconfigure .main .main.txt -weight 1
-grid columnconfigure .main .main.txt -weight 1
+scrollbar .nb.main.v -orient vertical -command {.nb.main.txt yview}
+scrollbar .nb.main.h -orient horizontal -command {.nb.main.txt xview}
+ctext .nb.main.txt -wrap none -xscroll {.nb.main.h set} -yscrollcommand {.nb.main.v set} -undo 1 -tabstyle wordprocessor
+
+grid .nb.main.txt .nb.main.v -sticky nsew
+grid .nb.main.h           -sticky nsew
+grid rowconfigure .nb.main .nb.main.txt -weight 1
+grid columnconfigure .nb.main .nb.main.txt -weight 1
 
 scrollbar .bot.v -orient vertical -command {.bot.txt yview}
 scrollbar .bot.h -orient horizontal -command {.bot.txt xview}
@@ -524,7 +523,7 @@ proc CreateTabs {} {
 }
 
 tk fontchooser configure -parent .
-bind .main.txt <FocusIn> [list fontchooserFocus .main.txt]
+bind .nb.main.txt <FocusIn> [list fontchooserFocus .nb.main.txt]
 
 bind . <Control-n> { newSpinFile }
 bind . <Control-o> { loadSpinFile }
@@ -539,8 +538,8 @@ wm protocol . WM_DELETE_WINDOW {
     exitProgram
 }
 
-autoscroll::autoscroll .main.v
-autoscroll::autoscroll .main.h
+autoscroll::autoscroll .nb.main.v
+autoscroll::autoscroll .nb.main.h
 autoscroll::autoscroll .bot.v
 autoscroll::autoscroll .bot.h
 
@@ -816,11 +815,11 @@ proc searchrep'all w {
 }
 
 # main code
-setHighlightingSpin .main.txt
+setHighlightingSpin .nb.main.txt
 
 
 if { $::argc > 0 } {
-    loadFileToWindow $argv .main.txt
+    loadFileToWindow $argv .nb.main.txt
 } else {
     set SPINFILE ""
 }
