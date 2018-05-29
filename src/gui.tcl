@@ -358,7 +358,7 @@ proc saveSpinAs {} {
 
 set aboutMsg {
 GUI tool for .spin2
-Version 1.0.4    
+Version 1.0.5    
 Copyright 2018 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
