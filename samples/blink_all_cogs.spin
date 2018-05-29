@@ -32,4 +32,3 @@ PUB doblink(id) | pin, delay
   repeat
     OUTREG[pin] ^= 1
     waitcnt(CNT + delay)
-    
