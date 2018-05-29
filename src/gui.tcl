@@ -52,11 +52,11 @@ copyShadowToConfig
 #
 proc setfont { w fnt } {
     $w configure -font $fnt
-    set mwidth [expr 8*[font measure $fnt "m"]]
-    set mwidth2 [expr 2*$mwidth]
-    set mwidth3 [expr 3*$mwidth]
-    set mwidth4 [expr 3*$mwidth]
-    $w configure -tabs "$mwidth $mwidth2 $mwidth3 $mwidth4"
+#    set mwidth [expr 8*[font measure $fnt "m"]]
+#    set mwidth2 [expr 2*$mwidth]
+#    set mwidth3 [expr 3*$mwidth]
+#    set mwidth4 [expr 3*$mwidth]
+#    $w configure -tabs "$mwidth $mwidth2 $mwidth3 $mwidth4"
 }
 
 # configuration settings
@@ -255,7 +255,7 @@ proc loadFileForBrowse {w filename} {
 	set xvcmd "$w.f.txt xview"
 	set searchcmd "searchrep $w.f.txt 0"
 	
-	ctext $w.f.txt -wrap none -yscrollcommand $yscmd -xscroll $xscmd
+	ctext $w.f.txt -wrap none -yscrollcommand $yscmd -xscroll $xscmd -tabstyle wordprocessor
 	scrollbar $w.f.v -orient vertical -command $yvcmd
 	scrollbar $w.f.h -orient horizontal -command $xvcmd
 
@@ -513,7 +513,7 @@ grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun -sticky nsew
 
 scrollbar .main.v -orient vertical -command {.main.txt yview}
 scrollbar .main.h -orient horizontal -command {.main.txt xview}
-ctext .main.txt -wrap none -xscroll {.main.h set} -yscrollcommand {.main.v set} -undo 1
+ctext .main.txt -wrap none -xscroll {.main.h set} -yscrollcommand {.main.v set} -undo 1 -tabstyle wordprocessor
 label .main.label -background DarkGrey -foreground white -text "New File"
 grid .main.label       -sticky nsew
 grid .main.txt .main.v -sticky nsew
