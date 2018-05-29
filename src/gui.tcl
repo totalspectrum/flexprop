@@ -47,6 +47,18 @@ set OPT "-O1"
 setShadowP2Defaults
 copyShadowToConfig
     
+#
+# set font and tab stops for a window
+#
+proc setfont { w fnt } {
+    $w configure -font $fnt
+    set mwidth [expr 8*[font measure $fnt "m"]]
+    set mwidth2 [expr 2*$mwidth]
+    set mwidth3 [expr 3*$mwidth]
+    set mwidth4 [expr 3*$mwidth]
+    $w configure -tabs "$mwidth $mwidth2 $mwidth3 $mwidth4"
+}
+
 # configuration settings
 proc config_open {} {
     global config
@@ -71,7 +83,7 @@ proc config_open {} {
 	    }
 	    font {
 		# restore font
-		.main.txt configure -font [lindex $data 1]
+		setfont .main.txt [lindex $data 1]
 	    }
 	    opt {
 		# set optimize level
@@ -168,6 +180,7 @@ proc saveFileFromWindow { fname win } {
     $win edit modified false
 }
 
+
 #
 # tag text containing "error:" in a text widget w
 #
@@ -227,6 +240,7 @@ proc newSpinFile {} {
 # load a secondary file into a read-only window
 # the window should be named w
 proc loadFileForBrowse {w filename} {
+    global config
     set viewpos 0
     if {[winfo exists $w]} {
 	raise $w
@@ -239,6 +253,8 @@ proc loadFileForBrowse {w filename} {
 	set xscmd "$w.f.h set"
 	set yvcmd "$w.f.txt yview"
 	set xvcmd "$w.f.txt xview"
+	set searchcmd "searchrep $w.f.txt 0"
+	
 	ctext $w.f.txt -wrap none -yscrollcommand $yscmd -xscroll $xscmd
 	scrollbar $w.f.v -orient vertical -command $yvcmd
 	scrollbar $w.f.h -orient horizontal -command $xvcmd
@@ -253,8 +269,10 @@ proc loadFileForBrowse {w filename} {
 	grid columnconfigure $w.f $w.f.txt -weight 1
 
 	setHighlightingSpin $w.f.txt
+	bind $w.f.txt <Control-f> $searchcmd
     }
     # make it read only
+    setfont $w.f.txt [.main.txt cget -font]
     loadFileToWindow $filename $w.f.txt
     $w.f.txt yview moveto $viewpos
     $w.f.txt highlight 1.0 end
@@ -452,6 +470,9 @@ menu .mbar.help -tearoff 0
 .mbar.edit add command -label "Undo" -accelerator "^Z" -command {event generate [focus] <<Undo>>}
 .mbar.edit add command -label "Redo" -accelerator "^Y" -command {event generate [focus] <<Redo>>}
 .mbar.edit add separator
+.mbar.edit add command -label "Find..." -accelerator "^F" -command {searchrep [focus] 0}
+.mbar.edit add separator
+
 .mbar.edit add command -label "Select Font..." -command { tk fontchooser show }
     
 .mbar add cascade -menu .mbar.options -label Options
@@ -521,6 +542,7 @@ bind . <Control-b> { browseFile }
 bind . <Control-q> { exitProgram }
 bind . <Control-r> { doCompileRun }
 bind . <Control-l> { doListing }
+bind . <Control-f> { searchrep [focus] 0 }
 
 wm protocol . WM_DELETE_WINDOW {
     exitProgram
@@ -543,6 +565,7 @@ proc fontchooserFontSelection {w font args} {
     $w configure -font [font actual $font]
 }
 
+# translate % escapes in our command line strings
 proc mapPercent {str} {
     global SPINFILE
     global BINFILE
@@ -574,6 +597,8 @@ bind $hWnd <KeyPress> {
         "End" {
         }
 
+	"f" -
+	"F" -
         "c" -
         "C" {
             if {(%s & 0x04) == 0} {
@@ -736,6 +761,70 @@ proc doRunOptions {} {
     wm title .runopts "Executable Paths"
 }
 
+#
+# simple search and replace widget by Richard Suchenwirth, from wiki.tcl.tk
+#
+proc searchrep {t {replace 1}} {
+   set w .sr
+   if ![winfo exists $w] {
+       toplevel $w
+       wm title $w "Search"
+       grid [label $w.1 -text Find:] [entry $w.f -textvar Find] \
+               [button $w.bn -text Next \
+               -command [list searchrep'next $t]] -sticky ew
+       bind $w.f <Return> [list $w.bn invoke]
+       if $replace {
+           grid [label $w.2 -text Replace:] [entry $w.r -textvar Replace] \
+                   [button $w.br -text Replace \
+                   -command [list searchrep'rep1 $t]] -sticky ew
+           bind $w.r <Return> [list $w.br invoke]
+           grid x x [button $w.ba -text "Replace all" \
+                   -command [list searchrep'all $t]] -sticky ew
+       }
+       grid x [checkbutton $w.i -text "Ignore case" -variable IgnoreCase] \
+               [button $w.c -text Cancel -command "destroy $w"] -sticky ew
+       grid $w.i -sticky w
+       grid columnconfigure $w 1 -weight 1
+       $t tag config hilite -background yellow
+       focus $w.f
+   } else {
+       raise $w.f
+       focus $w
+   }
+}
+
+# Find the next instance
+proc searchrep'next w {
+    foreach {from to} [$w tag ranges hilite] {
+        $w tag remove hilite $from $to
+    }
+    set cmd [list $w search -count n -- $::Find insert+2c]
+    if $::IgnoreCase {set cmd [linsert $cmd 2 -nocase]}
+    set pos [eval $cmd]
+    if {$pos ne ""} {
+        $w mark set insert $pos
+        $w see insert
+        $w tag add hilite $pos $pos+${n}c
+    }
+}
+
+# Replace the current instance, and find the next
+proc searchrep'rep1 w {
+    if {[$w tag ranges hilite] ne ""} {
+        $w delete insert insert+[string length $::Find]c
+        $w insert insert $::Replace
+        searchrep'next $w
+        return 1
+    } else {return 0}
+}
+
+# Replace all
+proc searchrep'all w {
+    set go 1
+    while {$go} {set go [searchrep'rep1 $w]}
+}
+
+# main code
 setHighlightingSpin .main.txt
 
 
