@@ -242,12 +242,14 @@ proc newSpinFile {} {
 proc loadFileForBrowse {w filename} {
     global config
     set viewpos 0
-    if {[winfo exists $w]} {
-	raise $w
+    if {![winfo exists .tabs]} {
+	CreateTabs
+    }
+    if {[winfo exists $w.f]} {
+	.tabs select $w
 	set viewpos [$w.f.txt yview]
 	set viewpos [lindex $viewpos 0]
     } else {
-	toplevel $w
 	frame $w.f
 	set yscmd "$w.f.v set"
 	set xscmd "$w.f.h set"
@@ -280,7 +282,7 @@ proc loadFileForBrowse {w filename} {
     ctext::linemapUpdate $w.f.txt
     makeReadOnly $w.f.txt
 
-    wm title $w $filename
+#    wm title $w $filename
 }
 
 proc browseFile {} {
@@ -292,7 +294,7 @@ proc browseFile {} {
 	return
     }
     set config(lastdir) [file dirname $filename]
-    loadFileForBrowse .browse $filename
+    loadFileForBrowse .tabs.nb.browse $filename
 }
 
 proc loadSpinFile {} {
@@ -371,28 +373,7 @@ proc doAbout {} {
 }
 
 proc doHelp {} {
-    if {[winfo exists .help]} {
-	raise .help
-	return
-    }
-    toplevel .help
-    frame .help.f
-    text .help.f.txt -wrap none -yscroll { .help.f.v set } -xscroll { .help.f.h set }
-    scrollbar .help.f.v -orient vertical -command { .help.f.txt yview }
-    scrollbar .help.f.h -orient horizontal -command { .help.f.txt xview }
-
-    grid columnconfigure .help 0 -weight 1
-    grid rowconfigure .help 0 -weight 1
-    grid .help.f -sticky nsew
-    
-    grid .help.f.txt .help.f.v -sticky nsew
-    grid .help.f.h -sticky nsew
-    grid rowconfigure .help.f .help.f.txt -weight 1
-    grid columnconfigure .help.f .help.f.txt -weight 1
-
-    loadFileToWindow "doc/help.txt" .help.f.txt
-    wm title .help "Spin2GUI Help"
-    makeReadOnly .help.f.txt
+    loadFileForBrowse .tabs.nb.help "doc/help.txt"
 }
 
 #
@@ -531,6 +512,16 @@ grid .bot.txt .bot.v -sticky nsew
 grid .bot.h          -sticky nsew
 grid rowconfigure .bot .bot.txt -weight 1
 grid columnconfigure .bot .bot.txt -weight 1
+
+proc CreateTabs {} {
+    toplevel .tabs
+    ttk::notebook .tabs.nb
+    ttk::frame .tabs.nb.browse
+    ttk::frame .tabs.nb.help
+    .tabs.nb add .tabs.nb.browse -text "Browse File"
+    .tabs.nb add .tabs.nb.help -text "Help"
+    grid .tabs.nb -sticky nsew
+}
 
 tk fontchooser configure -parent .
 bind .main.txt <FocusIn> [list fontchooserFocus .main.txt]
