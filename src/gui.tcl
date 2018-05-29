@@ -141,7 +141,6 @@ proc uread {name} {
 # reset anything associated with the output file and configuration
 #
 proc resetOutputVars { } {
-    global SPINFILE
     global BINFILE
     
     set BINFILE ""
@@ -152,6 +151,13 @@ proc exitProgram { } {
     checkChanges
     config_save
     exit
+}
+
+# close tab
+proc closeTab { } {
+    set w [focus]
+    set s [.nb select]
+    puts "focus = $w select =  $s"
 }
 
 # load a file into a text (or ctext) window
@@ -213,9 +219,10 @@ set BinTypes {
 # see if anything has changed in the main text window
 #
 proc checkChanges {} {
-    global SPINFILE
+    global filenames
+    set s filenames(.nb.main)
     if {[.nb.main.txt edit modified]==1} {
-	set answer [tk_messageBox -icon question -type yesno -message "Save file $SPINFILE?" -default yes]
+	set answer [tk_messageBox -icon question -type yesno -message "Save file $s?" -default yes]
 	if { $answer eq yes } {
 	    saveSpinFile
 	}
@@ -228,21 +235,35 @@ proc getLibrary {} {
 }
 
 proc newSpinFile {} {
-    global SPINFILE
-    set SPINFILE ""
+    global filenames
     set BINFILE ""
     checkChanges
     .nb.main.txt delete 1.0 end
     .bot.txt delete 1.0 end
+    set filenames(.nb.main) ""
     .nb tab .nb.main -text "New File"
+}
+
+set TABCOUNTER 0
+proc newTab {} {
+    global TABCOUNTER
+    set s "f$TABCOUNTER"
+    set TABCOUNTER [expr "$TABCOUNTER + 1"]
+    return ".nb.$s"
 }
 
 # load a secondary file into a read-only window
 # the window name is w
 # its title is title
+# if title is "" then set the title based on
+# the file name
+#
 proc loadFileForBrowse {w filename title} {
     global config
     set viewpos 0
+    if {$title eq ""} {
+	set title [file tail $filename]
+    }
     if {[winfo exists $w]} {
 	.nb select $w
 	set viewpos [$w.txt yview]
@@ -279,7 +300,7 @@ proc loadFileForBrowse {w filename title} {
     $w.txt highlight 1.0 end
     ctext::comments $w.txt
     ctext::linemapUpdate $w.txt
-#    makeReadOnly $w.txt
+    .nb select $w
 }
 
 proc browseFile {} {
@@ -291,12 +312,12 @@ proc browseFile {} {
 	return
     }
     set config(lastdir) [file dirname $filename]
-    loadFileForBrowse .nb.browse $filename "Browse"
+    loadFileForBrowse [newTab] $filename ""
 }
 
 proc loadSpinFile {} {
-    global SPINFILE
     global BINFILE
+    global filenames
     global SpinTypes
     global config
     
@@ -312,34 +333,34 @@ proc loadSpinFile {} {
     ctext::comments .nb.main.txt
     ctext::linemapUpdate .nb.main.txt
     
-    set SPINFILE $filename
+    set filenames(.nb.main) $filename
     set BINFILE ""
-    .nb tab .nb.main -text $SPINFILE
+    .nb tab .nb.main -text $filename
 }
 
 proc saveSpinFile {} {
-    global SPINFILE
+    global filenames
     global BINFILE
     global SpinTypes
     global config
     
-    if { [string length $SPINFILE] == 0 } {
-	set filename [tk_getSaveFile -initialfile $SPINFILE -filetypes $SpinTypes -defaultextension $config(spinext) ]
+    if { [string length $filenames(.nb.main)] == 0 } {
+	set filename [tk_getSaveFile -initialfile $filenames(.nb.main) -filetypes $SpinTypes -defaultextension $config(spinext) ]
 	if { [string length $filename] == 0 } {
 	    return
 	}
 	set config(lastdir) [file dirname $filename]
 	set config(spinext) [file extension $filename]
-	set SPINFILE $filename
+	set filenames(.nb.main) $filename
 	set BINFILE ""
     }
     
-    saveFileFromWindow $SPINFILE .nb.main.txt
-    .nb tab .nb.main -text $SPINFILE
+    saveFileFromWindow $filenames(.nb.main) .nb.main.txt
+    .nb tab .nb.main -text $filenames(.nb.main) 
 }
 
 proc saveSpinAs {} {
-    global SPINFILE
+    global filenames
     global BINFILE
     global SpinTypes
     global config
@@ -349,9 +370,9 @@ proc saveSpinAs {} {
     }
     set config(lastdir) [file dirname $filename]
     set config(spinext) [file extension $filename]
-    set SPINFILE $filename
     set BINFILE ""
-    .nb tab .nb.main -text $SPINFILE
+    set filenames(.nb.main) $filename
+    .nb tab .nb.main -text $filename
     saveSpinFile
 }
 
@@ -371,6 +392,7 @@ proc doAbout {} {
 
 proc doHelp {} {
     loadFileForBrowse .nb.help "doc/help.txt" "Help"
+    makeReadOnly .nb.help
 }
 
 #
@@ -437,6 +459,8 @@ menu .mbar.help -tearoff 0
 .mbar.file add command -label "Browse File..." -accelerator "^B" -command { browseFile }
 .mbar.file add separator
 .mbar.file add command -label "Library directory..." -command { getLibrary }
+.mbar.file add separator
+.mbar.file add command -label "Close tab" -accelerator "^W" -command { closeTab }
 .mbar.file add separator
 .mbar.file add command -label Exit -accelerator "^Q" -command { exitProgram }
 
@@ -512,16 +536,6 @@ grid .bot.h          -sticky nsew
 grid rowconfigure .bot .bot.txt -weight 1
 grid columnconfigure .bot .bot.txt -weight 1
 
-proc CreateTabs {} {
-    toplevel .tabs
-    ttk::notebook .tabs.nb
-    ttk::frame .tabs.nb.browse
-    ttk::frame .tabs.nb.help
-    .tabs.nb add .tabs.nb.browse -text "Browse File"
-    .tabs.nb add .tabs.nb.help -text "Help"
-    grid .tabs.nb -sticky nsew
-}
-
 tk fontchooser configure -parent .
 bind .nb.main.txt <FocusIn> [list fontchooserFocus .nb.main.txt]
 
@@ -533,6 +547,7 @@ bind . <Control-q> { exitProgram }
 bind . <Control-r> { doCompileRun }
 bind . <Control-l> { doListing }
 bind . <Control-f> { searchrep [focus] 0 }
+bind . <Control-w> { closeTab }
 
 wm protocol . WM_DELETE_WINDOW {
     exitProgram
@@ -557,13 +572,13 @@ proc fontchooserFontSelection {w font args} {
 
 # translate % escapes in our command line strings
 proc mapPercent {str} {
-    global SPINFILE
+    global filenames
     global BINFILE
     global ROOTDIR
     global OPT
     global config
     
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%L" $config(library) "%S" $SPINFILE "%B" $BINFILE "%O" $OPT ]
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%L" $config(library) "%S" $filenames(.nb.main) "%B" $BINFILE "%O" $OPT ]
     set result [string map $percentmap $str]
     return $result
 }
@@ -613,7 +628,7 @@ bind $hWnd <<Cut>> "break"
 proc doCompile {} {
     global config
     global BINFILE
-    global SPINFILE
+    global filenames
     
     set status 0
     saveSpinFile
@@ -631,7 +646,7 @@ proc doCompile {} {
 	tk_messageBox -icon error -type ok -message "Compilation failed" -detail "see compiler output window for details"
 	set BINFILE ""
     } else {
-	set BINFILE [file rootname $SPINFILE]
+	set BINFILE [file rootname $filenames(.nb.main)]
 	set BINFILE "$BINFILE.binary"
 	# load the listing if a listing window is open
 	if {[winfo exists .list]} {
@@ -642,10 +657,11 @@ proc doCompile {} {
 }
 
 proc doListing {} {
-    global SPINFILE
-    set LSTFILE [file rootname $SPINFILE]
+    global filenames
+    set LSTFILE [file rootname $filenames(.nb.main)]
     set LSTFILE "$LSTFILE.lst"
-    loadFileForBrowse .list $LSTFILE
+    loadFileForBrowse .nb.list Listing
+    makeReadOnly .nb.list
 }
 
 proc doJustRun {} {
@@ -821,5 +837,5 @@ setHighlightingSpin .nb.main.txt
 if { $::argc > 0 } {
     loadFileToWindow $argv .nb.main.txt
 } else {
-    set SPINFILE ""
+    set filenames(.nb.main) ""
 }
