@@ -660,7 +660,7 @@ proc doListing {} {
     global filenames
     set LSTFILE [file rootname $filenames(.nb.main)]
     set LSTFILE "$LSTFILE.lst"
-    loadFileForBrowse .nb.list Listing
+    loadFileForBrowse .nb.list $LSTFILE Listing
     makeReadOnly .nb.list
 }
 
