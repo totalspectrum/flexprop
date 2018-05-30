@@ -325,7 +325,8 @@ proc loadFileToTab {w filename title} {
 	setHighlightingSpin $w.txt
     }
 
-#    setfont $w.txt [.nb.main.txt cget -font]
+    
+    setfont $w.txt $config(font)
     loadFileToWindow $filename $w.txt
     $w.txt highlight 1.0 end
     ctext::comments $w.txt
@@ -499,7 +500,7 @@ menu .mbar.help -tearoff 0
 .mbar.edit add command -label "Find..." -accelerator "^F" -command {searchrep [focus] 0}
 .mbar.edit add separator
 
-.mbar.edit add command -label "Select Font..." -command { tk fontchooser show }
+.mbar.edit add command -label "Select Font..." -command { doSelectFont }
     
 .mbar add cascade -menu .mbar.options -label Options
 .mbar.options add radiobutton -label "No Optimization" -variable OPT -value "-O0"
@@ -548,7 +549,6 @@ grid .bot.h          -sticky nsew
 grid rowconfigure .bot .bot.txt -weight 1
 grid columnconfigure .bot .bot.txt -weight 1
 
-tk fontchooser configure -parent .
 #bind .nb.main.txt <FocusIn> [list fontchooserFocus .nb.main.txt]
 
 bind . <Control-n> { createNewTab }
@@ -574,12 +574,16 @@ autoscroll::autoscroll .bot.h
 config_open
 
 # font configuration stuff
-proc fontchooserFocus {w} {
-    tk fontchooser configure -font [$w cget -font] -command [list fontchooserFontSelection $w]
+proc doSelectFont {} {
+    tk fontchooser configure -parent . -command resetFont
+    tk fontchooser show
 }
 
-proc fontchooserFontSelection {w font args} {
-    $w configure -font [font actual $font]
+proc resetFont {w} {
+    global config
+    set fnt [font actual $w]
+    set config(font) $fnt
+    setfont [.nb select].txt $fnt
 }
 
 # translate % escapes in our command line strings
