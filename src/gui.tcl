@@ -10,7 +10,6 @@
 # global variables
 set CONFIG_FILE "~/.spin2gui.config"
 set ROOTDIR [file dirname $::argv0]
-set OPT "-O2"
 
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start"
@@ -284,55 +283,56 @@ proc setupFramedText {w} {
     bind $w.txt <Control-f> $searchcmd
 }
 
-# load a secondary file into a read-only window
-# the window name is w
-# its title is title
-# if title is "" then set the title based on
-# the file name
 #
-proc loadFileForBrowse {w filename title} {
+# load a file into a toplevel window .list
+#
+proc loadListingFile {filename} {
+    global config
+    set viewpos 0
+    if {[winfo exists .list]} {
+	raise .list
+	set viewpos [.list.f.txt yview]
+	set viewpos [lindex $viewpos 0]
+    } else {
+	toplevel .list
+	setupFramedText .list.f
+	grid columnconfigure .list 0 -weight 1
+	grid rowconfigure .list 0 -weight 1
+	grid .list.f -sticky nsew
+    }
+    loadFileToWindow $filename .list.f.txt
+    .list.f.txt yview moveto $viewpos
+    wm title .list [file root $filename]
+}
+
+#
+# load a file into a tab
+# the tab name is w
+# its title is title
+# if title is "" then set the title based on the file name
+#
+proc loadFileToTab {w filename title} {
     global config
     global filenames
-    set viewpos 0
     if {$title eq ""} {
 	set title [file tail $filename]
     }
     if {[winfo exists $w]} {
 	.nb select $w
-	set viewpos [$w.txt yview]
-	set viewpos [lindex $viewpos 0]
     } else {
 	setupFramedText $w
 	.nb add $w -text "$title"
-#	grid columnconfigure $w 0 -weight 1
-#	grid rowconfigure $w 0 -weight 1
-	
-#	grid $w -sticky nsew
-
 	setHighlightingSpin $w.txt
     }
 
 #    setfont $w.txt [.nb.main.txt cget -font]
     loadFileToWindow $filename $w.txt
-    $w.txt yview moveto $viewpos
     $w.txt highlight 1.0 end
     ctext::comments $w.txt
     ctext::linemapUpdate $w.txt
     .nb tab $w -text $title
     .nb select $w
     set filenames($w) $filename
-}
-
-proc browseFile {} {
-    global config
-    global SpinTypes
-    
-    set filename [tk_getOpenFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $config(lastdir) -title "Browse File" ]
-    if { [string length $filename] == 0 } {
-	return
-    }
-    set config(lastdir) [file dirname $filename]
-    loadFileForBrowse [newTabName] $filename ""
 }
 
 proc loadSpinFile {} {
@@ -356,7 +356,7 @@ proc loadSpinFile {} {
     set config(lastdir) [file dirname $filename]
     set config(spinext) [file extension $filename]
 
-    loadFileForBrowse $w $filename ""
+    loadFileToTab $w $filename ""
     
     set BINFILE ""
 }
@@ -417,7 +417,7 @@ proc doAbout {} {
 }
 
 proc doHelp {} {
-    loadFileForBrowse .nb.help "doc/help.txt" "Help"
+    loadFileToTab .nb.help "doc/help.txt" "Help"
     makeReadOnly .nb.help
 }
 
@@ -481,8 +481,6 @@ menu .mbar.help -tearoff 0
 .mbar.file add command -label "Open Spin File..." -accelerator "^O" -command { loadSpinFile }
 .mbar.file add command -label "Save Spin File" -accelerator "^S" -command { saveCurFile }
 .mbar.file add command -label "Save File As..." -command { saveFileAs [.nb select] }
-.mbar.file add separator
-.mbar.file add command -label "Browse File..." -accelerator "^B" -command { browseFile }
 .mbar.file add separator
 .mbar.file add command -label "Library directory..." -command { getLibrary }
 .mbar.file add separator
@@ -674,8 +672,8 @@ proc doListing {} {
     global filenames
     set LSTFILE [file rootname $filenames([.nb select])]
     set LSTFILE "$LSTFILE.lst"
-    loadFileForBrowse .nb.list $LSTFILE Listing
-    makeReadOnly .nb.list
+    loadListingFile $LSTFILE
+    makeReadOnly .list.f.txt
 }
 
 proc doJustRun {} {
@@ -847,7 +845,7 @@ proc searchrep'all w {
 # main code
 
 if { $::argc > 0 } {
-    loadFileToWindow $argv .nb.main
+    loadFileToTab $argv .nb.main
 } else {
     createNewTab
 }
