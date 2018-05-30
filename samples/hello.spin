@@ -9,4 +9,4 @@ OBJ
 PUB hello
   ser.start(115_200)
   repeat
-    ser.str(string("Hello, world!", 13, 10))
+    ser.str(string("hello, world!", 13, 10))

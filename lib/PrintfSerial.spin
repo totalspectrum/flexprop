@@ -19,6 +19,8 @@ VAR
   long bitcycles
    
 PUB start(baudrate)
+  DIR[txpin] := 1
+  OUT[txpin] := 1
   pause(1)
   bitcycles := clkfreq / baudrate
   return 1
