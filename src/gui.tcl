@@ -10,7 +10,6 @@
 # global variables
 set CONFIG_FILE "~/.spin2gui.config"
 set ROOTDIR [file dirname $::argv0]
-set OPT "-O2"
 
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start"
@@ -42,21 +41,19 @@ proc copyShadowToConfig {} {
 set config(library) "./lib"
 set config(spinext) ".spin"
 set config(lastdir) "."
+set config(font) ""
 set OPT "-O1"
 
 setShadowP2Defaults
 copyShadowToConfig
-    
+
 #
 # set font and tab stops for a window
 #
 proc setfont { w fnt } {
-    $w configure -font $fnt
-#    set mwidth [expr 8*[font measure $fnt "m"]]
-#    set mwidth2 [expr 2*$mwidth]
-#    set mwidth3 [expr 3*$mwidth]
-#    set mwidth4 [expr 3*$mwidth]
-#    $w configure -tabs "$mwidth $mwidth2 $mwidth3 $mwidth4"
+    if { $fnt ne "" } {
+	$w configure -font $fnt
+    }
 }
 
 # configuration settings
@@ -81,10 +78,6 @@ proc config_open {} {
 		# restore last position on screen
 		wm geometry [winfo toplevel .] [lindex $data 1]
 	    }
-	    font {
-		# restore font
-		setfont .main.txt [lindex $data 1]
-	    }
 	    opt {
 		# set optimize level
 		set OPT [lindex $data 1]
@@ -105,7 +98,6 @@ proc config_save {} {
     set fp [open $CONFIG_FILE w]
     puts $fp "# spin2gui config info"
     puts $fp "geometry\t[winfo geometry [winfo toplevel .]]"
-    puts $fp "font\t\{[.main.txt cget -font]\}"
     puts $fp "opt\t\{$OPT\}"
     foreach i [array names config] {
 	if {$i != ""} {
@@ -137,21 +129,23 @@ proc uread {name} {
     return $text
 }
 
-#
-# reset anything associated with the output file and configuration
-#
-proc resetOutputVars { } {
-    global SPINFILE
-    global BINFILE
-    
-    set BINFILE ""
-}
-
 # exit the program
 proc exitProgram { } {
-    checkChanges
+    checkAllChanges
     config_save
     exit
+}
+
+# close tab
+proc closeTab { } {
+    global filenames
+    set w [.nb select]
+    if { $w ne "" } {
+	checkChanges $w
+	set filenames($w) ""
+	.nb forget $w
+	destroy $w
+    }
 }
 
 # load a file into a text (or ctext) window
@@ -210,137 +204,189 @@ set BinTypes {
 }
 
 #
-# see if anything has changed in the main text window
+# see if anything has changed in window w
 #
-proc checkChanges {} {
-    global SPINFILE
-    if {[.main.txt edit modified]==1} {
-	set answer [tk_messageBox -icon question -type yesno -message "Save file $SPINFILE?" -default yes]
+proc checkChanges {w} {
+    global filenames
+    set s $filenames($w)
+    if { $s eq "" } {
+	return
+    }
+    if {[$w.txt edit modified]==1} {
+	set answer [tk_messageBox -icon question -type yesno -message "Save file $s?" -default yes]
 	if { $answer eq yes } {
-	    saveSpinFile
+	    saveFile $w
 	}
     }
 }
 
+# check all windows for changes
+proc checkAllChanges {} {
+    set t [.nb tabs]
+    set i 0
+    set w [lindex $t $i]
+    while { $w ne "" } {
+	checkChanges $w
+	set w [lindex $t $i]
+	set i [expr "$i + 1"]
+    }
+}
+
+# choose the library directory
 proc getLibrary {} {
     global config
     set config(library) [tk_chooseDirectory -title "Choose Spin library directory" -initialdir $config(library) ]
 }
 
-proc newSpinFile {} {
-    global SPINFILE
-    set SPINFILE ""
-    set BINFILE ""
-    checkChanges
-    .main.label configure -text "New File"
-    .main.txt delete 1.0 end
-    .bot.txt delete 1.0 end
+set TABCOUNTER 0
+proc newTabName {} {
+    global TABCOUNTER
+    set s "f$TABCOUNTER"
+    set TABCOUNTER [expr "$TABCOUNTER + 1"]
+    return ".nb.$s"
 }
 
-# load a secondary file into a read-only window
-# the window should be named w
-proc loadFileForBrowse {w filename} {
+proc createNewTab {} {
+    global filenames
+    global config
+    set w [newTabName]
+    
+    .bot.txt delete 1.0 end
+    set filenames($w) ""
+    setupFramedText $w
+    setHighlightingSpin $w.txt
+    setfont $w.txt $config(font)
+    .nb add $w
+    .nb tab $w -text "New File"
+    .nb select $w
+}
+
+#
+# set up a framed text window
+#
+proc setupFramedText {w} {
+    frame $w
+    set yscmd "$w.v set"
+    set xscmd "$w.h set"
+    set yvcmd "$w.txt yview"
+    set xvcmd "$w.txt xview"
+    set searchcmd "searchrep $w.txt 0"
+
+    ctext $w.txt -wrap none -yscrollcommand $yscmd -xscroll $xscmd -tabstyle wordprocessor
+    scrollbar $w.v -orient vertical -command $yvcmd
+    scrollbar $w.h -orient horizontal -command $xvcmd
+
+    grid $w.txt $w.v -sticky nsew
+    grid $w.h -sticky nsew
+    grid rowconfigure $w $w.txt -weight 1
+    grid columnconfigure $w $w.txt -weight 1
+    bind $w.txt <Control-f> $searchcmd
+}
+
+#
+# load a file into a toplevel window .list
+#
+proc loadListingFile {filename} {
     global config
     set viewpos 0
-    if {[winfo exists $w]} {
-	raise $w
-	set viewpos [$w.f.txt yview]
+    if {[winfo exists .list]} {
+	raise .list
+	set viewpos [.list.f.txt yview]
 	set viewpos [lindex $viewpos 0]
     } else {
-	toplevel $w
-	frame $w.f
-	set yscmd "$w.f.v set"
-	set xscmd "$w.f.h set"
-	set yvcmd "$w.f.txt yview"
-	set xvcmd "$w.f.txt xview"
-	set searchcmd "searchrep $w.f.txt 0"
-	
-	ctext $w.f.txt -wrap none -yscrollcommand $yscmd -xscroll $xscmd -tabstyle wordprocessor
-	scrollbar $w.f.v -orient vertical -command $yvcmd
-	scrollbar $w.f.h -orient horizontal -command $xvcmd
-
-	grid columnconfigure $w 0 -weight 1
-	grid rowconfigure $w 0 -weight 1
-	
-	grid $w.f -sticky nsew
-	grid $w.f.txt $w.f.v -sticky nsew
-	grid $w.f.h -sticky nsew
-	grid rowconfigure $w.f $w.f.txt -weight 1
-	grid columnconfigure $w.f $w.f.txt -weight 1
-
-	setHighlightingSpin $w.f.txt
-	bind $w.f.txt <Control-f> $searchcmd
+	toplevel .list
+	setupFramedText .list.f
+	grid columnconfigure .list 0 -weight 1
+	grid rowconfigure .list 0 -weight 1
+	grid .list.f -sticky nsew
     }
-    # make it read only
-    setfont $w.f.txt [.main.txt cget -font]
-    loadFileToWindow $filename $w.f.txt
-    $w.f.txt yview moveto $viewpos
-    $w.f.txt highlight 1.0 end
-    ctext::comments $w.f.txt
-    ctext::linemapUpdate $w.f.txt
-    makeReadOnly $w.f.txt
-
-    wm title $w $filename
+    loadFileToWindow $filename .list.f.txt
+    .list.f.txt yview moveto $viewpos
+    wm title .list [file root $filename]
 }
 
-proc browseFile {} {
+#
+# load a file into a tab
+# the tab name is w
+# its title is title
+# if title is "" then set the title based on the file name
+#
+proc loadFileToTab {w filename title} {
     global config
-    global SpinTypes
-    
-    set filename [tk_getOpenFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $config(lastdir) -title "Browse File" ]
-    if { [string length $filename] == 0 } {
-	return
+    global filenames
+    if {$title eq ""} {
+	set title [file tail $filename]
     }
-    set config(lastdir) [file dirname $filename]
-    loadFileForBrowse .browse $filename
+    if {[winfo exists $w]} {
+	.nb select $w
+    } else {
+	setupFramedText $w
+	.nb add $w -text "$title"
+	setHighlightingSpin $w.txt
+    }
+
+#    setfont $w.txt [.nb.main.txt cget -font]
+    loadFileToWindow $filename $w.txt
+    $w.txt highlight 1.0 end
+    ctext::comments $w.txt
+    ctext::linemapUpdate $w.txt
+    .nb tab $w -text $title
+    .nb select $w
+    set filenames($w) $filename
 }
 
 proc loadSpinFile {} {
-    global SPINFILE
     global BINFILE
+    global filenames
     global SpinTypes
     global config
+
+    set w [.nb select]
     
-    checkChanges
+    if { $filenames($w) ne ""} {
+	createNewTab
+	set w [.nb select]
+    }
+    checkChanges $w
+    
     set filename [tk_getOpenFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $config(lastdir) ]
     if { [string length $filename] == 0 } {
 	return
     }
     set config(lastdir) [file dirname $filename]
     set config(spinext) [file extension $filename]
-    loadFileToWindow $filename .main.txt
-    .main.txt highlight 1.0 end
-    ctext::comments .main.txt
-    ctext::linemapUpdate .main.txt
+
+    loadFileToTab $w $filename ""
     
-    set SPINFILE $filename
     set BINFILE ""
-    .main.label configure -text $SPINFILE
 }
 
-proc saveSpinFile {} {
-    global SPINFILE
+proc saveCurFile {} {
+    saveFile [.nb select]
+}
+		  
+proc saveFile {w} {
+    global filenames
     global BINFILE
     global SpinTypes
     global config
     
-    if { [string length $SPINFILE] == 0 } {
-	set filename [tk_getSaveFile -initialfile $SPINFILE -filetypes $SpinTypes -defaultextension $config(spinext) ]
+    if { [string length $filenames($w)] == 0 } {
+	set filename [tk_getSaveFile -initialfile $filenames($w) -filetypes $SpinTypes -defaultextension $config(spinext) ]
 	if { [string length $filename] == 0 } {
 	    return
 	}
 	set config(lastdir) [file dirname $filename]
 	set config(spinext) [file extension $filename]
-	set SPINFILE $filename
+	set filenames($w) $filename
 	set BINFILE ""
     }
     
-    saveFileFromWindow $SPINFILE .main.txt
-    .main.label configure -text $SPINFILE
+    saveFileFromWindow $filenames($w) $w.txt
 }
 
-proc saveSpinAs {} {
-    global SPINFILE
+proc saveFileAs {w} {
+    global filenames
     global BINFILE
     global SpinTypes
     global config
@@ -350,15 +396,15 @@ proc saveSpinAs {} {
     }
     set config(lastdir) [file dirname $filename]
     set config(spinext) [file extension $filename]
-    set SPINFILE $filename
     set BINFILE ""
-    .main.label configure -text $SPINFILE
-    saveSpinFile
+    set filenames($w) $filename
+    .nb tab $w -text [file root $filename]
+    saveFile $w
 }
 
 set aboutMsg {
-GUI tool for .spin2
-Version 1.0.5    
+    GUI tool for .spin2
+       Version 1.1.0
 Copyright 2018 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
@@ -371,28 +417,8 @@ proc doAbout {} {
 }
 
 proc doHelp {} {
-    if {[winfo exists .help]} {
-	raise .help
-	return
-    }
-    toplevel .help
-    frame .help.f
-    text .help.f.txt -wrap none -yscroll { .help.f.v set } -xscroll { .help.f.h set }
-    scrollbar .help.f.v -orient vertical -command { .help.f.txt yview }
-    scrollbar .help.f.h -orient horizontal -command { .help.f.txt xview }
-
-    grid columnconfigure .help 0 -weight 1
-    grid rowconfigure .help 0 -weight 1
-    grid .help.f -sticky nsew
-    
-    grid .help.f.txt .help.f.v -sticky nsew
-    grid .help.f.h -sticky nsew
-    grid rowconfigure .help.f .help.f.txt -weight 1
-    grid columnconfigure .help.f .help.f.txt -weight 1
-
-    loadFileToWindow "doc/help.txt" .help.f.txt
-    wm title .help "Spin2GUI Help"
-    makeReadOnly .help.f.txt
+    loadFileToTab .nb.help "doc/help.txt" "Help"
+    makeReadOnly .nb.help
 }
 
 #
@@ -451,14 +477,14 @@ menu .mbar.run -tearoff 0
 menu .mbar.help -tearoff 0
 
 .mbar add cascade -menu .mbar.file -label File
-.mbar.file add command -label "New Spin File..." -accelerator "^N" -command { newSpinFile }
+.mbar.file add command -label "New File" -accelerator "^N" -command { createNewTab }
 .mbar.file add command -label "Open Spin File..." -accelerator "^O" -command { loadSpinFile }
-.mbar.file add command -label "Save Spin File" -accelerator "^S" -command { saveSpinFile }
-.mbar.file add command -label "Save File As..." -command { saveSpinAs }
-.mbar.file add separator
-.mbar.file add command -label "Browse File..." -accelerator "^B" -command { browseFile }
+.mbar.file add command -label "Save Spin File" -accelerator "^S" -command { saveCurFile }
+.mbar.file add command -label "Save File As..." -command { saveFileAs [.nb select] }
 .mbar.file add separator
 .mbar.file add command -label "Library directory..." -command { getLibrary }
+.mbar.file add separator
+.mbar.file add command -label "Close tab" -accelerator "^W" -command { closeTab }
 .mbar.file add separator
 .mbar.file add command -label Exit -accelerator "^Q" -command { exitProgram }
 
@@ -498,28 +524,18 @@ wm title . "Spin 2 GUI"
 
 grid columnconfigure . {0 1} -weight 1
 grid rowconfigure . 1 -weight 1
-frame .main
+ttk::notebook .nb
 frame .bot
 frame .toolbar -bd 1 -relief raised
 
 grid .toolbar -column 0 -row 0 -columnspan 2 -sticky nsew
-grid .main -column 0 -row 1 -columnspan 2 -rowspan 1 -sticky nsew
+grid .nb -column 0 -row 1 -columnspan 2 -rowspan 1 -sticky nsew
 grid .bot -column 0 -row 2 -columnspan 2 -sticky nsew
 
 button .toolbar.compile -text "Compile" -command doCompile
 button .toolbar.runBinary -text "Run Binary" -command doLoadRun
 button .toolbar.compileRun -text "Compile & Run" -command doCompileRun
 grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun -sticky nsew
-
-scrollbar .main.v -orient vertical -command {.main.txt yview}
-scrollbar .main.h -orient horizontal -command {.main.txt xview}
-ctext .main.txt -wrap none -xscroll {.main.h set} -yscrollcommand {.main.v set} -undo 1 -tabstyle wordprocessor
-label .main.label -background DarkGrey -foreground white -text "New File"
-grid .main.label       -sticky nsew
-grid .main.txt .main.v -sticky nsew
-grid .main.h           -sticky nsew
-grid rowconfigure .main .main.txt -weight 1
-grid columnconfigure .main .main.txt -weight 1
 
 scrollbar .bot.v -orient vertical -command {.bot.txt yview}
 scrollbar .bot.h -orient horizontal -command {.bot.txt xview}
@@ -533,23 +549,24 @@ grid rowconfigure .bot .bot.txt -weight 1
 grid columnconfigure .bot .bot.txt -weight 1
 
 tk fontchooser configure -parent .
-bind .main.txt <FocusIn> [list fontchooserFocus .main.txt]
+#bind .nb.main.txt <FocusIn> [list fontchooserFocus .nb.main.txt]
 
-bind . <Control-n> { newSpinFile }
+bind . <Control-n> { createNewTab }
 bind . <Control-o> { loadSpinFile }
-bind . <Control-s> { saveSpinFile }
+bind . <Control-s> { saveCurFile }
 bind . <Control-b> { browseFile }
 bind . <Control-q> { exitProgram }
 bind . <Control-r> { doCompileRun }
 bind . <Control-l> { doListing }
 bind . <Control-f> { searchrep [focus] 0 }
+bind . <Control-w> { closeTab }
 
 wm protocol . WM_DELETE_WINDOW {
     exitProgram
 }
 
-autoscroll::autoscroll .main.v
-autoscroll::autoscroll .main.h
+#autoscroll::autoscroll .nb.main.v
+#autoscroll::autoscroll .nb.main.h
 autoscroll::autoscroll .bot.v
 autoscroll::autoscroll .bot.h
 
@@ -567,13 +584,13 @@ proc fontchooserFontSelection {w font args} {
 
 # translate % escapes in our command line strings
 proc mapPercent {str} {
-    global SPINFILE
+    global filenames
     global BINFILE
     global ROOTDIR
     global OPT
     global config
     
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%L" $config(library) "%S" $SPINFILE "%B" $BINFILE "%O" $OPT ]
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%L" $config(library) "%S" $filenames([.nb select]) "%B" $BINFILE "%O" $OPT ]
     set result [string map $percentmap $str]
     return $result
 }
@@ -623,10 +640,10 @@ bind $hWnd <<Cut>> "break"
 proc doCompile {} {
     global config
     global BINFILE
-    global SPINFILE
+    global filenames
     
     set status 0
-    saveSpinFile
+    saveCurFile
     set cmdstr [mapPercent $config(compilecmd)]
     set runcmd [list exec -ignorestderr]
     set runcmd [concat $runcmd $cmdstr]
@@ -641,7 +658,7 @@ proc doCompile {} {
 	tk_messageBox -icon error -type ok -message "Compilation failed" -detail "see compiler output window for details"
 	set BINFILE ""
     } else {
-	set BINFILE [file rootname $SPINFILE]
+	set BINFILE [file rootname $filenames([.nb select])]
 	set BINFILE "$BINFILE.binary"
 	# load the listing if a listing window is open
 	if {[winfo exists .list]} {
@@ -652,10 +669,11 @@ proc doCompile {} {
 }
 
 proc doListing {} {
-    global SPINFILE
-    set LSTFILE [file rootname $SPINFILE]
+    global filenames
+    set LSTFILE [file rootname $filenames([.nb select])]
     set LSTFILE "$LSTFILE.lst"
-    loadFileForBrowse .list $LSTFILE
+    loadListingFile $LSTFILE
+    makeReadOnly .list.f.txt
 }
 
 proc doJustRun {} {
@@ -825,11 +843,9 @@ proc searchrep'all w {
 }
 
 # main code
-setHighlightingSpin .main.txt
-
 
 if { $::argc > 0 } {
-    loadFileToWindow $argv .main.txt
+    loadFileToTab $argv .nb.main
 } else {
-    set SPINFILE ""
+    createNewTab
 }
