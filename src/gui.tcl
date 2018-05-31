@@ -302,7 +302,7 @@ proc loadListingFile {filename} {
     }
     loadFileToWindow $filename .list.f.txt
     .list.f.txt yview moveto $viewpos
-    wm title .list [file root $filename]
+    wm title .list [file tail $filename]
 }
 
 #
@@ -380,6 +380,7 @@ proc saveFile {w} {
 	set config(lastdir) [file dirname $filename]
 	set config(spinext) [file extension $filename]
 	set filenames($w) $filename
+	.nb tab $w -text [file root $filename]
 	set BINFILE ""
     }
     
@@ -399,13 +400,13 @@ proc saveFileAs {w} {
     set config(spinext) [file extension $filename]
     set BINFILE ""
     set filenames($w) $filename
-    .nb tab $w -text [file root $filename]
+    .nb tab $w -text [file tail $filename]
     saveFile $w
 }
 
 set aboutMsg {
 GUI tool for .spin2
-Version 1.1.0
+Version 1.1.1
 Copyright 2018 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
