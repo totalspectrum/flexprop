@@ -39,7 +39,7 @@ PUB tx(c) | val, nextcnt
      OUT[txpin] := val
      val >>= 1
 
-PUB str(s) | c
+PUB str(s = string("")) | c
   REPEAT WHILE ((c := byte[s++]) <> 0)
     tx(c)
 
