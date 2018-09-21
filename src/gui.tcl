@@ -44,7 +44,7 @@ set config(lastdir) "."
 set config(font) ""
 set OPT "-O1"
 
-setShadowP2Defaults
+setShadowP1Defaults
 copyShadowToConfig
 
 #
@@ -195,6 +195,7 @@ proc tagerrors { w } {
 set SpinTypes {
     {{Spin2 files}   {.spin2 .spin} }
     {{Spin files}   {.spin} }
+    {{BASIC files}   {.bas} }
     {{All files}    *}
 }
 
@@ -406,7 +407,7 @@ proc saveFileAs {w} {
 
 set aboutMsg {
 GUI tool for .spin2
-Version 1.1.2
+Version 1.1.4
 Copyright 2018 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
