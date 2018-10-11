@@ -5,17 +5,15 @@
 BASIC support in fastspin is very much incomplete, and not usable for production
 right now. Missing features include:
 
-(1) Documentation; the manual below is just a start, much is incomplete.
+ - Documentation; the manual below is just a start, much is incomplete.
 
-(2) String support is very limited; strings may be assigned and printed, but that's about all for now. Still to be implemented are string concatenation and other string functions.
+ - There are some missing floating point functions, like sin and cos.
 
-(3) There are some missing floating point functions, like sin and cos.
+ - Input and output isn't fully implemented yet.
 
-(4) Input and output isn't implemented yet, except for a basic PRINT statement. Eventually we will have re-directable PRINT, and a similar INPUT.
+ - There is no way to initialize an array.
 
-(5) There is no way to initialize an array.
-
-(6) There are no functions yet for starting BASIC code on other COGs.
+ - There are only limited functions for starting BASIC code on other COGs.
 
 ## Introduction
 
@@ -61,7 +59,9 @@ asm
 byte
 case
 class
+close
 continue
+cpu
 declare
 dim
 direction
@@ -83,6 +83,8 @@ long
 loop
 mod
 next
+nil
+not
 open
 or
 output
@@ -94,13 +96,16 @@ put
 rem
 return
 select
+self
 shared
+short
 single
 sqrt
 step
 sub
 then
 to
+type
 ubyte
 uinteger
 ulong
@@ -245,6 +250,45 @@ function Add(a as integer, b as integer) as integer
 end function
 ```
 
+### Memory allocation
+
+Fastspin BASIC supports allocation of memory and garbage collection. Memory allocation is done from a small built-in heap. This heap defaults to 256 bytes in size, but this may be changed by defining a constant `HEAPSIZE` in the top level file of the program.
+
+Garbage collection works by scanning memory for pointers that were returned from the memory allocation function. As long as references to the original pointers returned by functions like `left$` or `right$` exist, the memory will not be re-used for anything else.
+
+Note that a CPU ("COG" in Spin terms) cannot scan the internal memory of other CPUs, so memory allocated by one CPU will only be garbage collected by that same CPU. This can lead to an out of memory situation even if in fact there is memory available to be claimed. For this reason we suggest that all allocation of temporary memory be done in one CPU only.
+
+#### new and delete
+
+The `new` operator may be used to allocate memory. `new` returns a pointer to enough memory to hold objects, or `nil` if not enough space is available for the allocation. For example, to allocate 40 bytes one can do:
+```
+  var ptr = new ubyte(40)
+  if ptr then
+    '' do stuff with the allocated memory
+    ...
+    '' now free it (this is optional)
+    delete ptr
+  else
+    print "not enough memory"
+  endif
+```
+The memory allocated by `new` is managed by the garbage collector, so it will ber reclaimed when all references to it have been removed. One may also explicitly free it with `delete`.
+
+#### String functions
+
+String functions and operators like `left$`, `right$`, and `+` (string concatenation) also work with allocated memory. If there is not enough memory to allocate for a string, these functions/operators will return `nil`.
+
+#### Function pointers
+
+Pointers to functions require 8 bytes of memory to be allocated at run time (to hold information about the object to be called). So for example in:
+```
+  '' create a Spin FullDuplexSerial object
+  dim ser as class using "FullDuplexSerial.spin"
+  '' get a pointer to its transmit function
+  var tx = @ser.tx
+```
+the variable `tx` holds a pointer both to the `ser` object and to the particular method `tx` within it. Since this is dynamically allocated, it is possible for the `@` operator to fail and return `nil`.
+
 ## Propeller Specific Features
 
 ### Input, Output, and Direction
@@ -334,7 +378,7 @@ dimensioned variable.
 
 ```
   ' declare a function with an integer parameter that returns a string
-  function(x as integer) as string
+  function f(x as integer) as string
   ...
 ```
 ### ASC
@@ -347,7 +391,18 @@ argument is not a string it is an error.
 
 ### ASM
 
-Introduces inline assembly. This is not implemented yet.
+Introduces inline assembly. The block between ASM and END ASM is parsed slightly differently than usual; in particular, instruction names are treated as reserved identifiers.
+
+Inside inline assembly any instructions may be used, but the only legal operands are integer constants and local variables (or parameters) to the function which contains the inline assembly. Labels may be defined, and may be used as the target for `goto` elsewhere in the function.
+
+Example: to implement a wait (like the built-in `waitcnt`:
+```
+sub wait_until_cycle(x as uinteger)
+  asm
+    waitcnt x
+  end asm
+end sub
+```
 
 ### BYTE
 
@@ -356,6 +411,15 @@ A signed 8 bit integer, occupying one byte of computer memory. The unsigned vers
 ### CASE
 
 Used in a `select` statement. Not implemented yet.
+
+### CHR$
+
+Not actually a reserved word, but a built-in function. Converts an ascii
+value to a string (so the reverse of ASC). For example:
+```
+print chr$(65)
+```
+prints `A` (the character whose ASCII value is 65)
 
 ### CLASS
 
@@ -380,6 +444,46 @@ Another way to define an object is to first declare an abstract `class` with a n
 ```
 This is more convenient if there are many references to the class, or if you want to pass pointers to the class to functions.
 
+#### Class Example in BASIC
+
+`Counter.bas` (the class) contains:
+```
+dim x as integer
+
+sub reset
+  x = 0
+end sub
+
+sub inc(n = 1)
+  x = x + n
+end sub
+
+function get()
+  return x
+end function
+```
+
+`Main.bas` (the main program) contains:
+```
+  dim cnt as class using "Counter.bas"
+
+  cnt.reset
+  cnt.inc
+  cnt.inc
+  print cnt.get() ' prints 2
+```
+This is compiled with:
+```
+  fastspin main.bas
+```
+
+### CLOSE
+
+Closes a file previously opened by `open`. This causes the `closef` function specified in the device driver (if any) to be called, and then invalidates the handle so that it may not be used for further I/O operations. Any attempt to use a closed handle produces no result.
+```
+  close #2  ' close handle #2
+```
+Note that handles 0 and 1 are reserved by the system; closing them may produce undefined results.
 
 ### CONST
 
@@ -403,13 +507,39 @@ Inside a type name, CONST signifies that variables of this type may not be modif
 
 Used to resume loop execution early. Not implemented yet.
 
+### CPU
+
+Used to start a subroutine running on another CPU. The parameters are the subroutine call to execute, and a stack for the other CPU to use. For example:
+```
+' blink a pin at a given frequency
+sub blink(pin, freq)
+  direction(pin) = output
+  do
+    output(pin) = not output(pin)
+    waitcnt(getcnt() + freq)
+  loop
+end sub
+...
+dim stack(8) ' small stack, blink does not call many other functions
+
+' start the blinking up on another CPU
+var a = cpu(blink(LED, 80_000_000), @stack(1))
+```
+`cpu` returns the cpu id ("cog id") of the CPU that the new function is running on.
+
 ### DECLARE
 
 Keyword reserved for future use.
 
+### DELETE
+
+Free memory allocated by `new` or by one of the string functions (`+`, `left$`, `right$`, etc.).
+
+Use of `delete` is a nice hint and makes sure the memory is free, but it is not strictly necessary since the memory is garbage collected automatically.
+
 ### DIM
 
-Define variables and allocate memory for them. `dim` is the most common way to declare that variables exist. The simplest form just lists the variable names and (optionally) array sizes. The variable types are inferred from the names. For example, you can declare an array `a` of 10 integers, a single integer `b`, and a string `c$` with:
+Dimension variables. This defines variables and allocate memory for them. `dim` is the most common way to declare that variables exist. The simplest form just lists the variable names and (optionally) array sizes. The variable types are inferred from the names. For example, you can declare an array `a` of 10 integers, a single integer `b`, and a string `c$` with:
 ```
 dim a(10), b, c$
 ```
@@ -439,6 +569,11 @@ Pseudo-array of bits describing the direction (input or output) of pins. In Prop
   direction(2) = input ' set pin 2 as input
   direction(6,4) = output ' set pins 6, 5, 4 as outputs
 ```
+Note that pin ranges may not cross a 32 bit boundary; that is,
+```
+  direction(33, 30) = input
+```
+is illegal and produces undefined behavior.
 
 ### DO
 
@@ -478,7 +613,68 @@ Exit early from a `for`, `do`, or `while` loop. Not implemented yet.
 
 ### FOR
 
-Repeat a loop while incrementing (or decrementing) a variable.
+Repeat a loop while incrementing (or decrementing) a variable. The default step value is 1, but if an explicit `step` is given this is used instead:
+```
+' print 1 to 10
+for i = 1 to 10
+  print i
+next i
+' print 1, 3, 5, ..., 9
+for i = 1 to 10 step 2
+  print i
+next i
+```
+
+If the variable given in the loop is not already defined, it is created as a variable shared by all functions in the module. This tends to be inefficient, so it is better to explicitly dimension the variable as a local variable rather than letting `for` create it as a shared.
+
+### FUNCTION
+
+Defines a new function. The type of the function may be given explicitly with an `as` _type_ clause; if no such clause exists the function's type is deduced from its name. For example, a function whose name ends in `$` is assumed to return a string unless an `as` is given.
+
+Functions have a fixed number and type of arguments, but the last arguments may be given default values with an initializer. For example,
+```
+  function inc(n as integer, delta = 1 as integer) as integer
+    return n + delta
+  end function
+```
+defines a function which adds two integers and returns an integer result. Since the default type of variables is integer, this could also be written as:
+```
+  function inc(n, delta = 1)
+    return n+delta
+  end function
+```
+In this case because the final argument `delta` is given a default value of 1, callers may omit this argument. That is, a call `inc(x)` is exactly equivalent to `inc(x, 1)`.
+
+#### GETCNT
+
+Propeller specific builtin function.
+
+```
+  function getcnt() as uinteger
+  x = getcnt()
+```
+Returns the current cycle counter. This is an unsigned 32 bit value that counts the number of system clocks elapsed since the device was turned on. It wraps after approximately 54 seconds.
+
+### GOTO
+
+`goto x` jumps to a label `x`, which must be defined in the same function.
+Labels are defined by giving an identifier followed by a `:`. For example:
+```
+  if (x=y) goto xyequal
+  print "x differs from y"
+  goto done
+xyequal:
+  print "x and y are equal"
+done:
+```
+Note that in most cases code written with a `goto` could better be written with
+`if` or `do` (for instance the example above would be easier to read if written with `if` ... `then` ... `else`). `goto` should be used sparingly.
+
+### HEAPSIZE
+```
+  const HEAPSIZE = 256
+```
+Declares the amount of space to be used for internal memory allocation by things like string functions. The default is 256 bytes, but if your program does a lot of string manipulation and/or needs to hold on to the allocations for a long time, you may need to increase this by explicitly declaring `const HEAPSIZE` with a larger value.
 
 ### IF
 
@@ -518,9 +714,33 @@ else
 end if
 ```
 
+### INPUT
+
+A pseudo-array of bits representing the state of input bits. On the Propeller 1 this is the 32 bit INA register, but on Propeller 2 it is 64 bits.
+
+Bits in `input` may be read with an array-like syntax:
+```
+   x = input(0)    ' read pin 0
+   y = input(4,2)  ' read pins 4,3,2
+```
+Note that usually you will want to read the pins with the larger pin number first, as the bits are labelled with bit 31 at the high bit and bit 0 as the low bit.
+
+Also note that before using a pin as input its direction should be set as input somewhere in the program:
+```
+   direction(4,0) = input  ' set pins 4-0 as inputs
+```
+
+### INPUT$
+
+A predefined string function. `input$(n, h)` reads `n` characters from handle `h`, as created by an `open device as #h` statement.
+
 ### INTEGER
 
 A 32 bit signed integer type. The unsigned 32 bit integer type is `uinteger`.
+
+### LEFT$
+
+A predefined string function. `left$(s, n)` returns the left-most `n` characters of `s`. If `n` is longer than the length of `s`, returns `s`. If `n` =< 0, returns an empty string. If a memory allocation error occurs, returns `nil`.
 
 ### LET
 
@@ -534,6 +754,49 @@ sets `a` to be equal to `b`. This can usually be written as:
 ```
 the only difference is that in the `let` form if `a` does not already exist it is created as a global variable (one accessible in all functions). The `let` keyword is deprecated in some versions of BASIC (such as FreeBASIC) so it's probably better to use `var` or `dim` to explicitly declare your variables.
 
+### LONG
+
+A signed 32 bit integer. An alias for `integer`. The unsigned version of this is `ulong`.
+
+### LOOP
+
+Marks the end of a loop introduced by `do`. See DO for details.
+
+### MOD
+
+`x mod y` finds the integer remainder when `x` is divided by `y`.
+
+Note that if both the quotient and remainder are desired, it is best to put the calculations close together; that way the compiler may be able to combine the two operations into one (since the software division code produces both quotient and remainder). For example:
+```
+  q = x / y
+  r = x mod y
+```
+
+### NEW
+
+Allocates memory from the heap for a new object, and returns a pointer to it. May also be used to allocate arrays of objects. The name of the type of the new object appears after the `new`, optionally followed by an array size:
+```
+  var x = new ubyte(10)  ' allocate 10 bytes and return a pointer to it
+  x(1) = 1               ' set a variable in it
+  
+  class FDS using "FullDuplexSerial.spin"
+  var ser = new FDS      ' allocate space for a new full duplex serial object
+  ser.start(31, 30, 0, 115_200) ' start up the new object
+```
+See the discussion of memory allocation for tips on using `new`. Note that the default heap is rather small, so you will probably need to declare a larger `HEAPSIZE` if you use `new` a lot.
+
+Memory allocated by `new` may be explicitly freed with `delete`; or, it may left to be garbage collected automatically.
+
+### NEXT
+
+Indicates the end of a `for` loop. The variable used in the loop may be placed after the `next` keyword, but this is not mandatory. If a variable is present though then it must match the loop.
+
+See FOR.
+
+### NIL
+
+A special pointer value that indicates an invalid pointer. `nil` may be returned from any string function or other function that allocates memory if there is not enough space to fulfil the request. `nil` is of type `any` and may be assigned to any variable. When assigned to a numeric variable it will cause the variable to become 0.
+
 ### NOT
 ```
   a = NOT b
@@ -541,6 +804,20 @@ the only difference is that in the `let` form if `a` does not already exist it i
 Inverts all bits in the destination. This is basically the same as `b xor -1`.
 
 In logical (boolean) conditions, since the TRUE condition is all 1 bits set, this operation has its usual effect of reversing TRUE and FALSE.
+
+### OPEN
+
+Open a handle for input and/or output. The general form is:
+```
+  open device as #n
+```
+where `device` is a device driver structure returned by a system function such as `SendRecvDevice`, and `n` evaluates to an integer between 2 and 7. (Handles 0 and 1 also exist, but are reserved for system use.)
+
+Example:
+```
+  open SendRecvDevice(@ser.tx, @ser.rx, @ser.stop) as #2
+```
+Here the `SendRecvDevice` is given pointers to functions to call to send a single character, to receive a single character, and to be called when the handle is closed. Any of these may be `nil`, in which case the corresponding function (output, input, or close) does nothing.
 
 ### OR
 
@@ -556,9 +833,29 @@ Also useful in boolean operations. The comparison operators return 0 for false c
   end if
 ```
 
-### OPEN
+### OUTPUT
 
-Reserved for future implementation.
+A pseudo-array of bits representing the state of output bits. On the Propeller 1 this is the 32 bit OUTA register, but on Propeller 2 it is 64 bits.
+
+Bits in `output` may be read and written an array-like syntax:
+```
+   output(0) = not output(0)   ' toggle pin 0
+   output(4,2) = 1  ' set pins 4 and 3 to 0 and pin 2 to 1
+```
+Note that usually you will want to access the pins with the larger pin number first, as the bits are labelled with bit 31 at the high bit and bit 0 as the low bit.
+
+Also note that before using a pin as output its direction should be set as output somewhere in the program:
+```
+   direction(4,0) = output  ' set pins 4-0 as outputs
+```
+
+### PAUSEMS
+
+
+A built-in subroutine to pause for a number of milliseconds. For example, to pause for 2 seconds, do
+```
+  pausems 2000
+```
 
 ### PRINT
 
@@ -591,9 +888,116 @@ helloworld
 1then 2
 ```
 
+`print` may be redirected. For example,
+```
+print #2, "hello, world"
+```
+prints its message to the device previously `open`ed as device #2.
+
+### PRINT USING
+
+Formats output using a string. The general form of this is:
+```
+  print using STRING; expr [,expr...] [;]
+```
+where `STRING` is a string literal and `expr` is one or more expressions.
+
+Within the string literal output fields are specified by special forms, which are replaced by the various expressions.
+
+`&` indicates a variable width field, within which the numbers or strings are printed with the minimum number of characters.
+
+`#` starts a numeric field with space padding; the number of `#` characters indicates the width of the field. The numeric value is printed right-justified within the field. If it cannot fit, the first digit which will fit is replaced with '#' and the rest are printed normally. If the field is preceded by a `-` or `+` the sign is printed there; otherwise, if the value is negative then the `-` sign is included in the digits to print.
+
+`%` starts a numeric field with 0 padding; the number of `%` characters indicates the width of the field. Leading zeros are explicitly printed. If the number cannot fit in the indicated number of digits, the first digit which will fit is replaced with '#' and the rest are printed normally.
+
+`+` indicates that a place should be reserved for a sign character (`+` for non-negative, `-` for negative). `+` must immediately be followed by a numeric field. If the argument is an unsigned integer, instead of `+` a space is always printed.
+
+`-` indicates that a place should be reserved for a sign character (space for non-negative, `-` for negative). `-` must immediately be followed by a numeric field. If the argument is an unsigned integer, a space is always printed.
+
+`!` indicates to print a single character (the first character of the string argument).
+
+`\` indicates a string field, which continues until the next `\`. The width of the field is the total number of characters, including the beginning and ending `\`. The string will be printed left justified within the field. Centering or right justification may be achieved for fields of length 3 or more by using `=` or '>' characters, respectively, as fillers between `\`. If the string is too long to fit within the field, only the first `N` characters of the string are printed.
+
+
+```
+print using "%%%%"; x
+```
+
+### PROGRAM
+
+This keyword is reserved for future use.
+
+The statements in the top level of the file (not inside any subroutine or function) are placed in a method called `program`. This is only really useful for calling them from another language (for example a Spin program using a BASIC program as an object).
+
+### REM
+
+Introduces a comment, which continues until the end of the line. A single quote character `'` may also be used for this.
+
+### RETURN
+
+Return from a subroutine or function. If this statement occurs inside a function, then the `return` keyword must be followed by an expression giving the value to return; this expression should have a type compatible with the function's return value.
+
+### RIGHT$
+
+A predefined string function. `right$(s, n)` returns the right-most `n` characters of `s`. If `n` is longer than the length of `s`, returns `s`. If `n` =< 0, returns an empty string. If a memory allocation error occurs, returns `nil`.
+
+### SELF
+
+Indicates the current object. Not implemented yet.
+
+### SENDRECVDEVICE
+
+A built-in function rather than a keyword. `SendRecvDevice(sendf, recvf, closef)` constructs a simple device driver based on three functions: `sendf` to send a single byte, `recvf` to receive a byte (or return -1 if no byte is available), and `closef` to be called when the device is closed. The value(s) returned by `SendRecvDevice` is only useful for passing directly to the `open` statement, and should not be used in any other context (at least not at this time).
+
+### SHORT
+
+A signed 16 bit integer, occupying two bytes of computer memory. The unsigned version of this is `ushort`. The difference arises with the treatment of the upper bit. Both `short` and `ushort` treat 0-32767 the same, but for `short` 32768 to 65535 are considered equivalent to -32768 to -1 respectively (that is, when a `short` is copied to a larger sized integer the upper bit is repeated into all the other bits; for `ushort` the new bits are filled with 0 instead).
+
+### SINGLE
+
+Single precision floating point data type. By default this is an IEEE 32 bit single precision float, but compiler options may change this (for example to a 16.16 fixed point number).
+
+### STEP
+
+Gives the increment to apply in a FOR loop.
+```
+for i = 2 to 8 step 2
+  print i
+next
+```
+will print 2, 4, 6, and 8 on separate lines.
+
+### THEN
+
+Introduces a multi-line series of statements for an `if` statement. See IF for details.
+
+### TO
+
+A syntactical element typically used for giving ranges of items.
+
+### TYPE
+
+Creates an alias for a type. For example,
+```
+  type uptr as ubyte ptr
+```
+creates a new type name `uptr` which is a pointer to a `ubyte`. You may use the new type name anywhere a type is required.
+
 ### UBYTE
 
 An unsigned 8 bit integer, occupying one byte of computer memory. The signed version of this is `byte`. The difference arises with the treatment of the upper bit. Both `byte` and `ubyte` treat 0-127 the same, but for `byte` 128 to 255 are considered equivalent to -128 to -1 respectively (that is, when a `byte` is copied to a larger sized integer the upper bit is repeated into all the other bits; for `ubyte` the new bytes are filled with 0 instead).
+
+### UINTEGER
+
+An unsigned 32 bit integer.
+
+### ULONG
+
+An unsigned 32 bit integer, occupying four bytes of computer memory. The signed version of this is `long`.
+
+### USHORT
+
+An unsigned 16 bit integer, occupying two bytes of computer memory. The signed version of this is `short`. The difference arises with the treatment of the upper bit. Both `short` and `ushort` treat 0-32767 the same, but for `short` 32768 to 65535 are considered equivalent to -32768 to -1 respectively (that is, when a `short` is copied to a larger sized integer the upper bit is repeated into all the other bits; for `ushort` the new bits are filled with 0 instead).
 
 ### USING
 
@@ -609,6 +1013,22 @@ VAR msg$ = "hello"
 `var` creates and initializes a new local variable (only available inside the function in which it is declared. The type of the new variable is inferred from the type of the expression used to initialize it; if for some reason that cannot be determined, the type is set according to the variable suffix (if any is present).
 
 `var` is somewhat similar to `dim`, except that the type isn't given explicitly (it is determined by the initializer expression) and the variables created are always local, even if the `var` is in the main program (in the main program `dim` creates shared variables that may be used by functions or subroutines).
+
+### WAITCNT
+
+Propeller specific builtin function. Waits until the cycle counter is a specific value
+```
+  waitcnt(getcnt() + clkfreq) ' wait one second
+```
+
+#### WAITPEQ
+
+Propeller specific builtin function. Waits for pins to have a specific value (given by a bit mask). Same as the Spin `waitpeq` routine. Note that the arguments are bit masks, not pin numbers, so take care when porting code from PropBasic.
+
+#### WAITPNE
+
+Propeller specific builtin function. Waits for pins to not have a specific value (given by a bit mask). Same as the Spin `waitpne` routine. Note that the arguments are bit masks, not pin numbers, so take care when porting code from PropBasic.
+
 
 ### WHILE
 
@@ -636,37 +1056,16 @@ or
   loop
 ```
 
+### WORD
+
+An alias for `ushort`, a 16 bit unsigned word.
+
 ### XOR
 
 ```
   a = x xor y
 ```
 Returns the bit-wise exclusive or of x and y. If x or y is a floating point number then it will be converted to integer before the operation is performed. `xor` is often used for flipping bits.
-
-### Propeller Specific Functions
-
-#### getcnt
-
-```
-  function getcnt() as uinteger
-  x = getcnt()
-```
-Returns the current cycle counter. This is an unsigned 32 bit value that counts the number of system clocks elapsed since the device was turned on. It wraps after approximately 54 seconds.
-
-#### waitcnt
-
-Waits until the cycle counter is a specific value
-```
-  waitcnt(getcnt() + clkfreq) ' wait one second
-```
-
-#### waitpeq
-
-Waits for pins to have a specific value
-
-#### waitpne
-
-Waits for pins to have a specific value
 
 ### Propeller Specific Variables
 
@@ -692,11 +1091,7 @@ let mscycles = clkfreq / 1000
 direction(pin) = output
 
 do
-  output(pin) = output(pin) xor 1
+  output(pin) = not output(pin)
   pausems 1000
 loop
-
-sub pausems(ms)
-  waitcnt(getcnt() + ms * mscycles)
-end sub
 ```
