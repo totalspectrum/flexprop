@@ -2,5 +2,10 @@
 *.pasm
 *.p2asm
 *.binary
+*.lst
 spin2gui
 spin2gui.exe
+bin
+loadp2/build-win32
+proploader-msys-build
+spin2gui_dir

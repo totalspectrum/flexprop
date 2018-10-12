@@ -236,7 +236,7 @@ proc checkAllChanges {} {
 # choose the library directory
 proc getLibrary {} {
     global config
-    set config(library) [tk_chooseDirectory -title "Choose Spin library directory" -initialdir $config(library) ]
+    set config(library) [tk_chooseDirectory -title "Choose library directory" -initialdir $config(library) ]
 }
 
 set TABCOUNTER 0
@@ -255,7 +255,7 @@ proc createNewTab {} {
     .bot.txt delete 1.0 end
     set filenames($w) ""
     setupFramedText $w
-    setHighlightingSpin $w.txt
+    #setHighlightingSpin $w.txt
     setfont $w.txt $config(font)
     .nb add $w
     .nb tab $w -text "New File"
@@ -323,7 +323,7 @@ proc loadFileToTab {w filename title} {
     } else {
 	setupFramedText $w
 	.nb add $w -text "$title"
-	setHighlightingSpin $w.txt
+	#setHighlightingSpin $w.txt
     }
 
     
@@ -406,8 +406,8 @@ proc saveFileAs {w} {
 }
 
 set aboutMsg {
-GUI tool for .spin2
-Version 1.1.5
+GUI tool for fastspin
+Version 1.2.0
 Copyright 2018 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
@@ -481,8 +481,8 @@ menu .mbar.help -tearoff 0
 
 .mbar add cascade -menu .mbar.file -label File
 .mbar.file add command -label "New File" -accelerator "^N" -command { createNewTab }
-.mbar.file add command -label "Open Spin File..." -accelerator "^O" -command { loadSpinFile }
-.mbar.file add command -label "Save Spin File" -accelerator "^S" -command { saveCurFile }
+.mbar.file add command -label "Open File..." -accelerator "^O" -command { loadSpinFile }
+.mbar.file add command -label "Save File" -accelerator "^S" -command { saveCurFile }
 .mbar.file add command -label "Save File As..." -command { saveFileAs [.nb select] }
 .mbar.file add separator
 .mbar.file add command -label "Library directory..." -command { getLibrary }

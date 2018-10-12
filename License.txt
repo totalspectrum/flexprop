@@ -48,10 +48,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ============================================================================
-Running on the P2 is accomplished via the propeller-load program by David
+Running on the P2 is accomplished via the PropLoader program by David
 Betz. This is also distributed under the MIT license.
 
-propeller-load is Copyright (c) 2015 dbetz
+PropLoader is Copyright (c) 2015 David Michael Betz
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

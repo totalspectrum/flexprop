@@ -1,0 +1,6 @@
+[submodule "PropLoader"]
+	path = PropLoader
+	url = https://github.com/totalspectrum/PropLoader
+[submodule "spin2cpp"]
+	path = spin2cpp
+	url = https://github.com/totalspectrum/spin2cpp

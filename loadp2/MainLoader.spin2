@@ -1,0 +1,33 @@
+CON
+		rxpin = 63
+
+DAT		org
+
+begin		hubset	clkmode			'set the clock mode
+		wrfast	#0,address		'ready to write entire memory starting at address
+		setse1	#%010_000000 | rxpin	'select negative edge on p63
+
+mainloop	pollse1				'clear edge detector
+		waitse1				'wait for start bit
+		waitx	waitbit1_5		'wait for middle of 1st data bit
+
+		rep	@loopend,#8		'get 8 bits
+		testp	#rxpin		wc	'sample rx
+		rcr	rxbyte,#1		'rotate bit into byte
+		waitx	waitbit			'wait for middle of nth data bit
+loopend
+		shr	rxbyte,#32-8		'justify received byte
+		wfbyte	rxbyte			'write to hub
+
+		djnz	filesize,#mainloop	'loop until all bytes received
+
+                rdfast  #0,#0                   'wait for last byte to be written
+
+		coginit	#0,address		'launch cog 0 from address
+
+clkmode		res	1			'clock mode
+waitbit1_5	res	1			'1.5 bit cycles = 3*clock_freq/baud_rate/2 - 6
+waitbit		res	1			'1 bit cycles = clock_freq/baud_rate - 6
+filesize	res	1			'binary file size in bytes
+address		res	1			'starting address
+rxbyte		res	1			'received byte

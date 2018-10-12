@@ -2,7 +2,7 @@
 
 default: spin2gui.zip
 
-spin2gui.zip: spin2gui.exe spin2gui_dir
+spin2gui.zip: spin2gui.exe bin/fastspin.exe bin/proploader.exe bin/loadp2.exe spin2gui_dir
 	rm -f spin2gui.zip
 	zip -r spin2gui.zip spin2gui
 
@@ -23,3 +23,21 @@ spin2gui_dir:
 	touch spin2gui_dir
 
 .PHONY: spin2gui_dir
+
+bin/fastspin.exe: spin2cpp/build-win32/fastspin.exe
+	cp $< $@
+
+bin/proploader.exe: proploader-msys-build/bin/proploader.exe
+	cp $< $@
+
+bin/loadp2.exe: loadp2/build-win32/loadp2.exe
+	cp $< $@
+
+spin2cpp/build-win32/fastspin.exe:
+	make -C spin2cpp CROSS=win32
+
+proploader-msys-build/bin/proploader.exe:
+	make -C PropLoader CROSS=win32
+
+loadp2/build-win32/loadp2.exe:
+	make -C loadp2 CROSS=win32
