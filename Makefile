@@ -18,7 +18,9 @@ clean:
 
 spin2gui_dir:
 	mkdir -p spin2gui/bin
-	cp -r spin2gui.exe README.md License.txt doc lib samples src spin2gui
+	mkdir -p spin2gui/doc
+	cp -r spin2gui.exe README.md License.txt lib samples src spin2gui
+	cp -r spin2cpp/docs/* spin2gui/doc
 	cp -r bin/*.exe spin2gui/bin
 	touch spin2gui_dir
 
