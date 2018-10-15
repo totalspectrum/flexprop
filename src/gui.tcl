@@ -8,8 +8,8 @@
 #
 
 # global variables
-set CONFIG_FILE "~/.spin2gui.config"
 set ROOTDIR [file dirname $::argv0]
+set CONFIG_FILE "$ROOTDIR/.spin2gui.config"
 
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start"
@@ -22,14 +22,14 @@ proc setShadowP1Defaults {} {
     global WINPREFIX
     
     set shadow(compilecmd) "%D/bin/fastspin -l %O -L %L %S"
-    set shadow(runcmd) "$WINPREFIX %D/bin/propeller-load %B -r -t"
+    set shadow(runcmd) "$WINPREFIX %D/bin/proploader %B -r -t -k"
 }
 proc setShadowP2Defaults {} {
     global shadow
     global WINPREFIX
     
     set shadow(compilecmd) "%D/bin/fastspin -2 -l %O -L %L %S"
-    set shadow(runcmd) "$WINPREFIX %D/bin/loadp2 %B -t"
+    set shadow(runcmd) "$WINPREFIX %D/bin/loadp2 %B -t -k"
 }
 proc copyShadowToConfig {} {
     global config
@@ -194,7 +194,6 @@ proc tagerrors { w } {
 
 set SpinTypes {
     {{Spin2 files}   {.spin2 .spin} }
-    {{Spin files}   {.spin} }
     {{BASIC files}   {.bas} }
     {{All files}    *}
 }
