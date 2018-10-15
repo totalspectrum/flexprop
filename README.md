@@ -1,15 +1,17 @@
 Spin2gui
 ========
 
-Spin2gui is a very simple GUI for running applications on the Parallax Propeller 2 (Prop2), using the Spin language. It consists of a very basic front end (designed for working on one file at a time), the fastspin compiler, and Dave Hein's loadp2 program loader. I've also included David Betz's propeller-load.exe, which allows spin2gui to work on Propeller 1 systems as well.
+Spin2gui is a very simple GUI for running applications on the Parallax Propeller 1 or 2, using the Spin language. It consists of a very basic front end (designed for working on one file at a time), the fastspin compiler, and Dave Hein's loadp2 program loader. I've also included David Betz's proploader.exe, which allows spin2gui to work on Propeller 1 systems as well (and in fact the default configuration is for Prop1).
 
-To use it, create a directory called "spin2gui" (or whatever you'd like) and unpack the .zip file into that directory. Then run spin2gui.exe. The program will save its configuration in a file called .spin2gui.config in your home directory.
+To use it, create a directory called "spin2gui" (or whatever you'd like) and unpack the .zip file into that directory. Then run spin2gui.exe. The program will save its configuration in a file called .spin2gui.config in that directory.
 
 Spin2gui is distributed under the MIT license; see the file License.txt for details.
 
 ## Usage
 
-Not much to say here; I hope the menus will be self explanatory. Use the `File` menu to open a Spin file. You can only work on one Spin file at a time; this will be treated as the top level project if you try to compile and/or run. The commands used for compiling or running are settable from the `Commands > Configure Commands...` menu item. Compiling and running on Prop2 is the main focus, but you can configure for virtually any situation where just one file is compiled. So for example it should be feasible to use this GUI for `p2gcc` with a bit of tweaking.
+Not much to say here; I hope the menus will be self explanatory. Use the `File` menu to open a Spin or BASIC file. You can only work on one file at a time; this will be treated as the top level project if you try to compile and/or run. The commands used for compiling or running are settable from the `Commands > Configure Commands...` menu item. Compiling and running on Prop2 is the main focus, but you can configure for virtually any situation where just one file is compiled. So for example it should be feasible to use this GUI for `p2gcc` with a bit of tweaking.
+
+To change between P1 and P2 development use Configure Commands... and select the appropriate default.
 
 ### Other platforms
 
@@ -21,7 +23,7 @@ The scripts used are in the `src` subdirectory, so you can customize them to you
 
 ## Features
 
-The main advantage of spin2gui over PNut (the "official" development tool for the Prop2) is that PNut doesn't yet support a high level language, whereas spin2gui does. You can basically write ordinary Spin code, with Prop2 assembly code in the DAT section (instead of Prop1 assembly code). This makes prototyping your applications much easier.
+The main advantage of spin2gui over PNut (the "official" development tool for the Prop2) is that PNut doesn't yet support a high level language, whereas spin2gui supports both Spin and BASIC. You can basically write ordinary Spin code, with Prop2 assembly code in the DAT section (instead of Prop1 assembly code). This makes prototyping your applications much easier.
 
 The Spin code is compiled to P2 assembler by fastspin. This is somewhat different from the way Spin works on the Prop1, where Spin code is typically compiled to bytecode and interpreted. (Note that fastspin does work for Prop1, though!)
 
