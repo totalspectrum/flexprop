@@ -7,7 +7,7 @@
 const cycles_per_microsecond = 80.0
 
 function getcycles() as uinteger
-  return cnt
+  return getcnt()
 end function
 
 sub pause
