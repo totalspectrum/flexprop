@@ -1,0 +1,66 @@
+Spin2gui help
+=============
+
+Menus
+----
+
+### File
+
+The File menu should be pretty self explanatory. You can create a new
+file in a new tab with "New File" or open an existing file with "Open Spin
+file...". If you use "Open Spin file..." with the current tab holding
+an empty, unmodified new file, the file will be opened in that tab,
+otherwise it will be opened in a new tab.
+
+The "Library directory..." entry allows you to pick a directory that
+will be searched for OBJ declarations automatically. It defaults to
+the lib directory in the spin2gui distribution.
+
+"Close tab" closes the currently selected tab.
+
+### Edit
+
+The Edit menu is again pretty self-explanatory. The Undo/Redo
+functionality is quite limited; only one level of Redo is reliable,
+and trying to Redo again will produce unpredictable results.
+
+"Select Font..." allows you to change the font used for the currently
+selected tab. It's still somewhat experimental.
+
+### Options
+
+The Options menu lets you change compiler options. For now just the
+optimization level can be changed.
+
+### Commands
+
+The Commands menu allow you to compile, run a binary, or both compile
+and run. The current file (the one in the currently selected tab) is
+always the one compiled, so it should be your top level Spin file. It
+will be saved automatically before any compilation.
+
+The default configuration always creates a listing file (.lst), which
+you can load into a window by selecting "Open Listing File" under the
+Commands menu. If the listing file window is open it will
+automatically be updated on every recompile.
+
+Run Binary allows you to choose a binary that you compiled off-line
+(or that was compiled earlier) and run it on the device.
+
+Configuring Commands
+--------------------
+
+You can change the commands used for compiling and running
+programs. Since the commands are flexible, you can acutally use
+spin2gui for compiling and running programs on the P1. The "P1
+defaults" button sets the commands for this (you will need to supply
+propeller-load.exe yourself). "P2 defaults" restores the settings to
+the original Prop2 development.
+
+Config File
+-----------
+Settings for spin2gui are saved in a file called ".spin2gui.config" in
+the HOME directory of the user (usually something like
+C:\Users\MyName). If something gets really messed up, deleting that
+file will restore spin2gui to its default state.
+

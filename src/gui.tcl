@@ -406,7 +406,7 @@ proc saveFileAs {w} {
 
 set aboutMsg {
 GUI tool for fastspin
-Version 1.2.1
+Version 1.2.2
 Copyright 2018 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
