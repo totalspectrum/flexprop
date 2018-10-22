@@ -1,0 +1,45 @@
+
+
+default: spin2gui.zip
+
+spin2gui.zip: spin2gui.tcl bin/fastspin bin/proploader bin/loadp2 spin2gui_dir
+	rm -f spin2gui.zip
+	zip -r spin2gui.zip spin2gui
+
+clean:
+	rm -rf spin2gui
+	rm -rf *.zip
+	rm -rf spin2cpp/build
+	rm -rf proploader-macosx-build
+	rm -rf loadp2/build
+	rm -rf samples/*.elf samples/*.binary samples/*~
+	rm -rf samples/*.lst samples/*.pasm samples/*.p2asm
+	rm -rf samples/*.c samples/*.h samples/*.cpp
+
+spin2gui_dir:
+	mkdir -p spin2gui/bin
+	mkdir -p spin2gui/doc
+	cp -r spin2gui.tcl README.md License.txt lib samples src spin2gui
+	cp -r spin2cpp/docs/* spin2gui/doc
+	cp -r bin/* spin2gui/bin
+	touch spin2gui_dir
+
+.PHONY: spin2gui_dir
+
+bin/fastspin: spin2cpp/build/fastspin
+	cp $< $@
+
+bin/proploader: proploader-macosx-build/bin/proploader
+	cp $< $@
+
+bin/loadp2: loadp2/build/loadp2
+	cp $< $@
+
+spin2cpp/build/fastspin:
+	make -C spin2cpp
+
+proploader-macosx-build/bin/proploader:
+	make -C PropLoader
+
+loadp2/build/loadp2:
+	make -C loadp2
