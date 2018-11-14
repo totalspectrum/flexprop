@@ -198,6 +198,7 @@ proc tagerrors { w } {
 }
 
 set SpinTypes {
+    {{FastSpin files}   {.bas .spin2 .spin} }
     {{Spin2 files}   {.spin2 .spin} }
     {{BASIC files}   {.bas} }
     {{All files}    *}
@@ -550,7 +551,7 @@ grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun -sticky nsew
 
 scrollbar .bot.v -orient vertical -command {.bot.txt yview}
 scrollbar .bot.h -orient horizontal -command {.bot.txt xview}
-text .bot.txt -wrap none -xscroll {.bot.h set} -yscroll {.bot.v set} -height 8
+text .bot.txt -wrap none -xscroll {.bot.h set} -yscroll {.bot.v set} -height 10 -font "courier 8"
 label .bot.label -background DarkGrey -foreground white -text "Compiler Output"
 
 grid .bot.label      -sticky nsew
