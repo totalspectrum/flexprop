@@ -3,3 +3,5 @@ Version 1.2.3:
 - Fixed a problem with empty library names
 - Fixed issue with spaces in file names
 - Use UTF-8 encoding by default, even on Windows
+- Use a smaller font with more lines for the compiler output window
+- Provide an option to open all editable files
