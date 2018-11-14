@@ -21,8 +21,8 @@ proc setShadowP1Defaults {} {
     global shadow
     global WINPREFIX
     
-    set shadow(compilecmd) "%D/bin/fastspin -l %O -L %L %S"
-    set shadow(runcmd) "$WINPREFIX %D/bin/proploader %B -r -t -k"
+    set shadow(compilecmd) "%D/bin/fastspin -l %O -L \"%L\" \"%S\""
+    set shadow(runcmd) "$WINPREFIX %D/bin/proploader -Dbaudrate=115200 \"%B\" -r -t -k"
 }
 proc setShadowP2Defaults {} {
     global shadow
@@ -119,6 +119,8 @@ proc uread {name} {
     if {[regexp \xFE\xFF $line] || [regexp \xFF\xFE $line]} {
 	fconfigure $f -encoding unicode
 	set encoding unicode
+    } else {
+	fconfigure $f -encoding utf-8
     }
     seek $f 0 start ;# rewind
     set text [read $f $len]
@@ -161,6 +163,9 @@ proc saveFileFromWindow { fname win } {
     set fp [open $fname w]
     set file_data [$win get 1.0 end]
 
+    # encode as UTF-8
+    fconfigure $fp -encoding utf-8
+    
     # HACK: the text widget inserts an extra \n at end of file
     set file_data [string trimright $file_data]
     
@@ -235,7 +240,11 @@ proc checkAllChanges {} {
 # choose the library directory
 proc getLibrary {} {
     global config
-    set config(library) [tk_chooseDirectory -title "Choose library directory" -initialdir $config(library) ]
+    
+    set lib [tk_chooseDirectory -title "Choose library directory" -initialdir $config(library) ]
+    if { $lib ne "" } {
+	set config(library) $lib
+    }
 }
 
 set TABCOUNTER 0
@@ -344,7 +353,7 @@ proc loadSpinFile {} {
 
     set w [.nb select]
     
-    if { $filenames($w) ne ""} {
+    if { $w eq "" || $filenames($w) ne ""} {
 	createNewTab
 	set w [.nb select]
     }
@@ -406,7 +415,7 @@ proc saveFileAs {w} {
 
 set aboutMsg {
 GUI tool for fastspin
-Version 1.2.2
+Version 1.2.3
 Copyright 2018 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
@@ -420,7 +429,7 @@ proc doAbout {} {
 
 proc doHelp {} {
     loadFileToTab .nb.help "doc/help.txt" "Help"
-    makeReadOnly .nb.help
+    makeReadOnly .nb.help.txt
 }
 
 #
@@ -675,10 +684,13 @@ proc doCompile {} {
 
 proc doListing {} {
     global filenames
-    set LSTFILE [file rootname $filenames([.nb select])]
-    set LSTFILE "$LSTFILE.lst"
-    loadListingFile $LSTFILE
-    makeReadOnly .list.f.txt
+    set w [.nb select]
+    if { $w ne "" } {
+	set LSTFILE [file rootname $filenames($w)]
+	set LSTFILE "$LSTFILE.lst"
+	loadListingFile $LSTFILE
+	makeReadOnly .list.f.txt
+    }
 }
 
 proc doJustRun {} {
