@@ -5,3 +5,4 @@ Version 1.2.3:
 - Use UTF-8 encoding by default, even on Windows
 - Use a smaller font with more lines for the compiler output window
 - Provide an option to open all editable files
+- Updated fastspin to version 3.9.10
