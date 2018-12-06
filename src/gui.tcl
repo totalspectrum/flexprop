@@ -198,9 +198,10 @@ proc tagerrors { w } {
 }
 
 set SpinTypes {
-    {{FastSpin files}   {.bas .spin2 .spin} }
+    {{FastSpin files}   {.bas .c .h .spin2 .spin} }
     {{Spin2 files}   {.spin2 .spin} }
     {{BASIC files}   {.bas} }
+    {{C files}   {.c .h} }
     {{All files}    *}
 }
 
@@ -416,7 +417,7 @@ proc saveFileAs {w} {
 
 set aboutMsg {
 GUI tool for fastspin
-Version 1.2.3
+Version 1.2.4
 Copyright 2018 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that

@@ -1,3 +1,8 @@
+Version 1.2.4:
+- Add simple C include files to the distribution
+- Add .c and .h to the default file selector
+- Updated fastspin to version 3.9.11
+
 Version 1.2.3:
 
 - Fixed a problem with empty library names

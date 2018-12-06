@@ -24,6 +24,7 @@ spin2gui_dir:
 	mkdir -p spin2gui/doc
 	cp -r spin2gui.exe README.md License.txt lib samples src spin2gui
 	cp -r spin2cpp/docs/* spin2gui/doc
+	cp -r spin2cpp/include spin2gui/
 	cp -r doc/*.txt spin2gui/doc
 	cp -r bin/*.exe spin2gui/bin
 	touch spin2gui_dir
