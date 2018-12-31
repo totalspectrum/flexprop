@@ -1,5 +1,5 @@
                                    LOADP2
-                                April 4, 2018
+                              December 29, 2018
                                   Dave Hein
 
 Loadp2 will load and execute a P2 binary file.  It can be built under Cygwin,
@@ -24,12 +24,18 @@ serial ports.  This is done as follows:
 
 If no parameter are specified loadp2 will print out the following usage message.
 
-loadp2 - a loader for the propeller 2 - version 0.005, 2018-04-04
+loadp2 - a loader for the propeller 2 - version 0.007, 2018-12-29
 usage: loadp2
          [ -p port ]               serial port
-         [ -b baud ]               baud rate (default is 115200)
+         [ -b baud ]               baud rate (default is -1)
+         [ -f clkfreq ]            clock frequency (default is 80000000)
+         [ -m clkmode ]            clock mode in hex (default is ffffffff)
+         [ -s address ]            starting address in hex (default is 0)
          [ -t ]                    enter terminal mode after running the program
          [ -T ]                    enter PST-compatible terminal mode
          [ -v ]                    enable verbose mode
          [ -? ]                    display a usage message and exit
+         [ -CHIP ]                 set load mode for CHIP
+         [ -FPGA ]                 set load mode for FPGA
+         [ -SINGLE ]               set load mode for single stage
          file                      file to load
