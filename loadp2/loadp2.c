@@ -33,8 +33,8 @@
 #define LOAD_FPGA   1
 #define LOAD_SINGLE 2
 
-#define LOADER_BAUD 2000000
-
+#define LOADER_BAUD loader_baud
+static int loader_baud = 2000000;
 static int clock_mode = -1;
 static int user_baud = -1;
 static int clock_freq = 80000000;
@@ -61,7 +61,7 @@ static int verbose = 0;
 static int waitAtExit = 0;
 
 /* promptexit: print a prompt if waitAtExit is set, then exit */
-static void
+void
 promptexit(int r)
 {
     int c;
@@ -268,6 +268,7 @@ int main(int argc, char **argv)
                     user_baud = atoi(argv[i]);
                 else
                     Usage();
+                loader_baud = user_baud;
             }
             else if (argv[i][1] == 'X')
             {
@@ -388,11 +389,16 @@ int main(int argc, char **argv)
 
     if (runterm)
     {
-        serial_baud(user_baud);
+        if (user_baud == -1) {
+            user_baud = LOADER_BAUD;
+        }
+        if (user_baud != LOADER_BAUD) {
+            serial_baud(user_baud);
+        }
         printf("[ Entering terminal mode.  Press ESC to exit. ]\n");
         terminal_mode(1,pstmode);
     }
 
     serial_done();
-    return 0;
+    promptexit(0);
 }

@@ -48,6 +48,7 @@
 typedef int HANDLE;
 static HANDLE hSerial = -1;
 static struct termios old_sparm;
+extern void promptexit(int r);
 
 /* normally we use DTR for reset but setting this variable to non-zero will use RTS instead */
 static int use_rts_for_reset = 0;
@@ -90,7 +91,7 @@ int serial_find(const char* prefix, int (*check)(const char* port, void* data), 
 static void sigint_handler(int signum)
 {
     serial_done();
-    exit(1);
+    promptexit(1);
 }
 
 /**
@@ -167,7 +168,9 @@ int serial_baud(unsigned long baud)
 {
     struct termios sparm;
     int tbaud = 0;
-
+#ifndef MACOS
+    int cmd = TIOCM_DTR;
+#endif
     switch(baud) {
         case 0: // default
             tbaud = B115200;
@@ -218,8 +221,8 @@ int serial_baud(unsigned long baud)
             tbaud = B9600;
             break;
         default:
-            printf("Unsupported baudrate. Use ");
-            tbaud = baud; break;
+            printf("Unsupported baudrate %lu. Use ", baud);
+            tbaud = baud;
 #ifdef B921600
             printf("921600, ");
 #endif
@@ -237,7 +240,7 @@ int serial_baud(unsigned long baud)
 #endif
             printf("115200, 57600, 38400, 19200, or 9600\n");
             serial_done();
-            exit(2);
+            promptexit(2);
             break;
     }
     
@@ -255,7 +258,10 @@ int serial_baud(unsigned long baud)
     /* set the options */
     chk("tcflush", tcflush(hSerial, TCIFLUSH));
     chk("tcsetattr", tcsetattr(hSerial, TCSANOW, &sparm));
-    
+#ifndef MACOSX
+    // immediately clear DTR to prevent reset
+    ioctl(hSerial, TIOCMBIC, &cmd);
+#endif
     return 1;
 }
 
@@ -266,6 +272,11 @@ void serial_done(void)
 {
     if (hSerial != -1) {
         tcflush(hSerial, TCIOFLUSH);
+#ifndef MACOSX
+        // "hang up" to allow program to continue running
+        cfsetispeed(&old_sparm, B0);
+        cfsetospeed(&old_sparm, B0);
+#endif        
         tcsetattr(hSerial, TCSANOW, &old_sparm);
         ioctl(hSerial, TIOCNXCL);
         close(hSerial);
@@ -465,7 +476,7 @@ done:
 
     if (sawexit_valid)
       {
-        exit(exitcode);
+        promptexit(exitcode);
       }
     
 }

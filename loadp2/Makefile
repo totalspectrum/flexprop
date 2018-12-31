@@ -35,7 +35,7 @@ endif
 
 default: $(BUILD)/loadp2$(EXT)
 
-$(BUILD)/loadp2$(EXT): $(BUILD) loadp2.c
+$(BUILD)/loadp2$(EXT): $(BUILD) loadp2.c osint_linux.c osint_mingw.c
 	$(CC) -Wall -O -o $@ loadp2.c $(OSFILE)
 
 $(BUILD):
