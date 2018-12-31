@@ -1,12 +1,17 @@
 ''
-'' program to test multiply
+'' program to test multiply on P2
 ''
+CON
+  _clkfreq = 160_000_000
+  _clkmode = $010c3f04
+  
 OBJ
   ser: "SimpleSerial"
   m: "multiply"
   
 PUB main | a,b
-  ser.start(115_200)
+  clkset(_clkmode, _clkfreq)
+  ser.start(2_000_000)
   ser.str(string("Multiply test...", 13, 10))
   try(1, 1)
   try($7fffffff, $ffffffff)

@@ -1,5 +1,5 @@
 ''
-'' module for testing various forms of multiply
+'' module for testing various forms of multiply on P2
 ''
 PUB builtinmul(a, b) : r1, r2, t
   t := CNT

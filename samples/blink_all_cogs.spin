@@ -3,7 +3,7 @@
 #ifdef __P2__
 #define DIRREG DIRB
 #define OUTREG OUTB
-#define BASEPIN 0
+#define BASEPIN (56-32)
 #else
 #define DIRREG DIRA
 #define OUTREG OUTA
@@ -11,14 +11,20 @@
 #endif
 
 CON
+#ifdef __P2__
+  _clkmode = 0x010c3f04
+  _clkfreq = 160_000_000
+#else  
   _clkmode = xtal1 + pll16x
   _clkfreq = 80_000_000
+#endif  
 
 DAT
 stack
     long 0[64]
 
 PUB demo | cognum
+  clkset(_clkmode, _clkfreq)
   repeat cognum from 2 to 1
     coginit(cognum, doblink(cognum), @stack[cognum*4])
   doblink(0)

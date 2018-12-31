@@ -1,4 +1,5 @@
 '' simple hello world program
+'' this is tested on P1 only
 CON
   _clkmode = xtal1 + pll16x
   _clkfreq = 80_000_000

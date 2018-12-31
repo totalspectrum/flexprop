@@ -1,6 +1,10 @@
 '' simple fibonacci program
 CON
+#ifdef __P2__
+  _clkmode = $010c1f04
+#else
   _clkmode = xtal1 + pll16x
+#endif
   _clkfreq = 80_000_000
 
 OBJ

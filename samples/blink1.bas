@@ -1,7 +1,16 @@
 ''
 '' simple program to blink an LED in BASIC
 ''
+#ifdef __P2__
+const ledpin = 56
+const _clkmode = 0x10c3f04
+const _clkfreq = 160_000_000
+
+clkset(_clkmode, _clkfreq)
+_setbaud(2000000)
+#else
 const ledpin = 16
+#endif
 
 '' set the pin to output
 direction(ledpin) = output

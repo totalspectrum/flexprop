@@ -1,8 +1,19 @@
 ''
 '' use 2 COGs to blink 2 LEDs (on pins 16 and 17)
 ''
+#ifdef __P2__
+const LED1 = 56
+const LED2 = 57
+const _clkmode = 0x10c3f04
+const _clkfreq = 160_000_000
+
+clkset(_clkmode, _clkfreq)
+_setbaud(2000000)
+
+#else
 const LED1 = 16
 const LED2 = 17
+#endif
 
 '' variable for the stack
 dim shared cpustack(8)

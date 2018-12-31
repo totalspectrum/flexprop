@@ -4,14 +4,21 @@
 
 #ifdef __FASTSPIN__
 
+#ifdef __P2__
+const _clkmode = 0x010c3f04
+const _clkfreq = 160_000_000
+const cycles_per_microsecond = 160.0
+#else
+const _clkfreq = 80_000_000
 const cycles_per_microsecond = 80.0
+#endif
 
 function getcycles() as uinteger
   return getcnt()
 end function
 
 sub pause
-  waitcnt getcycles() + 80_000_000
+  waitcnt getcycles() + _clkfreq
 end sub
 
 #else
@@ -35,6 +42,11 @@ function fibo(n as integer) as integer
 end function
 
 dim as uinteger cycles, i
+
+#ifdef __P2__
+clkset(_clkmode, _clkfreq)
+_setbaud(2000000)
+#endif
 
 pause
 print "BASIC fibo demo"
