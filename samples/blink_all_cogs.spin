@@ -12,7 +12,7 @@
 
 CON
 #ifdef __P2__
-  _clkmode = 0x010c3f04
+  _clkmode = $010c3f04
   _clkfreq = 160_000_000
 #else  
   _clkmode = xtal1 + pll16x
@@ -25,7 +25,7 @@ stack
 
 PUB demo | cognum
   clkset(_clkmode, _clkfreq)
-  repeat cognum from 2 to 1
+  repeat cognum from 7 to 1
     coginit(cognum, doblink(cognum), @stack[cognum*4])
   doblink(0)
   
