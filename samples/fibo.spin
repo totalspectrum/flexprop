@@ -1,17 +1,21 @@
 '' simple fibonacci program
 CON
 #ifdef __P2__
-  _clkmode = $010c1f04
+  _clkmode = $010c3f04
+  _clkfreq = 160_000_000
+  baud = 2_000_000
 #else
   _clkmode = xtal1 + pll16x
-#endif
   _clkfreq = 80_000_000
+  baud = 115_200
+#endif
 
 OBJ
   ser: "PrintfSerial"
 
 PUB demo | i, n, t
-  ser.start(115_200)
+  clkset(_clkmode, _clkfreq)
+  ser.start(baud)
   repeat i from 1 to 9 step 1
     t := CNT
     n := fiborec(i)
