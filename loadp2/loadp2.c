@@ -58,6 +58,23 @@ char *MainLoader1 =
 static char buffer[1024];
 static char binbuffer[101];   // Added for Prop2-v28
 static int verbose = 0;
+static int waitAtExit = 0;
+
+/* promptexit: print a prompt if waitAtExit is set, then exit */
+static void
+promptexit(int r)
+{
+    int c;
+    if (waitAtExit) {
+        fflush(stderr);
+        printf("Press enter to continue...\n");
+        fflush(stdout);
+        do {
+            c = getchar();
+        } while (c > 0 && c != '\n' && c != '\r');
+    }
+    exit(r);
+}
 
 /* Usage - display a usage message and exit */
 static void Usage(void)
@@ -73,12 +90,13 @@ usage: loadp2\n\
          [ -t ]                    enter terminal mode after running the program\n\
          [ -T ]                    enter PST-compatible terminal mode\n\
          [ -v ]                    enable verbose mode\n\
+         [ -k ]                    wait for user input before exit\n\
          [ -? ]                    display a usage message and exit\n\
          [ -CHIP ]                 set load mode for CHIP\n\
          [ -FPGA ]                 set load mode for FPGA\n\
          [ -SINGLE ]               set load mode for single stage\n\
          file                      file to load\n", user_baud, clock_freq, clock_mode);
-    exit(1);
+    promptexit(1);
 }
 
 void txval(int val)
@@ -269,6 +287,10 @@ int main(int argc, char **argv)
                 else
                     Usage();
             }
+            else if (argv[i][1] == 'k')
+            {
+                waitAtExit = 1;
+            }
             else if (argv[i][1] == 'm')
             {
                 if(argv[i][2])
@@ -318,13 +340,13 @@ int main(int argc, char **argv)
         if (!findp2(PORT_PREFIX, LOADER_BAUD))
         {
             printf("Could not find a P2\n");
-            exit(1);
+            promptexit(1);
         }
     }
     else if (1 != serial_init(port, LOADER_BAUD))
     {
         printf("Could not open port %s\n", argv[1]);
-        exit(1);
+        promptexit(1);
     }
 
     if (load_mode == LOAD_CHIP)
@@ -361,7 +383,7 @@ int main(int argc, char **argv)
     if (loadfile(fname, address))
     {
         serial_done();
-        exit(1);
+        promptexit(1);
     }
 
     if (runterm)
