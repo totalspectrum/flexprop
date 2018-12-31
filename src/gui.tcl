@@ -29,7 +29,7 @@ proc setShadowP2Defaults {} {
     global WINPREFIX
     
     set shadow(compilecmd) "%D/bin/fastspin -2 -l %O -L %L %S"
-    set shadow(runcmd) "$WINPREFIX %D/bin/loadp2 %B -t -k"
+    set shadow(runcmd) "$WINPREFIX %D/bin/loadp2 -SINGLE -b2000000 %B -t -k"
 }
 proc copyShadowToConfig {} {
     global config
@@ -417,7 +417,7 @@ proc saveFileAs {w} {
 
 set aboutMsg {
 GUI tool for fastspin
-Version 1.2.4
+Version 1.3.0
 Copyright 2018 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
