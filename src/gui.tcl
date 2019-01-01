@@ -21,7 +21,7 @@ output will be correct.
 
 
 if { $tcl_platform(platform) == "windows" } {
-    set WINPREFIX "cmd.exe /c start \"P2 Output\""
+    set WINPREFIX "cmd.exe /c start \"Propeller Output\""
 } else {
     set WINPREFIX "xterm -fs 14 -e"
 }
@@ -51,7 +51,7 @@ set config(library) "./lib"
 set config(spinext) ".spin"
 set config(lastdir) "."
 set config(font) ""
-set COMPORT ""
+set COMPORT " "
 set OPT "-O1"
 
 setShadowP1Defaults
@@ -539,7 +539,7 @@ menu .mbar.help -tearoff 0
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
 
 .mbar add cascade -menu .mbar.comport -label Port
-.mbar.comport add radiobutton -label "Default (try to find port)" -variable COMPORT -value ""
+.mbar.comport add radiobutton -label "Default (try to find port)" -variable COMPORT -value " "
 if { $tcl_platform(platform) == "windows" } {
     .mbar.comport add radiobutton -label "COM1" -variable COMPORT -value "-p COM1"
     .mbar.comport add radiobutton -label "COM2" -variable COMPORT -value "-p COM2"
