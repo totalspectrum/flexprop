@@ -116,7 +116,7 @@ proc config_save {} {
     puts $fp "# spin2gui config info"
     puts $fp "geometry\t[winfo geometry [winfo toplevel .]]"
     puts $fp "opt\t\{$OPT\}"
-    puts $fp "comport\t{$COMPORT\}"
+    puts $fp "comport\t\{$COMPORT\}"
     foreach i [array names config] {
 	if {$i != ""} {
 	    puts $fp "$i\t\{$config($i)\}"
@@ -538,7 +538,7 @@ menu .mbar.help -tearoff 0
 .mbar.run add separator
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
 
-.mbar.add cascade -menu .mbar.comport -label Port
+.mbar add cascade -menu .mbar.comport -label Port
 .mbar.options add radiobutton -label "Default (try to find port)" -variable COMPORT -value ""
 if { $tcl_platform(platform) == "windows" } {
     .mbar.options add radiobutton -label "COM1" -variable COMPORT -value "-p COM1"
