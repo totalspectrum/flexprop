@@ -32,12 +32,15 @@ spin2gui_dir:
 .PHONY: spin2gui_dir
 
 bin/fastspin.exe: spin2cpp/build-win32/fastspin.exe
+	mkdir -p bin
 	cp $< $@
 
 bin/proploader.exe: proploader-msys-build/bin/proploader.exe
+	mkdir -p bin
 	cp $< $@
 
 bin/loadp2.exe: loadp2/build-win32/loadp2.exe
+	mkdir -p bin
 	cp $< $@
 
 spin2cpp/build-win32/fastspin.exe:

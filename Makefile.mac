@@ -27,12 +27,15 @@ spin2gui_dir:
 .PHONY: spin2gui_dir
 
 bin/fastspin: spin2cpp/build/fastspin
+	mkdir -p bin
 	cp $< $@
 
 bin/proploader: proploader-macosx-build/bin/proploader
+	mkdir -p bin
 	cp $< $@
 
 bin/loadp2: loadp2/build/loadp2
+	mkdir -p bin
 	cp $< $@
 
 spin2cpp/build/fastspin:
