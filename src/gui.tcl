@@ -539,26 +539,26 @@ menu .mbar.help -tearoff 0
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
 
 .mbar add cascade -menu .mbar.comport -label Port
-.mbar.options add radiobutton -label "Default (try to find port)" -variable COMPORT -value ""
+.mbar.comport add radiobutton -label "Default (try to find port)" -variable COMPORT -value ""
 if { $tcl_platform(platform) == "windows" } {
-    .mbar.options add radiobutton -label "COM1" -variable COMPORT -value "-p COM1"
-    .mbar.options add radiobutton -label "COM2" -variable COMPORT -value "-p COM2"
-    .mbar.options add radiobutton -label "COM3" -variable COMPORT -value "-p COM3"
-    .mbar.options add radiobutton -label "COM4" -variable COMPORT -value "-p COM4"
-    .mbar.options add radiobutton -label "COM5" -variable COMPORT -value "-p COM5"
-    .mbar.options add radiobutton -label "COM6" -variable COMPORT -value "-p COM6"
-    .mbar.options add radiobutton -label "COM7" -variable COMPORT -value "-p COM7"
-    .mbar.options add radiobutton -label "COM8" -variable COMPORT -value "-p COM8"
-    .mbar.options add radiobutton -label "COM9" -variable COMPORT -value "-p COM9"
+    .mbar.comport add radiobutton -label "COM1" -variable COMPORT -value "-p COM1"
+    .mbar.comport add radiobutton -label "COM2" -variable COMPORT -value "-p COM2"
+    .mbar.comport add radiobutton -label "COM3" -variable COMPORT -value "-p COM3"
+    .mbar.comport add radiobutton -label "COM4" -variable COMPORT -value "-p COM4"
+    .mbar.comport add radiobutton -label "COM5" -variable COMPORT -value "-p COM5"
+    .mbar.comport add radiobutton -label "COM6" -variable COMPORT -value "-p COM6"
+    .mbar.comport add radiobutton -label "COM7" -variable COMPORT -value "-p COM7"
+    .mbar.comport add radiobutton -label "COM8" -variable COMPORT -value "-p COM8"
+    .mbar.comport add radiobutton -label "COM9" -variable COMPORT -value "-p COM9"
 } else {
-    .mbar.options add radiobutton -label "/dev/ttyUSB0" -variable COMPORT -value "-p /dev/ttyUSB0"
-    .mbar.options add radiobutton -label "/dev/ttyUSB1" -variable COMPORT -value "-p /dev/ttyUSB1"
-    .mbar.options add radiobutton -label "/dev/ttyUSB2" -variable COMPORT -value "-p /dev/ttyUSB2"
-    .mbar.options add radiobutton -label "/dev/ttyUSB3" -variable COMPORT -value "-p /dev/ttyUSB3"
-    .mbar.options add radiobutton -label "/dev/ttyS0" -variable COMPORT -value "-p /dev/ttyS0"
-    .mbar.options add radiobutton -label "/dev/ttyS1" -variable COMPORT -value "-p /dev/ttyS1"
-    .mbar.options add radiobutton -label "/dev/ttyS2" -variable COMPORT -value "-p /dev/ttyS2"
-    .mbar.options add radiobutton -label "/dev/ttyS3" -variable COMPORT -value "-p /dev/ttyS3"
+    .mbar.comport add radiobutton -label "/dev/ttyUSB0" -variable COMPORT -value "-p /dev/ttyUSB0"
+    .mbar.comport add radiobutton -label "/dev/ttyUSB1" -variable COMPORT -value "-p /dev/ttyUSB1"
+    .mbar.comport add radiobutton -label "/dev/ttyUSB2" -variable COMPORT -value "-p /dev/ttyUSB2"
+    .mbar.comport add radiobutton -label "/dev/ttyUSB3" -variable COMPORT -value "-p /dev/ttyUSB3"
+    .mbar.comport add radiobutton -label "/dev/ttyS0" -variable COMPORT -value "-p /dev/ttyS0"
+    .mbar.comport add radiobutton -label "/dev/ttyS1" -variable COMPORT -value "-p /dev/ttyS1"
+    .mbar.comport add radiobutton -label "/dev/ttyS2" -variable COMPORT -value "-p /dev/ttyS2"
+    .mbar.comport add radiobutton -label "/dev/ttyS3" -variable COMPORT -value "-p /dev/ttyS3"
 }
 
 .mbar add cascade -menu .mbar.help -label Help
