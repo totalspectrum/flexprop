@@ -14,7 +14,6 @@ clean:
 	rm -rf loadp2/build
 	rm -rf samples/*.elf samples/*.binary samples/*~
 	rm -rf samples/*.lst samples/*.pasm samples/*.p2asm
-	rm -rf samples/*.c samples/*.h samples/*.cpp
 
 spin2gui_dir:
 	mkdir -p spin2gui/bin
