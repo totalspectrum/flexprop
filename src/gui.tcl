@@ -10,9 +10,18 @@
 # global variables
 set ROOTDIR [file dirname $::argv0]
 set CONFIG_FILE "$ROOTDIR/.spin2gui.config"
+set aboutMsg {
+GUI tool for fastspin
+Version 1.3.1
+Copyright 2018 Total Spectrum Software Inc.
+------
+There is no warranty and no guarantee that
+output will be correct.    
+}
+
 
 if { $tcl_platform(platform) == "windows" } {
-    set WINPREFIX "cmd.exe /c start"
+    set WINPREFIX "cmd.exe /c start \"P2 Output\""
 } else {
     set WINPREFIX "xterm -fs 14 -e"
 }
@@ -21,15 +30,15 @@ proc setShadowP1Defaults {} {
     global shadow
     global WINPREFIX
     
-    set shadow(compilecmd) "%D/bin/fastspin -l %O -L \"%L\" \"%S\""
-    set shadow(runcmd) "$WINPREFIX %D/bin/proploader -Dbaudrate=115200 \"%B\" -r -t -k"
+    set shadow(compilecmd) "\"%D/bin/fastspin\" -l %O -L \"%L\" \"%S\""
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader\" -Dbaudrate=115200 %P \"%B\" -r -t -k"
 }
 proc setShadowP2Defaults {} {
     global shadow
     global WINPREFIX
     
-    set shadow(compilecmd) "%D/bin/fastspin -2 -l %O -L %L %S"
-    set shadow(runcmd) "$WINPREFIX %D/bin/loadp2 -SINGLE -b2000000 %B -t -k"
+    set shadow(compilecmd) "\"%D/bin/fastspin\" -2 -l %O -L \"%L\" \"%S\""
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -SINGLE -b2000000 \"%B\" -t -k"
 }
 proc copyShadowToConfig {} {
     global config
@@ -42,6 +51,7 @@ set config(library) "./lib"
 set config(spinext) ".spin"
 set config(lastdir) "."
 set config(font) ""
+set COMPORT ""
 set OPT "-O1"
 
 setShadowP1Defaults
@@ -61,12 +71,14 @@ proc config_open {} {
     global config
     global CONFIG_FILE
     global OPT
+    global COMPORT
     
     if {[file exists $CONFIG_FILE]} {
 	set fp [open $CONFIG_FILE r]
     } else {
 	return 0
     }
+    
     # read config values
     while {![eof $fp]} {
 	set data [gets $fp]
@@ -82,6 +94,10 @@ proc config_open {} {
 		# set optimize level
 		set OPT [lindex $data 1]
 	    }
+	    comport {
+		# set optimize level
+		set COMPORT [lindex $data 1]
+	    }
 	    default {
 		set config([lindex $data 0]) [lindex $data 1]
 	    }
@@ -95,10 +111,12 @@ proc config_save {} {
     global config
     global CONFIG_FILE
     global OPT
+    global COMPORT
     set fp [open $CONFIG_FILE w]
     puts $fp "# spin2gui config info"
     puts $fp "geometry\t[winfo geometry [winfo toplevel .]]"
     puts $fp "opt\t\{$OPT\}"
+    puts $fp "comport\t{$COMPORT\}"
     foreach i [array names config] {
 	if {$i != ""} {
 	    puts $fp "$i\t\{$config($i)\}"
@@ -415,15 +433,6 @@ proc saveFileAs {w} {
     saveFile $w
 }
 
-set aboutMsg {
-GUI tool for fastspin
-Version 1.3.0
-Copyright 2018 Total Spectrum Software Inc.
-------
-There is no warranty and no guarantee that
-output will be correct.    
-}
-
 proc doAbout {} {
     global aboutMsg
     tk_messageBox -icon info -type ok -message "Spin 2 GUI" -detail $aboutMsg
@@ -487,6 +496,7 @@ menu .mbar.file -tearoff 0
 menu .mbar.edit -tearoff 0
 menu .mbar.options -tearoff 0
 menu .mbar.run -tearoff 0
+menu .mbar.comport -tearoff 0
 menu .mbar.help -tearoff 0
 
 .mbar add cascade -menu .mbar.file -label File
@@ -527,6 +537,29 @@ menu .mbar.help -tearoff 0
 .mbar.run add command -label "Open listing file" -accelerator "^L" -command { doListing }
 .mbar.run add separator
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
+
+.mbar.add cascade -menu .mbar.comport -label Port
+.mbar.options add radiobutton -label "Default (try to find port)" -variable COMPORT -value ""
+if { $tcl_platform(platform) == "windows" } {
+    .mbar.options add radiobutton -label "COM1" -variable COMPORT -value "-p COM1"
+    .mbar.options add radiobutton -label "COM2" -variable COMPORT -value "-p COM2"
+    .mbar.options add radiobutton -label "COM3" -variable COMPORT -value "-p COM3"
+    .mbar.options add radiobutton -label "COM4" -variable COMPORT -value "-p COM4"
+    .mbar.options add radiobutton -label "COM5" -variable COMPORT -value "-p COM5"
+    .mbar.options add radiobutton -label "COM6" -variable COMPORT -value "-p COM6"
+    .mbar.options add radiobutton -label "COM7" -variable COMPORT -value "-p COM7"
+    .mbar.options add radiobutton -label "COM8" -variable COMPORT -value "-p COM8"
+    .mbar.options add radiobutton -label "COM9" -variable COMPORT -value "-p COM9"
+} else {
+    .mbar.options add radiobutton -label "/dev/ttyUSB0" -variable COMPORT -value "-p /dev/ttyUSB0"
+    .mbar.options add radiobutton -label "/dev/ttyUSB1" -variable COMPORT -value "-p /dev/ttyUSB1"
+    .mbar.options add radiobutton -label "/dev/ttyUSB2" -variable COMPORT -value "-p /dev/ttyUSB2"
+    .mbar.options add radiobutton -label "/dev/ttyUSB3" -variable COMPORT -value "-p /dev/ttyUSB3"
+    .mbar.options add radiobutton -label "/dev/ttyS0" -variable COMPORT -value "-p /dev/ttyS0"
+    .mbar.options add radiobutton -label "/dev/ttyS1" -variable COMPORT -value "-p /dev/ttyS1"
+    .mbar.options add radiobutton -label "/dev/ttyS2" -variable COMPORT -value "-p /dev/ttyS2"
+    .mbar.options add radiobutton -label "/dev/ttyS3" -variable COMPORT -value "-p /dev/ttyS3"
+}
 
 .mbar add cascade -menu .mbar.help -label Help
 .mbar.help add command -label "Help" -command { doHelp }
@@ -604,9 +637,10 @@ proc mapPercent {str} {
     global BINFILE
     global ROOTDIR
     global OPT
+    global COMPORT
     global config
     
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%L" $config(library) "%S" $filenames([.nb select]) "%B" $BINFILE "%O" $OPT ]
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%L" $config(library) "%S" $filenames([.nb select]) "%B" $BINFILE "%O" $OPT "%P" $COMPORT ]
     set result [string map $percentmap $str]
     return $result
 }

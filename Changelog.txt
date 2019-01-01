@@ -1,3 +1,8 @@
+Version 1.3.1
+- Added a Ports menu for selecting the port to use
+- Added quotes to protect default command lines against paths with
+  spaces in them
+
 Version 1.3.0
 - Updated samples for P2 Eval board
 - Changed P2 defaults to match P2 Eval board
