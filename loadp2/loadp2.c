@@ -346,7 +346,7 @@ int main(int argc, char **argv)
     }
     else if (1 != serial_init(port, LOADER_BAUD))
     {
-        printf("Could not open port %s\n", argv[1]);
+        printf("Could not open port %s\n", port);
         promptexit(1);
     }
 
