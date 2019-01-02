@@ -54,7 +54,7 @@ set config(font) ""
 set COMPORT " "
 set OPT "-O1"
 
-setShadowP1Defaults
+setShadowP2Defaults
 copyShadowToConfig
 
 #
