@@ -397,6 +397,7 @@ int main(int argc, char **argv)
         }
         printf("[ Entering terminal mode.  Press ESC to exit. ]\n");
         terminal_mode(1,pstmode);
+        waitAtExit = 0; // no need to wait, user pressed ESC
     }
 
     serial_done();
