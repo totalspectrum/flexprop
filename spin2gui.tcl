@@ -12,5 +12,6 @@ package require autoscroll
 #package require ctext
 
 source src/ctext/ctext.tcl
+source src/checkserial.tcl
 source src/gui.tcl
 
