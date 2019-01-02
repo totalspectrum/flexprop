@@ -1,5 +1,5 @@
 # Simple GUI for Spin
-# Copyright 2018 Total Spectrum Software
+# Copyright 2018-2019 Total Spectrum Software
 # Distributed under the terms of the MIT license;
 # see License.txt for details.
 #
@@ -12,8 +12,8 @@ set ROOTDIR [file dirname $::argv0]
 set CONFIG_FILE "$ROOTDIR/.spin2gui.config"
 set aboutMsg {
 GUI tool for fastspin
-Version 1.3.1
-Copyright 2018 Total Spectrum Software Inc.
+Version 1.3.2
+Copyright 2018-2019 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
 output will be correct.    
@@ -544,7 +544,9 @@ menu .mbar.help -tearoff 0
 # search for serial ports using serial::listports (src/checkserial.tcl)
 set serlist [serial::listports]
 foreach v $serlist {
-    .mbar.comport add radiobutton -label $v -variable COMPORT -value "-p $v"
+    set comname [lrange [split $v "\\"] end end]
+    set portval [string map {\\ \\\\} "-p $v"]
+    .mbar.comport add radiobutton -label $comname -variable COMPORT -value $portval
 }
 
 .mbar add cascade -menu .mbar.help -label Help

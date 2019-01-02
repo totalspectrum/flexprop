@@ -1,6 +1,6 @@
 Spin2gui development tool for Prop2
 
-Copyright 2011-2018 Total Spectrum Software Inc.
+Copyright 2011-2019 Total Spectrum Software Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files
