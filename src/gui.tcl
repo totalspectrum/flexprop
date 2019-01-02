@@ -775,6 +775,7 @@ set cmddialoghelptext {
     %S = Replace with current Spin file name
     %B = Replace with current binary file name
     %O = Replace with optimization level
+    %P = Replace with port to use
     %% = Insert a % character
 }
 proc copyShadowClose {w} {

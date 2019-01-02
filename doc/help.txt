@@ -47,6 +47,20 @@ automatically be updated on every recompile.
 Run Binary allows you to choose a binary that you compiled off-line
 (or that was compiled earlier) and run it on the device.
 
+### Port
+
+Presents a menu of ports that may be selected. The default is to tell
+the loader program (loadp2 or proploader) to scan for a port to
+use. But you may override this by selecting a specific serial port
+from COM1 to COM9.
+
+If for some reason the port you wish to use is not listed (this will
+be quite common on Mac OS X, for example) then you can still override
+the port by configuring the command manually (using the Commands >
+Configure Commands... menu). In the "Run command" replace `%P` with
+`-p COM20` or `-p /dev/tty.usbmodem123` (or whatever the port you wish
+to use is).
+
 Configuring Commands
 --------------------
 
