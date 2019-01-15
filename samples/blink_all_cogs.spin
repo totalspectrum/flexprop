@@ -23,15 +23,16 @@ DAT
 stack
     long 0[64]
 
-PUB demo | cognum
+PUB demo | cognum, delay
   clkset(_clkmode, _clkfreq)
+  delay := clkfreq
   repeat cognum from 7 to 1
-    coginit(cognum, doblink(cognum), @stack[cognum*4])
-  doblink(0)
+    delay -= clkfreq / 10
+    coginit(cognum, doblink(cognum, delay), @stack[cognum*4])
+  doblink(0, delay)
   
-PUB doblink(id) | pin, delay
+PUB doblink(id, delay) | pin
   pin := id + BASEPIN
-  delay := (id+1) * (_clkfreq/4)
   
   DIRREG[pin] := 1
   
