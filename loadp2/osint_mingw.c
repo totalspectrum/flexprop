@@ -47,6 +47,11 @@ void serial_use_rts_for_reset(int use_rts)
     use_rts_for_reset = use_rts;
 }
 
+int get_loader_baud(int ubaud, int lbaud)
+{
+    return lbaud;
+}
+
 int serial_init(const char *port, unsigned long baud)
 {
     char fullPort[20];

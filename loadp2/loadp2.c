@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2017-2018 by Dave Hein
+ * Copyright (c) 2017-2019 by Dave Hein
  * Based on p2load written by David Betz
  *
  * MIT License
@@ -41,6 +41,8 @@ static int clock_freq = 80000000;
 static int extra_cycles = 7;
 static int load_mode = -1;
 
+int get_loader_baud(int ubaud, int lbaud);
+
 #if defined(__CYGWIN__) || defined(__MINGW32__) || defined(__MINGW64__)
   #define PORT_PREFIX "com"
 #elif defined(__APPLE__)
@@ -80,7 +82,7 @@ promptexit(int r)
 static void Usage(void)
 {
 printf("\
-loadp2 - a loader for the propeller 2 - version 0.007, 2018-12-29\n\
+loadp2 - a loader for the propeller 2 - version 0.008s, 2019-01-15\n\
 usage: loadp2\n\
          [ -p port ]               serial port\n\
          [ -b baud ]               baud rate (default is %d)\n\
@@ -182,16 +184,24 @@ int loadfile(char *fname, int address)
     return 0;
 }
 
-int findp2(char *portprefix, int baudrate)
+int findp2(char *portprefix, int baudrate, char *portname)
 {
     int i, num;
-    char Port[20];
+    char Port[100];
     char buffer[101];
 
     if (verbose) printf("Searching serial ports for a P2\n");
-    for (i = 0; i < 20; i++)
+    if (portname)
     {
-        sprintf(Port, "%s%d", portprefix, i);
+        i = 19;
+        strcpy(Port, portname);
+    }
+    else
+        i = 0;
+    for (; i < 20; i++)
+    {
+        if (!portname)
+            sprintf(Port, "%s%d", portprefix, i);
         if (serial_init(Port, baudrate))
         {
             hwreset();
@@ -237,6 +247,33 @@ int atox(char *ptr)
     return value;
 }
 
+int get_clock_mode(int sysfreq)
+{
+    int xtalfreq = 20000000;
+    int xdiv = 4;
+    int xdivp = 2;
+    int xosc = 2;
+    int xmul, xpppp, setfreq;
+    //int xsel = 3;
+    //int enafreq;
+
+    if (sysfreq > 180)
+    {
+        xdiv = 10;
+        xdivp = 1;
+    }
+
+    xmul = sysfreq/100*xdiv*xdivp/(xtalfreq/100);
+
+    xpppp = ((xdivp >> 1) + 15) & 0xf;
+    setfreq = (1 << 24) + ((xdiv-1) << 18) + ((xmul - 1) << 8) + (xpppp << 4) + (xosc << 2);
+    //enafreq = setfreq + xsel;
+
+    //printf("SYSFREQ = %d, XMUL = %d, SETFREQ = %8.8x, ENAFREQ = %8.8x\n", sysfreq, xmul, setfreq, enafreq);
+    //printf("VCOFREQ = %d\n", xtalfreq/xdiv*xmul);
+
+    return setfreq;
+}
 int main(int argc, char **argv)
 {
     int i;
@@ -268,7 +305,6 @@ int main(int argc, char **argv)
                     user_baud = atoi(argv[i]);
                 else
                     Usage();
-                loader_baud = user_baud;
             }
             else if (argv[i][1] == 'X')
             {
@@ -336,33 +372,31 @@ int main(int argc, char **argv)
     }
 
     if (!fname) Usage();
-    if (!port)
+
+    // Determine the user baud rate
+    if (user_baud == -1)
     {
-        if (!findp2(PORT_PREFIX, LOADER_BAUD))
-        {
-            printf("Could not find a P2\n");
-            promptexit(1);
-        }
+        user_baud = clock_freq / 10 * 9 / 625;
+        if (verbose) printf("Setting user_baud to %d\n", user_baud);
     }
-    else if (1 != serial_init(port, LOADER_BAUD))
+
+    // Determine the loader baud rate
+    loader_baud = get_loader_baud(user_baud, loader_baud);
+    if (verbose) printf("Set loader_baud to %d\n", loader_baud);
+
+    // Find a P2 on one of the serial ports, or on the specified port
+    if (!findp2(PORT_PREFIX, LOADER_BAUD, port))
     {
-        printf("Could not open port %s\n", port);
+        printf("Could not find a P2\n");
         promptexit(1);
     }
 
     if (load_mode == LOAD_CHIP)
     {
-        int temp = clock_freq / 2500000; // * 72 / 180000000
-        int temp1 = 0x010c0008 | ((temp - 1) << 8);
         if (clock_mode == -1)
         {
-            clock_mode = temp1;
-            if (verbose) printf("Setting clock_mode to %x\n", temp1);
-        }
-        if (user_baud == -1)
-        {
-            user_baud = clock_freq / 10 * 9 / 625;
-            if (verbose) printf("Setting user_baud to %d\n", user_baud);
+            clock_mode = get_clock_mode(clock_freq);
+            if (verbose) printf("Setting clock_mode to %x\n", clock_mode);
         }
     }
     else if (load_mode == LOAD_FPGA)
@@ -374,11 +408,6 @@ int main(int argc, char **argv)
             clock_mode = temp1;
             if (verbose) printf("Setting clock_mode to %x\n", temp1);
         }
-        if (user_baud == -1)
-        {
-            user_baud = clock_freq / 10 * 9 / 625;
-            if (verbose) printf("Setting user_baud to %d\n", user_baud);
-        }
     }
 
     if (loadfile(fname, address))
@@ -389,12 +418,7 @@ int main(int argc, char **argv)
 
     if (runterm)
     {
-        if (user_baud == -1) {
-            user_baud = LOADER_BAUD;
-        }
-        if (user_baud != LOADER_BAUD) {
-            serial_baud(user_baud);
-        }
+        serial_baud(user_baud);
         printf("[ Entering terminal mode.  Press ESC to exit. ]\n");
         terminal_mode(1,pstmode);
         waitAtExit = 0; // no need to wait, user pressed ESC

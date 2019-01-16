@@ -48,7 +48,6 @@
 typedef int HANDLE;
 static HANDLE hSerial = -1;
 static struct termios old_sparm;
-extern void promptexit(int r);
 
 /* normally we use DTR for reset but setting this variable to non-zero will use RTS instead */
 static int use_rts_for_reset = 0;
@@ -62,6 +61,11 @@ static void chk(char *fun, int sts)
 {
     if (sts != 0)
         printf("%s failed\n", fun);
+}
+
+int get_loader_baud(int ubaud, int lbaud)
+{
+    return lbaud;
 }
 
 int serial_find(const char* prefix, int (*check)(const char* port, void* data), void* data)
@@ -91,7 +95,7 @@ int serial_find(const char* prefix, int (*check)(const char* port, void* data), 
 static void sigint_handler(int signum)
 {
     serial_done();
-    promptexit(1);
+    exit(1);
 }
 
 /**
@@ -168,9 +172,10 @@ int serial_baud(unsigned long baud)
 {
     struct termios sparm;
     int tbaud = 0;
-#ifndef MACOS
-    int cmd = TIOCM_DTR;
-#endif
+static unsigned long last_baud = -1;
+if (baud == last_baud) return 1;
+last_baud = baud;
+
     switch(baud) {
         case 0: // default
             tbaud = B115200;
@@ -240,7 +245,7 @@ int serial_baud(unsigned long baud)
 #endif
             printf("115200, 57600, 38400, 19200, or 9600\n");
             serial_done();
-            promptexit(2);
+            exit(2);
             break;
     }
     
@@ -258,10 +263,7 @@ int serial_baud(unsigned long baud)
     /* set the options */
     chk("tcflush", tcflush(hSerial, TCIFLUSH));
     chk("tcsetattr", tcsetattr(hSerial, TCSANOW, &sparm));
-#ifndef MACOSX
-    // immediately clear DTR to prevent reset
-    ioctl(hSerial, TIOCMBIC, &cmd);
-#endif
+    
     return 1;
 }
 
@@ -272,12 +274,7 @@ void serial_done(void)
 {
     if (hSerial != -1) {
         tcflush(hSerial, TCIOFLUSH);
-#ifndef MACOSX
-        // "hang up" to allow program to continue running
-        cfsetispeed(&old_sparm, B0);
-        cfsetospeed(&old_sparm, B0);
-#endif        
-        tcsetattr(hSerial, TCSANOW, &old_sparm);
+        //tcsetattr(hSerial, TCSANOW, &old_sparm);
         ioctl(hSerial, TIOCNXCL);
         close(hSerial);
         hSerial = -1;
@@ -356,6 +353,7 @@ int rx_timeout(uint8_t* buff, int n, int timeout)
  * @param sparm - pointer to DCB serial control struct
  * @returns void
  */
+#if 0
 void hwreset(void)
 {
     int cmd = use_rts_for_reset ? TIOCM_RTS : TIOCM_DTR;
@@ -365,6 +363,19 @@ void hwreset(void)
     msleep(90);
     tcflush(hSerial, TCIFLUSH);
 }
+#else
+void hwreset(void)
+{
+    int cmd = use_rts_for_reset ? TIOCM_RTS : TIOCM_DTR;
+    ioctl(hSerial, TIOCMBIS, &cmd); /* assert bit */
+    msleep(10);
+    ioctl(hSerial, TIOCMBIC, &cmd); /* clear bit */
+    msleep(10);
+    ioctl(hSerial, TIOCMBIS, &cmd); /* assert bit */
+    msleep(90);
+    tcflush(hSerial, TCIFLUSH);
+}
+#endif
 
 /**
  * sleep for ms milliseconds
@@ -476,7 +487,7 @@ done:
 
     if (sawexit_valid)
       {
-        promptexit(exitcode);
+        exit(exitcode);
       }
     
 }
