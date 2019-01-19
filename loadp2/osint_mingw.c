@@ -269,9 +269,6 @@ static void ShowLastError(void)
     exit(1); // exit on error
 }
 
-/* escape from terminal mode */
-#define ESC         0x1b
-
 /*
  * if "check_for_exit" is true, then
  * a sequence EXIT_CHAR 00 nn indicates that we should exit
@@ -313,7 +310,7 @@ void terminal_mode(int check_for_exit, int pst_mode)
             }
         }
         else if (kbhit()) {
-            if ((buf[0] = getch()) == ESC)
+            if ((buf[0] = getch()) == EXIT_CHAR0)
                 break;
             tx(buf, 1);
         }

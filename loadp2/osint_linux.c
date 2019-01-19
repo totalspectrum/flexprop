@@ -396,7 +396,11 @@ void msleep(int ms)
 #endif
 }
 
-#define ESC     0x1b    /* escape from terminal mode */
+/*
+ * if "check_for_exit" is true, then
+ * a sequence EXIT_CHAR 00 nn indicates that we should exit
+ */
+#define EXIT_CHAR   0xff
 
 /**
  * simple terminal emulator
@@ -422,7 +426,7 @@ void terminal_mode(int check_for_exit, int pst_mode)
 
     if (check_for_exit)
       {
-        exit_char = 0xff;
+        exit_char = EXIT_CHAR;
       }
 
 #if 0
@@ -473,7 +477,7 @@ void terminal_mode(int check_for_exit, int pst_mode)
                     int i;
                     for (i = 0; i < cnt; ++i) {
                         //printf("%02x\n", buf[i]);
-                        if (buf[i] == ESC)
+                        if (buf[i] == EXIT_CHAR0)
                             goto done;
                     }
                     write(hSerial, buf, cnt);

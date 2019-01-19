@@ -328,8 +328,6 @@ void console_putch(int ch)
     fflush(stdout);
 }
 
-#define ESC     0x1b    /* escape from terminal mode */
-
 /* if "check_for_exit" is true, then
  * a sequence EXIT_CHAR 00 nn indicates that we should exit
 */
@@ -369,7 +367,7 @@ void terminal_mode(int check_for_exit, int pst_mode)
 	        }
         }
         else if (console_kbhit()) {
-            if ((buf[0] = console_getch()) == ESC)
+            if ((buf[0] = console_getch()) == EXIT_CHAR0)
                 break;
             tx(buf, 1);
         }

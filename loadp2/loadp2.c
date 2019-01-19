@@ -2,6 +2,7 @@
  *
  * Copyright (c) 2017-2019 by Dave Hein
  * Based on p2load written by David Betz
+ * Modified slightly by Eric Smith for spin2gui
  *
  * MIT License
  *
@@ -34,6 +35,7 @@
 #define LOAD_SINGLE 2
 
 #define LOADER_BAUD loader_baud
+
 static int loader_baud = 2000000;
 static int clock_mode = -1;
 static int user_baud = -1;
@@ -82,7 +84,7 @@ promptexit(int r)
 static void Usage(void)
 {
 printf("\
-loadp2 - a loader for the propeller 2 - version 0.008s, 2019-01-15\n\
+loadp2 - a loader for the propeller 2 - version 0.008 for spin2gui, 2019-01-15\n\
 usage: loadp2\n\
          [ -p port ]               serial port\n\
          [ -b baud ]               baud rate (default is %d)\n\
@@ -384,13 +386,21 @@ int main(int argc, char **argv)
     loader_baud = get_loader_baud(user_baud, loader_baud);
     if (verbose) printf("Set loader_baud to %d\n", loader_baud);
 
-    // Find a P2 on one of the serial ports, or on the specified port
-    if (!findp2(PORT_PREFIX, LOADER_BAUD, port))
+    // Determine the P2 serial port
+    if (!port)
     {
-        printf("Could not find a P2\n");
+        if (!findp2(PORT_PREFIX, LOADER_BAUD, port))
+        {
+            printf("Could not find a P2\n");
+            promptexit(1);
+        }
+    }
+    else if (1 != serial_init(port, LOADER_BAUD))
+    {
+        printf("Could not open port %s\n", port);
         promptexit(1);
     }
-
+    
     if (load_mode == LOAD_CHIP)
     {
         if (clock_mode == -1)
@@ -419,7 +429,7 @@ int main(int argc, char **argv)
     if (runterm)
     {
         serial_baud(user_baud);
-        printf("[ Entering terminal mode.  Press ESC to exit. ]\n");
+        printf("[ Entering terminal mode.  Press Ctrl-] to exit. ]\n");
         terminal_mode(1,pstmode);
         waitAtExit = 0; // no need to wait, user pressed ESC
     }
