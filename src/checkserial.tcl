@@ -32,7 +32,7 @@ proc serial::listports {} {
                         set result [glob -nocomplain {/dev/ttyS[0-9]} {/dev/ttyUSB[0-9]} {/dev/ttyACM[0-9]}]
                 }
                 macosx {
-                        set result [glob -nocomplain {/dev/tty.usb*} {/dev/tty.pl*}]
+                        set result [glob -nocomplain {/dev/cu.usb*} {/dev/cu.pl*}]
                 }
                 netbsd {
                         set result [glob -nocomplain {/dev/tty0[0-9]} {/dev/ttyU[0-9]}]
