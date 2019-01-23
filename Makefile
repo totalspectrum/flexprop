@@ -25,18 +25,21 @@ clean:
 	rm -rf samples/*.elf samples/*.binary samples/*~
 	rm -rf samples/*.lst samples/*.pasm samples/*.p2asm
 
-spin2gui_dir: $(PDFFILES)
+spin2gui_dir:
 	mkdir -p spin2gui/bin
 	mkdir -p spin2gui/doc
 	cp -r spin2gui.exe README.md License.txt lib samples src spin2gui
 	cp -r spin2cpp/docs/* spin2gui/doc
 	cp -r spin2cpp/include spin2gui/
 	cp -r doc/*.txt spin2gui/doc
-	cp -r $(PDFFILES) spin2gui/doc
 	cp -r bin/*.exe spin2gui/bin
 	touch spin2gui_dir
 
 .PHONY: spin2gui_dir
+
+pdfs: spin2gui_dir $(PDFFILES)
+	cp -r $(PDFFILES) spin2gui/doc
+	touch spin2gui_dir
 
 bin/fastspin.exe: spin2cpp/build-win32/fastspin.exe
 	mkdir -p bin
