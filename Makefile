@@ -2,10 +2,10 @@
 
 default: spin2gui.zip
 
-VPATH=.:spin2cpp/docs
+VPATH=.:spin2cpp/doc
 
 BINFILES=bin/fastspin.exe bin/proploader.exe bin/loadp2.exe
-PDFFILES=spin2cpp/docs/basic.pdf spin2cpp/docs/c.pdf spin2cpp/docs/spin.pdf
+PDFFILES=spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
 
 spin2gui.zip: spin2gui.exe $(BINFILES) spin2gui_dir
 	rm -f spin2gui.zip
@@ -29,7 +29,7 @@ spin2gui_dir:
 	mkdir -p spin2gui/bin
 	mkdir -p spin2gui/doc
 	cp -r spin2gui.exe README.md License.txt lib samples src spin2gui
-	cp -r spin2cpp/docs/* spin2gui/doc
+	cp -r spin2cpp/doc/* spin2gui/doc
 	cp -r spin2cpp/include spin2gui/
 	cp -r doc/*.txt spin2gui/doc
 	cp -r bin/*.exe spin2gui/bin
@@ -61,8 +61,6 @@ proploader-msys-build/bin/proploader.exe:
 
 loadp2/build-win32/loadp2.exe:
 	make -C loadp2 CROSS=win32
-
-#spin2cpp/docs/basic,pdf: spin2cpp/docs/basic.md
 
 %.pdf: %.md
 	pandoc -f markdown_github -t latex -o $@ $<
