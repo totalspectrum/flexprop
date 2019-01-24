@@ -6,7 +6,7 @@
 
 #define FREQ 160000000
 #define OSCMODE 0x10c3f04
-#define BAUD 2000000
+#define BAUD 230400
 
 #define PIN 58
 

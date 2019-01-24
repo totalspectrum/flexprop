@@ -38,7 +38,7 @@ proc setShadowP2Defaults {} {
     global WINPREFIX
     
     set shadow(compilecmd) "\"%D/bin/fastspin\" -2 -l %O -L \"%L\" \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -SINGLE -b2000000 \"%B\" -t -k"
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -l230400 -b230400 \"%B\" -t -k"
 }
 proc copyShadowToConfig {} {
     global config

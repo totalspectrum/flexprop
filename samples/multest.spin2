@@ -11,7 +11,7 @@ OBJ
   
 PUB main | a,b
   clkset(_clkmode, _clkfreq)
-  ser.start(2_000_000)
+  ser.start(230_400)
   ser.str(string("Multiply test...", 13, 10))
   try(1, 1)
   try($7fffffff, $ffffffff)

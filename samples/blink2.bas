@@ -8,7 +8,7 @@ const _clkmode = 0x10c3f04
 const _clkfreq = 160_000_000
 
 clkset(_clkmode, _clkfreq)
-_setbaud(2000000)
+_setbaud(230400)
 
 #else
 const LED1 = 16

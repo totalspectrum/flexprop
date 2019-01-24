@@ -3,7 +3,7 @@ CON
 #ifdef __P2__
   _clkmode = $010c3f04
   _clkfreq = 160_000_000
-  baud = 2_000_000
+  baud = 230_400
 #else
   _clkmode = xtal1 + pll16x
   _clkfreq = 80_000_000
