@@ -2,7 +2,6 @@
  *
  * Copyright (c) 2017-2019 by Dave Hein
  * Based on p2load written by David Betz
- * Modified slightly by Eric Smith for spin2gui
  *
  * MIT License
  *
@@ -38,10 +37,11 @@
 
 static int loader_baud = 2000000;
 static int clock_mode = -1;
-static int user_baud = -1;
+static int user_baud = 115200;
 static int clock_freq = 80000000;
 static int extra_cycles = 7;
 static int load_mode = -1;
+static int patch_mode = 0;
 
 int get_loader_baud(int ubaud, int lbaud);
 
@@ -84,10 +84,11 @@ promptexit(int r)
 static void Usage(void)
 {
 printf("\
-loadp2 - a loader for the propeller 2 - version 0.008 for spin2gui, 2019-01-15\n\
+loadp2 - a loader for the propeller 2 - version 0.010 for spin2gui, 2019-01-24\n\
 usage: loadp2\n\
          [ -p port ]               serial port\n\
-         [ -b baud ]               baud rate (default is %d)\n\
+         [ -b baud ]               user baud rate (default is %d)\n\
+         [ -l baud ]               loader baud rate (default is %d)\n\
          [ -f clkfreq ]            clock frequency (default is %d)\n\
          [ -m clkmode ]            clock mode in hex (default is %02x)\n\
          [ -s address ]            starting address in hex (default is 0)\n\
@@ -99,7 +100,7 @@ usage: loadp2\n\
          [ -CHIP ]                 set load mode for CHIP\n\
          [ -FPGA ]                 set load mode for FPGA\n\
          [ -SINGLE ]               set load mode for single stage\n\
-         file                      file to load\n", user_baud, clock_freq, clock_mode);
+         file                      file to load\n", user_baud, loader_baud, clock_freq, clock_mode);
     promptexit(1);
 }
 
@@ -114,7 +115,10 @@ int loadfilesingle(char *fname)
 {
     FILE *infile;
     int num, size, i;
-
+    int patch = patch_mode;
+    int address = 0;
+    int bitcycles = clock_freq/user_baud;
+    
     infile = fopen(fname, "rb");
     if (!infile)
     {
@@ -131,6 +135,14 @@ int loadfilesingle(char *fname)
 
     while ((num=fread(binbuffer, 1, 101, infile)))
     {
+        if (patch)
+        {
+            patch = 0;
+            memcpy(&binbuffer[4], &clock_freq, 4);
+            memcpy(&binbuffer[8], &user_baud, 4);
+            memcpy(&binbuffer[12], &address, 4);
+            memcpy(&binbuffer[16], &bitcycles, 4);
+        }
         for( i = 0; i < num; i++ )
             sprintf( &buffer[i*3], " %2.2x", binbuffer[i] & 255 );
         tx( (uint8_t *)buffer, strlen(buffer) );
@@ -146,12 +158,11 @@ int loadfile(char *fname, int address)
 {
     FILE *infile;
     int num, size;
-
+    int patch = patch_mode;
+    int bitcycles = clock_freq/user_baud;
+    
     if (load_mode == LOAD_SINGLE)
-    {
-        loadfilesingle(fname);
-        return 0;
-    }
+        return loadfilesingle(fname);
 
     infile = fopen(fname, "rb");
     if (!infile)
@@ -179,6 +190,14 @@ int loadfile(char *fname, int address)
     msleep(100);
     while ((num=fread(buffer, 1, 1024, infile)))
     {
+        if (patch)
+        {
+            patch = 0;
+            memcpy(&buffer[4], &clock_freq, 4);
+            memcpy(&buffer[8], &user_baud, 4);
+            memcpy(&buffer[12], &address, 4);
+            memcpy(&buffer[16], &bitcycles, 4);
+        }
         tx((uint8_t *)buffer, num);
     }
     msleep(50);
@@ -186,24 +205,16 @@ int loadfile(char *fname, int address)
     return 0;
 }
 
-int findp2(char *portprefix, int baudrate, char *portname)
+int findp2(char *portprefix, int baudrate)
 {
     int i, num;
     char Port[100];
     char buffer[101];
 
     if (verbose) printf("Searching serial ports for a P2\n");
-    if (portname)
+    for (i = 0; i < 20; i++)
     {
-        i = 19;
-        strcpy(Port, portname);
-    }
-    else
-        i = 0;
-    for (; i < 20; i++)
-    {
-        if (!portname)
-            sprintf(Port, "%s%d", portprefix, i);
+        sprintf(Port, "%s%d", portprefix, i);
         if (serial_init(Port, baudrate))
         {
             hwreset();
@@ -221,12 +232,12 @@ int findp2(char *portprefix, int baudrate, char *portname)
                     if (buffer[11] == 'A')
                     {
                         load_mode = LOAD_CHIP;
-                        if (verbose) printf("Setting load_mode to LOAD_CHIP\n");
+                        if (verbose) printf("Setting load mode to CHIP\n");
                     }
                     else if (buffer[11] == 'B')
                     {
                         load_mode = LOAD_FPGA;
-                        if (verbose) printf("Setting load_mode to LOAD_FPGA\n");
+                        if (verbose) printf("Setting load mode to FPGA\n");
                     }
                     else
                     {
@@ -308,6 +319,15 @@ int main(int argc, char **argv)
                 else
                     Usage();
             }
+            else if (argv[i][1] == 'l')
+            {
+                if(argv[i][2])
+                    loader_baud = atoi(&argv[i][2]);
+                else if (++i < argc)
+                    loader_baud = atoi(argv[i]);
+                else
+                    Usage();
+            }
             else if (argv[i][1] == 'X')
             {
                 if(argv[i][2])
@@ -354,6 +374,8 @@ int main(int argc, char **argv)
                 runterm = pstmode = 1;
             else if (argv[i][1] == 'v')
                 verbose = 1;
+            else if (!strcmp(argv[i], "-PATCH"))
+                patch_mode = 1;
             else if (!strcmp(argv[i], "-CHIP"))
                 load_mode = LOAD_CHIP;
             else if (!strcmp(argv[i], "-FPGA"))
@@ -373,7 +395,7 @@ int main(int argc, char **argv)
         }
     }
 
-    if (!fname) Usage();
+    if (!fname && (!port || !runterm)) Usage();
 
     // Determine the user baud rate
     if (user_baud == -1)
@@ -382,14 +404,15 @@ int main(int argc, char **argv)
         if (verbose) printf("Setting user_baud to %d\n", user_baud);
     }
 
+#if 0
     // Determine the loader baud rate
     loader_baud = get_loader_baud(user_baud, loader_baud);
     if (verbose) printf("Set loader_baud to %d\n", loader_baud);
-
+#endif
     // Determine the P2 serial port
     if (!port)
     {
-        if (!findp2(PORT_PREFIX, LOADER_BAUD, port))
+        if (!findp2(PORT_PREFIX, LOADER_BAUD))
         {
             printf("Could not find a P2\n");
             promptexit(1);
@@ -401,37 +424,45 @@ int main(int argc, char **argv)
         promptexit(1);
     }
     
-    if (load_mode == LOAD_CHIP)
+    if (fname)
     {
-        if (clock_mode == -1)
+        if (load_mode == LOAD_CHIP)
         {
-            clock_mode = get_clock_mode(clock_freq);
-            if (verbose) printf("Setting clock_mode to %x\n", clock_mode);
+            if (clock_mode == -1)
+            {
+                clock_mode = get_clock_mode(clock_freq);
+                if (verbose) printf("Setting clock_mode to %x\n", clock_mode);
+            }
         }
-    }
-    else if (load_mode == LOAD_FPGA)
-    {
-        int temp = clock_freq / 312500; // * 256 / 80000000
-        int temp1 = temp - 1;
-        if (clock_mode == -1)
+        else if (load_mode == LOAD_FPGA)
         {
-            clock_mode = temp1;
-            if (verbose) printf("Setting clock_mode to %x\n", temp1);
+            int temp = clock_freq / 312500; // * 256 / 80000000
+            int temp1 = temp - 1;
+            if (clock_mode == -1)
+            {
+                clock_mode = temp1;
+                if (verbose) printf("Setting clock_mode to %x\n", temp1);
+            }
         }
-    }
+        else if (load_mode == -1)
+        {
+            load_mode = LOAD_SINGLE;
+            if (verbose) printf("Setting load mode to SINGLE\n");
+        }
 
-    if (loadfile(fname, address))
-    {
-        serial_done();
-        promptexit(1);
+        if (loadfile(fname, address))
+        {
+            serial_done();
+            promptexit(1);
+        }
     }
 
     if (runterm)
     {
         serial_baud(user_baud);
-        printf("[ Entering terminal mode.  Press Ctrl-] to exit. ]\n");
+        printf("( Entering terminal mode.  Press Ctrl-] to exit. )\n");
         terminal_mode(1,pstmode);
-        waitAtExit = 0; // no need to wait, user pressed ESC
+        waitAtExit = 0; // no need to wait, user explicitly quite
     }
 
     serial_done();

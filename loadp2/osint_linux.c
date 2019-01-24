@@ -396,12 +396,6 @@ void msleep(int ms)
 #endif
 }
 
-/*
- * if "check_for_exit" is true, then
- * a sequence EXIT_CHAR 00 nn indicates that we should exit
- */
-#define EXIT_CHAR   0xff
-
 /**
  * simple terminal emulator
  */
@@ -426,7 +420,7 @@ void terminal_mode(int check_for_exit, int pst_mode)
 
     if (check_for_exit)
       {
-        exit_char = EXIT_CHAR;
+        exit_char = 0xff;
       }
 
 #if 0
