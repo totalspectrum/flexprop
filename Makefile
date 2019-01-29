@@ -5,7 +5,7 @@ default: spin2gui.zip
 VPATH=.:spin2cpp/doc
 
 BINFILES=bin/fastspin.exe bin/proploader.exe bin/loadp2.exe
-PDFFILES=spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
+PDFFILES=spin2cpp/Fastspin.pdf spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
 
 spin2gui.zip: spin2gui.exe $(BINFILES) spin2gui_dir
 	rm -f spin2gui.zip
