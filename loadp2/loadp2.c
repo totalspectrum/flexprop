@@ -33,8 +33,6 @@
 #define LOAD_FPGA   1
 #define LOAD_SINGLE 2
 
-#define LOADER_BAUD loader_baud
-
 static int loader_baud = 2000000;
 static int clock_mode = -1;
 static int user_baud = 115200;
@@ -60,7 +58,7 @@ char *MainLoader1 =
 " 00 26 60 fd 86 01 80 ff 1f 80 66 fd 03 26 44 f5 00 26 60 fd 17 00 88 fc 20 7e 65 fd 24 08 60 fd 24 28 60 fd 1f 28 60 fd 08 06 dc fc 40 7e 74 fd 01 30 84 f0 1f 2a 60 fd 18 30 44 f0 15 30 60 fd f6 2d 6c fb 00 00 7c fc 17 00 e8 fc";
 
 static char buffer[1024];
-static char binbuffer[101];   // Added for Prop2-v28
+static char binbuffer[128];   // Added for Prop2-v28
 static int verbose = 0;
 static int waitAtExit = 0;
 
@@ -84,7 +82,7 @@ promptexit(int r)
 static void Usage(void)
 {
 printf("\
-loadp2 - a loader for the propeller 2 - version 0.010 for spin2gui, 2019-01-24\n\
+loadp2 - a loader for the propeller 2 - version 0.011, 2019-01-29\n\
 usage: loadp2\n\
          [ -p port ]               serial port\n\
          [ -b baud ]               user baud rate (default is %d)\n\
@@ -100,6 +98,7 @@ usage: loadp2\n\
          [ -CHIP ]                 set load mode for CHIP\n\
          [ -FPGA ]                 set load mode for FPGA\n\
          [ -SINGLE ]               set load mode for single stage\n\
+         [ -PATCH ]                patch in clock frequency and serial parms\n\
          file                      file to load\n", user_baud, loader_baud, clock_freq, clock_mode);
     promptexit(1);
 }
@@ -116,7 +115,7 @@ int loadfilesingle(char *fname)
     FILE *infile;
     int num, size, i;
     int patch = patch_mode;
-    int address = 0;
+    int totnum = 0;
     int bitcycles = clock_freq/user_baud;
     
     infile = fopen(fname, "rb");
@@ -133,19 +132,19 @@ int loadfilesingle(char *fname)
     msleep(50);
     tx((uint8_t *)"> Prop_Hex 0 0 0 0", 18);
 
-    while ((num=fread(binbuffer, 1, 101, infile)))
+    while ((num=fread(binbuffer, 1, 128, infile)))
     {
-        if (patch)
+        if (patch && totnum == 1024)
         {
             patch = 0;
-            memcpy(&binbuffer[4], &clock_freq, 4);
-            memcpy(&binbuffer[8], &user_baud, 4);
-            memcpy(&binbuffer[12], &address, 4);
-            memcpy(&binbuffer[16], &bitcycles, 4);
+            memcpy(&binbuffer[0], &clock_freq, 4);
+            memcpy(&binbuffer[4], &user_baud, 4);
+            memcpy(&binbuffer[8], &bitcycles, 4);
         }
         for( i = 0; i < num; i++ )
             sprintf( &buffer[i*3], " %2.2x", binbuffer[i] & 255 );
         tx( (uint8_t *)buffer, strlen(buffer) );
+        totnum += num;
     }
     tx((uint8_t *)"~", 1);   // Added for Prop2-v28
 
@@ -158,6 +157,7 @@ int loadfile(char *fname, int address)
 {
     FILE *infile;
     int num, size;
+    int totnum = 0;
     int patch = patch_mode;
     int bitcycles = clock_freq/user_baud;
     
@@ -182,23 +182,23 @@ int loadfile(char *fname, int address)
     else
         tx((uint8_t *)MainLoader1, strlen(MainLoader1));
     txval(clock_mode);
-    txval((3*clock_freq+LOADER_BAUD)/(LOADER_BAUD*2)-extra_cycles);
-    txval((clock_freq+LOADER_BAUD/2)/LOADER_BAUD-extra_cycles);
+    txval((3*clock_freq+loader_baud)/(loader_baud*2)-extra_cycles);
+    txval((clock_freq+loader_baud/2)/loader_baud-extra_cycles);
     txval(size);
     txval(address);
     tx((uint8_t *)"~", 1);
     msleep(100);
     while ((num=fread(buffer, 1, 1024, infile)))
     {
-        if (patch)
+        if (patch && totnum == 1024)
         {
             patch = 0;
-            memcpy(&buffer[4], &clock_freq, 4);
-            memcpy(&buffer[8], &user_baud, 4);
-            memcpy(&buffer[12], &address, 4);
-            memcpy(&buffer[16], &bitcycles, 4);
+            memcpy(&buffer[0], &clock_freq, 4);
+            memcpy(&buffer[4], &user_baud, 4);
+            memcpy(&buffer[8], &bitcycles, 4);
         }
         tx((uint8_t *)buffer, num);
+        totnum += num;
     }
     msleep(50);
     if (verbose) printf("%s loaded\n", fname);
@@ -287,6 +287,7 @@ int get_clock_mode(int sysfreq)
 
     return setfreq;
 }
+
 int main(int argc, char **argv)
 {
     int i;
@@ -295,6 +296,9 @@ int main(int argc, char **argv)
     char *fname = 0;
     char *port = 0;
     int address = 0;
+
+    // Initialize the loader baud rate
+    loader_baud = get_loader_baud(user_baud, loader_baud);
 
     // Parse the command-line parameters
     for (i = 1; i < argc; i++)
@@ -404,21 +408,16 @@ int main(int argc, char **argv)
         if (verbose) printf("Setting user_baud to %d\n", user_baud);
     }
 
-#if 0
-    // Determine the loader baud rate
-    loader_baud = get_loader_baud(user_baud, loader_baud);
-    if (verbose) printf("Set loader_baud to %d\n", loader_baud);
-#endif
     // Determine the P2 serial port
     if (!port)
     {
-        if (!findp2(PORT_PREFIX, LOADER_BAUD))
+        if (!findp2(PORT_PREFIX, loader_baud))
         {
             printf("Could not find a P2\n");
             promptexit(1);
         }
     }
-    else if (1 != serial_init(port, LOADER_BAUD))
+    else if (1 != serial_init(port, loader_baud))
     {
         printf("Could not open port %s\n", port);
         promptexit(1);

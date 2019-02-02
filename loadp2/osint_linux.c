@@ -65,7 +65,11 @@ static void chk(char *fun, int sts)
 
 int get_loader_baud(int ubaud, int lbaud)
 {
+#ifdef MACOSX
+    return 921600;
+#else
     return lbaud;
+#endif
 }
 
 int serial_find(const char* prefix, int (*check)(const char* port, void* data), void* data)
