@@ -30,10 +30,7 @@ spin2gui.exe: spin2gui.tcl
 clean:
 	rm -rf spin2gui
 	rm -rf *.exe *.zip
-	rm -rf $BINFILES
-ifdef PANDOC_EXISTS
-	rm -rf $PDFFILES
-endif
+	rm -rf $(BINFILES) $(PDFFILES)
 	rm -rf spin2cpp/build-win32/*
 	rm -rf proploader-*-build
 	rm -rf loadp2/build-win32/*
