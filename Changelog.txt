@@ -1,6 +1,8 @@
 Version 1.3.6
 - Updated loadp2 to 0.011
 - Updated fastspin to 3.9.17
+- Added proplisp sample
+- Updated samples to use cleaner mode setting on P2ES
 
 Version 1.3.5
 - Check for /dev/cu.* on Mac rather than /dev/tty.*
