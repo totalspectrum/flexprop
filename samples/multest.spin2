@@ -3,15 +3,22 @@
 ''
 CON
   _clkfreq = 160_000_000
-  _clkmode = $010c3f04
+  _clkmode = $010007f8
   
 OBJ
-  ser: "SimpleSerial"
+  ser: "SmartSerial.spin2"
+#ifdef USE_COG
+  m: "multiply.cog.spin"
+#else
   m: "multiply"
-  
+#endif
+
 PUB main | a,b
   clkset(_clkmode, _clkfreq)
-  ser.start(230_400)
+  ser.start(63, 62, 0, 230_400)
+#ifdef USE_COG
+  m.__cognew
+#endif
   ser.str(string("Multiply test...", 13, 10))
   try(1, 1)
   try($7fffffff, $ffffffff)
@@ -24,7 +31,9 @@ PUB try(a, b) | t, lo, hi
   report(string("cordic"), lo, hi, t)
   (lo,hi,t) := m.hwmul(a, b)
   report(string("mul16"), lo, hi, t)
-
+  ser.tx(13)
+  ser.tx(10)
+  
 PUB report(msg, x, y, t)
   ser.str(msg)
   ser.str(string(" gives "))

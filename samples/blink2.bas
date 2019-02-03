@@ -4,7 +4,7 @@
 #ifdef __P2__
 const LED1 = 56
 const LED2 = 57
-const _clkmode = 0x10c3f04
+const _clkmode = 0x10007f8
 const _clkfreq = 160_000_000
 
 clkset(_clkmode, _clkfreq)

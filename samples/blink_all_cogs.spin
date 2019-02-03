@@ -12,7 +12,7 @@
 
 CON
 #ifdef __P2__
-  _clkmode = $010c3f04
+  _clkmode = $010007f8
   _clkfreq = 160_000_000
 #else  
   _clkmode = xtal1 + pll16x

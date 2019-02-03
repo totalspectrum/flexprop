@@ -4,7 +4,7 @@
 con
   pin = 56
   freq = 160_000_000
-  mode = $010c3f04
+  mode = $010007f8
   delay = freq / 10
 
 dat
