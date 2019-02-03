@@ -68,6 +68,8 @@ enum CellType {
     CELL_NIL = -1,  // not actually stored
 };
 
+#ifdef LISPLIB_NEED_INTERNALS
+
 static INLINE uint32_t FromPtr(void *ptr) {
     uint32_t v = (uint32_t)ptr;
     v = v>>2;
@@ -145,5 +147,6 @@ static INLINE Cell CellNum(Num val) {
 static INLINE Cell CellPair(int typ, uint32_t head, uint32_t tail) {
     return (((Cell)head) <<HEADSHIFT) | (((Cell)tail)<<4) | (typ & 0x7);
 }
+#endif /* LISPLIB_NEED_INTERNALS */
 
 #endif
