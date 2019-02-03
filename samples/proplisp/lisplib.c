@@ -4,6 +4,8 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
+
+#define LISPLIB_NEED_INTERNALS
 #include "lisplib.h"
 
 #include <string.h>
