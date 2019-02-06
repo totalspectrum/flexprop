@@ -18,24 +18,20 @@ PUB cordicmul(a, b) : lo, hi, t | m1, m2
 
 PUB hwmul(a, b) : lo, hi, t | ahi, bhi
   t := CNT
-  ahi := a>>16
-  bhi := b>>16
   asm
+    getword ahi, a, #1
+    getword bhi, b, #1
     mov lo, a
-    mov hi, ahi
     mul lo, b
+    mov hi, ahi
     mul hi, bhi
     mul ahi, b
     mul bhi, a
-    mov a, ahi
-    shl a, #16
-    shr ahi, #16
-    mov b, bhi
-    shl b, #16
-    shr bhi, #16
-    add lo, a wc
-    addx hi, ahi
-    add lo, b wc
+    add ahi, bhi wc
+    getword bhi, ahi, #1
+    bitc bhi,#16
+    shl ahi, #16
+    add  lo, ahi wc
     addx hi, bhi
   endasm
   t := CNT - t
