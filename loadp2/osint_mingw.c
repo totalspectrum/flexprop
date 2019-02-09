@@ -146,6 +146,17 @@ int serial_baud(unsigned long baud)
     return 1;
 }
 
+/**
+ * wait till transmit buffer is empty
+ * for Windows we just wait 100 msec
+ * returns zero
+ */
+int wait_drain(void)
+{
+    msleep(100);
+    return 0;
+}
+
 void serial_done(void)
 {
     if (hSerial != INVALID_HANDLE_VALUE) {

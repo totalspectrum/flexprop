@@ -46,6 +46,7 @@ int tx(uint8_t* buff, int n);
 int rx(uint8_t* buff, int n);
 int rx_timeout(uint8_t* buff, int n, int timeout);
 void hwreset(void);
+int wait_drain(void);
 
 /* terminal mode */
 void terminal_mode(int check_for_exit, int pst_mode);

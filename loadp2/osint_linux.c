@@ -272,6 +272,14 @@ last_baud = baud;
 }
 
 /**
+ * wait for tx buffer to be empty
+ */
+int wait_drain(void)
+{
+    return tcdrain(hSerial);
+}
+
+/**
  * close serial port
  */
 void serial_done(void)
