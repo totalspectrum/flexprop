@@ -1,10 +1,11 @@
 '
 ' simple smart pin serial demo for P2 Eval board
+' The "smart pin" code is in Lib/SmartSerial.spin2
 '
 CON
-  oscmode = $010c3f04
+  oscmode = $010007f8
   freq = 160_000_000
-  baud = 2_000_000
+  baud = 230_400
 
 OBJ
   ser: "SmartSerial.spin2"
