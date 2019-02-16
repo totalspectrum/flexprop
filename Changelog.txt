@@ -1,3 +1,8 @@
+Version 1.3.8
+- Primitive support for clicking on error lines (only works with
+current window)
+- Updated fastspin to 3.9.20
+
 Version 1.3.7
 - Updated loadp2 to 0.013
 - Updated fastspin to 3.9.19

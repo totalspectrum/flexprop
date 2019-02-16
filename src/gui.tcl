@@ -12,7 +12,7 @@ set ROOTDIR [file dirname $::argv0]
 set CONFIG_FILE "$ROOTDIR/.spin2gui.config"
 set aboutMsg {
 GUI tool for fastspin
-Version 1.3.7
+Version 1.3.8
 Copyright 2018-2019 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
@@ -443,6 +443,43 @@ proc doHelp {} {
     makeReadOnly .nb.help.txt
 }
 
+proc finderrorline {text} {
+    set index [string last "error:" $text]
+    if { $index == -1 } {
+	return ""
+    }
+    set i2 [string last "(" $text $index]
+    if { $i2 == -1 } {
+	set index [string last ":" $text $index]
+    }
+    if { $i2 == -1 } {
+	return ""
+    }
+    set i2 [ expr $i2 + 1 ]
+    set first [string wordstart $text $i2]
+    set last [string wordend $text $i2]
+    set last [expr $last - 1]
+    set line [string range $text $first $last]
+    set line [expr $line]
+    return $line
+}
+
+#
+# parameter is text  coordinates like 2.72
+#
+proc doClickOnError {coord} {
+    set w .bot.txt
+    set first "$coord linestart"
+    set last "$coord lineend"
+    set text [$w get $first $last]
+    set line [finderrorline $text]
+    if { $line != "" } {
+	set w [.nb select]
+	$w.txt see $line.0
+    }
+#    tk_messageBox -message "go to line: $line" -type ok
+}
+
 #
 # set up syntax highlighting for a given ctext widget
 proc setHighlightingSpin {w} {
@@ -593,6 +630,8 @@ bind . <Control-r> { doCompileRun }
 bind . <Control-l> { doListing }
 bind . <Control-f> { searchrep [focus] 0 }
 bind . <Control-w> { closeTab }
+
+bind .bot.txt <Double-1> { doClickOnError "[%W index @%x,%y]" }
 
 wm protocol . WM_DELETE_WINDOW {
     exitProgram
