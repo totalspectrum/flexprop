@@ -36,6 +36,8 @@ clean:
 	rm -rf loadp2/build-win32/*
 	rm -rf samples/*.elf samples/*.binary samples/*~
 	rm -rf samples/*.lst samples/*.pasm samples/*.p2asm
+	rm -rf samples/*/*.binary samples/*/*.pasm samples/*/*.p2asm
+	rm -rf samples/*/*.lst
 
 spin2gui_dir:
 	mkdir -p spin2gui/bin

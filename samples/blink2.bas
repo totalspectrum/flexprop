@@ -16,7 +16,7 @@ const LED2 = 17
 #endif
 
 '' variable for the stack
-dim shared cpustack(8)
+dim shared cpustack(32)
 
 '' this is the blink subroutine
 '' pin is the pin to blink
@@ -34,8 +34,8 @@ end sub
 
 '' launch the blinker for LED1 in another COG
 '' "500" is the milliseconds to wait
-'' "@cpustack(1)" is the start of memory to use for stack
-var x = cpu(blinker(LED1, 500), @cpustack(1))
+'' "@cpustack(0)" is the start of memory to use for stack
+var x = cpu(blinker(LED1, 500), @cpustack(0))
 
 '' blink LED2 slightly faster
 blinker(LED2, 400)
