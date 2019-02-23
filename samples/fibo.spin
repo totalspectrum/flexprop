@@ -11,16 +11,22 @@ CON
 #endif
 
 OBJ
-  ser: "PrintfSerial"
+#ifdef __P2__
+  ser: "spin/SmartSerial"
+#else
+  ser: "spin/FullDuplexSerial"
+#endif
 
 PUB demo | i, n, t
+#ifdef __P2__
   clkset(_clkmode, _clkfreq)
-  ser.start(baud)
-  repeat i from 1 to 9 step 1
+#endif  
+  ser.start_default(baud)
+  repeat i from 1 to 10 step 1
     t := CNT
     n := fiborec(i)
     t := CNT - t
-    ser.printf( "fibo(%d) = %d; cycles = %d%n", i, n, t )
+    ser.printf( "fibo(%d) = %d; cycles = %d\n", i, n, t )
 
 '' iterative version
 PUB fibolp(n) : r | lastr

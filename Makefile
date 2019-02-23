@@ -40,7 +40,7 @@ clean:
 spin2gui_dir:
 	mkdir -p spin2gui/bin
 	mkdir -p spin2gui/doc
-	cp -r spin2gui.exe README.md License.txt lib samples src spin2gui
+	cp -r spin2gui.exe README.md License.txt samples src spin2gui
 ifdef PANDOC_EXISTS
 	cp -r $(PDFFILES) spin2gui/doc
 endif

@@ -1,6 +1,6 @@
 '
 ' simple smart pin serial demo for P2 Eval board
-' The "smart pin" code is in Lib/SmartSerial.spin2
+' The "smart pin" code is in include/spin/SmartSerial.spin
 '
 CON
   oscmode = $010007f8
@@ -8,7 +8,7 @@ CON
   baud = 230_400
 
 OBJ
-  ser: "SmartSerial.spin2"
+  ser: "spin/SmartSerial"
 
 VAR
 BYTE name[128]
@@ -16,12 +16,9 @@ BYTE name[128]
 PUB demo
   clkset(oscmode, freq)
   ser.start(63, 62, 0, baud)
-  ser.str(string("Hello, there! What is your name? "))
+  ser.printf("Hello, there! What is your name? ")
   getname
-  ser.str(string("Nice to meet you "))
-  ser.str(@name[0])
-  ser.tx(13)
-  ser.tx(10)
+  ser.printf("Nice to meet you %s\n", @name)
   pausems(1000)
 
 PUB getname | c, i
