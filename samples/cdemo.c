@@ -18,7 +18,7 @@
 #include "sys/p2es_clock.h"
 #define BAUD 230400
 
-#define PIN 58
+#define PIN 56
 
 void main()
 {
@@ -32,6 +32,6 @@ void main()
     for(;;) {
         OUTB ^= pinmask;
         waitcnt(getcnt() + CLKFREQ/4);
-        printf("toggle %u\n", i++);
+        printf("Toggle %u\n", i++);
     }
 }
