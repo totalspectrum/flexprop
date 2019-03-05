@@ -181,6 +181,15 @@ proc loadFileToWindow { fname win } {
 # save contents of a window to a file
 proc saveFileFromWindow { fname win } {
     global filetimes
+
+    # check for other programs changing the file
+    set disktime [file mtime $fname]
+    if { $disktime > $filetimes($fname) } {
+	set answer [tk_messageBox -icon question -type yesno -message "File $fname has changed on disk; overwrite it?" -default no]
+	if { $answer eq no } {
+	    return
+	}
+    }
     set fp [open $fname w]
     set file_data [$win get 1.0 end]
 
@@ -413,17 +422,12 @@ proc saveFilesForCompile {} {
 	    if {[$w.txt edit modified]==1} {
 		set needWrite "yes"
 	    }
+	    if { $needWrite eq "yes" } {
+		saveFileFromWindow $s $w.txt
+	    }
 	    set disktime [file mtime $s]
 	    if {$disktime > $filetimes($s)} {
 		set needRead "yes"
-		if { $needWrite eq "yes" } {
-		    set answer [tk_messageBox -icon question -type yesno -message "File $s is changed on disk. Overwrite it?" -default yes]
-		    if { $answer eq yes } {
-			saveFile $w
-			set needRead "no"
-		    }
-		    set needWrite "no"
-		}
 	    }
 	    if { $needRead eq "yes" } {
 		set answer [tk_messageBox -icon question -type yesno -message "File $s has changed on disk. Reload it?" -default yes]
@@ -434,9 +438,6 @@ proc saveFilesForCompile {} {
 		} else {
 		    set needWrite "no"
 		}
-	    }
-	    if { $needWrite eq "yes" } {
-		saveFileFromWindow $s $w.txt
 	    }
 	}
 	set i [expr "$i + 1"]
