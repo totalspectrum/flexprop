@@ -24,7 +24,9 @@ stack
     long 0[64]
 
 PUB demo | cognum, delay
+#ifdef __P2__
   clkset(_clkmode, _clkfreq)
+#endif  
   delay := clkfreq
   repeat cognum from 7 to 1
     delay -= clkfreq / 10
