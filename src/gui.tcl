@@ -12,7 +12,7 @@ set ROOTDIR [file dirname $::argv0]
 set CONFIG_FILE "$ROOTDIR/.spin2gui.config"
 set aboutMsg {
 GUI tool for fastspin
-Version 1.3.9
+Version 3.9.22
 Copyright 2018-2019 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
@@ -47,7 +47,7 @@ proc copyShadowToConfig {} {
     set config(runcmd) $shadow(runcmd)
 }
 
-set config(library) "./lib"
+set config(library) "./include"
 set config(spinext) ".spin"
 set config(lastdir) "."
 set config(font) ""
@@ -170,14 +170,17 @@ proc closeTab { } {
 
 # load a file into a text (or ctext) window
 proc loadFileToWindow { fname win } {
+    global filetimes
     set file_data [uread $fname]
     $win delete 1.0 end
     $win insert end $file_data
     $win edit modified false
+    set filetimes($fname) [file mtime $fname]
 }
 
 # save contents of a window to a file
 proc saveFileFromWindow { fname win } {
+    global filetimes
     set fp [open $fname w]
     set file_data [$win get 1.0 end]
 
@@ -194,6 +197,7 @@ proc saveFileFromWindow { fname win } {
     # by leaving off the -nonewline to puts
     puts $fp $file_data
     close $fp
+    set filetimes($fname) [file mtime $fname]
     $win edit modified false
 }
 
@@ -252,8 +256,8 @@ proc checkAllChanges {} {
     set w [lindex $t $i]
     while { $w ne "" } {
 	checkChanges $w
-	set w [lindex $t $i]
 	set i [expr "$i + 1"]
+	set w [lindex $t $i]
     }
 }
 
@@ -343,6 +347,7 @@ proc loadListingFile {filename} {
 proc loadFileToTab {w filename title} {
     global config
     global filenames
+    global filetimes
     if {$title eq ""} {
 	set title [file tail $filename]
     }
@@ -363,6 +368,7 @@ proc loadFileToTab {w filename title} {
     .nb tab $w -text $title
     .nb select $w
     set filenames($w) $filename
+    set filetimes($filename) [file mtime $filename]
 }
 
 proc loadSpinFile {} {
@@ -391,12 +397,62 @@ proc loadSpinFile {} {
     set BINFILE ""
 }
 
+# maybe save the current file; used for compilation
+# if no changes, then do not save
+proc saveFilesForCompile {} {
+    global filenames
+    global filetimes
+    set t [.nb tabs]
+    set i 0
+    set w [lindex $t $i]
+    while { $w ne "" } {
+	set s $filenames($w)
+	set needWrite "no"
+	set needRead "no"
+	if { $s ne "" } {
+	    if {[$w.txt edit modified]==1} {
+		set needWrite "yes"
+	    }
+	    set disktime [file mtime $s]
+	    if {$disktime > $filetimes($s)} {
+		set needRead "yes"
+		if { $needWrite eq "yes" } {
+		    set answer [tk_messageBox -icon question -type yesno -message "File $s is changed on disk. Overwrite it?" -default yes]
+		    if { $answer eq yes } {
+			saveFile $w
+			set needRead "no"
+		    }
+		    set needWrite "no"
+		}
+	    }
+	    if { $needRead eq "yes" } {
+		set answer [tk_messageBox -icon question -type yesno -message "File $s has changed on disk. Reload it?" -default yes]
+		if { $answer eq yes } {
+		    loadFileToWindow $s $w.txt
+		    set needRead "no"
+		    set needWRite "no"
+		} else {
+		    set needWrite "no"
+		}
+	    }
+	    if { $needWrite eq "yes" } {
+		saveFileFromWindow $s $w.txt
+	    }
+	}
+	set i [expr "$i + 1"]
+	set w [lindex $t $i]
+    }
+}
+    
+# always save the current file
 proc saveCurFile {} {
-    saveFile [.nb select]
+    set w [.nb select]
+    saveFile $w
 }
 		  
 proc saveFile {w} {
     global filenames
+    global filetimes
     global BINFILE
     global SpinTypes
     global config
@@ -409,6 +465,7 @@ proc saveFile {w} {
 	set config(lastdir) [file dirname $filename]
 	set config(spinext) [file extension $filename]
 	set filenames($w) $filename
+	set filetimes($filename) [file mtime $filename]
 	.nb tab $w -text [file root $filename]
 	set BINFILE ""
     }
@@ -429,6 +486,7 @@ proc saveFileAs {w} {
     set config(spinext) [file extension $filename]
     set BINFILE ""
     set filenames($w) $filename
+    set filetimes($filename) [file mtime $filename]
     .nb tab $w -text [file tail $filename]
     saveFile $w
 }
@@ -720,7 +778,7 @@ proc doCompile {} {
     global filenames
     
     set status 0
-    saveCurFile
+    saveFilesForCompile
     set cmdstr [mapPercent $config(compilecmd)]
     set runcmd [list exec -ignorestderr]
     set runcmd [concat $runcmd $cmdstr]
