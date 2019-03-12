@@ -183,11 +183,13 @@ proc saveFileFromWindow { fname win } {
     global filetimes
 
     # check for other programs changing the file
-    set disktime [file mtime $fname]
-    if { $disktime > $filetimes($fname) } {
-	set answer [tk_messageBox -icon question -type yesno -message "File $fname has changed on disk; overwrite it?" -default no]
-	if { $answer eq no } {
-	    return
+    if { [file exists $fname] } {
+        set disktime [file mtime $fname]
+        if { $disktime > $filetimes($fname) } {
+	    set answer [tk_messageBox -icon question -type yesno -message "File $fname has changed on disk; overwrite it?" -default no]
+	    if { $answer eq no } {
+	        return
+	    }
 	}
     }
     set fp [open $fname w]
@@ -422,19 +424,23 @@ proc saveFilesForCompile {} {
 	    if {[$w.txt edit modified]==1} {
 		set needWrite "yes"
 	    }
+	    if { [file exists $s] } {
+		set disktime [file mtime $s]
+	        if {$disktime > $filetimes($s)} {
+		    set needRead "yes"
+		}
+	    } else {
+		set needWrite "yes"
+	    }
 	    if { $needWrite eq "yes" } {
 		saveFileFromWindow $s $w.txt
-	    }
-	    set disktime [file mtime $s]
-	    if {$disktime > $filetimes($s)} {
-		set needRead "yes"
 	    }
 	    if { $needRead eq "yes" } {
 		set answer [tk_messageBox -icon question -type yesno -message "File $s has changed on disk. Reload it?" -default yes]
 		if { $answer eq yes } {
 		    loadFileToWindow $s $w.txt
 		    set needRead "no"
-		    set needWRite "no"
+		    set needWrite "no"
 		} else {
 		    set needWrite "no"
 		}
@@ -466,7 +472,6 @@ proc saveFile {w} {
 	set config(lastdir) [file dirname $filename]
 	set config(spinext) [file extension $filename]
 	set filenames($w) $filename
-	set filetimes($filename) [file mtime $filename]
 	.nb tab $w -text [file root $filename]
 	set BINFILE ""
     }
@@ -487,7 +492,6 @@ proc saveFileAs {w} {
     set config(spinext) [file extension $filename]
     set BINFILE ""
     set filenames($w) $filename
-    set filetimes($filename) [file mtime $filename]
     .nb tab $w -text [file tail $filename]
     saveFile $w
 }
