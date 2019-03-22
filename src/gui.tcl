@@ -864,11 +864,12 @@ proc doCompileRun {} {
 set cmddialoghelptext {
   Strings for various commands
   Some special % escapes:
-    %D = Replace with directory of spin2gui executable  
-    %S = Replace with current Spin file name
     %B = Replace with current binary file name
+    %D = Replace with directory of spin2gui executable
+    %L = Replace with library directory
     %O = Replace with optimization level
     %P = Replace with port to use
+    %S = Replace with current source file name
     %% = Insert a % character
 }
 proc copyShadowClose {w} {
