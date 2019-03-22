@@ -12,7 +12,7 @@ set ROOTDIR [file dirname $::argv0]
 set CONFIG_FILE "$ROOTDIR/.spin2gui.config"
 set aboutMsg {
 GUI tool for fastspin
-Version 3.9.23
+Version 3.9.24
 Copyright 2018-2019 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
@@ -420,7 +420,10 @@ proc saveFilesForCompile {} {
 	set s $filenames($w)
 	set needWrite "no"
 	set needRead "no"
-	if { $s ne "" } {
+	if { $s eq "" } {
+	    # need to ask the user for the file name
+	    saveFile $w
+	} else {
 	    if {[$w.txt edit modified]==1} {
 		set needWrite "yes"
 	    }
