@@ -1,3 +1,7 @@
+Version 3.9.24
+- Always save new files before trying to compile them.
+- Add %L to command dialog description
+
 Version 3.9.23
 - Check for file existing before trying to read its last modified
   time; if a file does not exist (removed by another program) make
