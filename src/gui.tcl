@@ -12,7 +12,7 @@ set ROOTDIR [file dirname $::argv0]
 set CONFIG_FILE "$ROOTDIR/.spin2gui.config"
 set aboutMsg {
 GUI tool for fastspin
-Version 3.9.24
+Version 3.9.25
 Copyright 2018-2019 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
@@ -705,8 +705,8 @@ wm protocol . WM_DELETE_WINDOW {
 
 #autoscroll::autoscroll .nb.main.v
 #autoscroll::autoscroll .nb.main.h
-autoscroll::autoscroll .bot.v
-autoscroll::autoscroll .bot.h
+#autoscroll::autoscroll .bot.v
+#autoscroll::autoscroll .bot.h
 
 # actually read in our config info
 config_open
