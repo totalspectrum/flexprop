@@ -12,7 +12,7 @@ set ROOTDIR [file dirname $::argv0]
 set CONFIG_FILE "$ROOTDIR/.spin2gui.config"
 set aboutMsg {
 GUI tool for fastspin
-Version 3.9.25
+Version 3.9.26
 Copyright 2018-2019 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
@@ -53,6 +53,7 @@ set config(lastdir) "."
 set config(font) ""
 set COMPORT " "
 set OPT "-O1"
+set COMPRESS "-z0"
 
 setShadowP2Defaults
 copyShadowToConfig
@@ -71,6 +72,7 @@ proc config_open {} {
     global config
     global CONFIG_FILE
     global OPT
+    global COMPRESS
     global COMPORT
     
     if {[file exists $CONFIG_FILE]} {
@@ -94,6 +96,10 @@ proc config_open {} {
 		# set optimize level
 		set OPT [lindex $data 1]
 	    }
+	    compress {
+		# set compression level
+		set COMPRESS [lindex $data 1]
+	    }
 	    comport {
 		# set optimize level
 		set COMPORT [lindex $data 1]
@@ -111,11 +117,13 @@ proc config_save {} {
     global config
     global CONFIG_FILE
     global OPT
+    global COMPRESS
     global COMPORT
     set fp [open $CONFIG_FILE w]
     puts $fp "# spin2gui config info"
     puts $fp "geometry\t[winfo geometry [winfo toplevel .]]"
     puts $fp "opt\t\{$OPT\}"
+    puts $fp "compress\t\{$COMPRESS\}"
     puts $fp "comport\t\{$COMPORT\}"
     foreach i [array names config] {
 	if {$i != ""} {
@@ -631,6 +639,9 @@ menu .mbar.help -tearoff 0
 .mbar.options add radiobutton -label "No Optimization" -variable OPT -value "-O0"
 .mbar.options add radiobutton -label "Default Optimization" -variable OPT -value "-O1"
 .mbar.options add radiobutton -label "Full Optimization" -variable OPT -value "-O2"
+#.mbar.options add separator
+#.mbar.options add radiobutton -label "No Compression" -variable COMPRESS -value "-z0"
+#.mbar.options add radiobutton -label "Compress Code" -variable COMPRESS -value "-z1"
 
 .mbar add cascade -menu .mbar.run -label Commands
 .mbar.run add command -label "Compile" -command { doCompile }
@@ -730,10 +741,13 @@ proc mapPercent {str} {
     global BINFILE
     global ROOTDIR
     global OPT
+    global COMPRESS
     global COMPORT
     global config
-    
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%L" $config(library) "%S" $filenames([.nb select]) "%B" $BINFILE "%O" $OPT "%P" $COMPORT ]
+
+#    set fulloptions "$OPT $COMPRESS"
+    set fulloptions "$OPT"
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%L" $config(library) "%S" $filenames([.nb select]) "%B" $BINFILE "%O" $fulloptions "%P" $COMPORT ]
     set result [string map $percentmap $str]
     return $result
 }
