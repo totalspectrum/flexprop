@@ -50,6 +50,7 @@ endif
 	cp -r spin2cpp/include spin2gui/
 	cp -r doc/*.txt spin2gui/doc
 	cp -r bin/*.exe spin2gui/bin
+	cp -r spin2gui.tcl spin2gui/
 	touch spin2gui_dir
 
 .PHONY: spin2gui_dir

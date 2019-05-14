@@ -21,6 +21,7 @@ spin2gui_dir:
 	cp -r spin2gui.tcl README.md License.txt samples src spin2gui
 	cp -r spin2cpp/doc/* spin2gui/doc
 	cp -r bin/* spin2gui/bin
+	cp -r spin2gui.tcl spin2gui/
 	touch spin2gui_dir
 
 .PHONY: spin2gui_dir
