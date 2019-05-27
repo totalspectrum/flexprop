@@ -19,8 +19,10 @@ endif
 
 BINFILES=bin/fastspin.exe bin/proploader.exe bin/loadp2.exe
 
+SIGN=./spin2cpp/sign.sh
 
 spin2gui.zip: spin2gui.exe $(BINFILES) $(PDFFILES) spin2gui_dir
+	$(SIGN) spin2gui.exe
 	rm -f spin2gui.zip
 	zip -r spin2gui.zip spin2gui
 
@@ -58,6 +60,7 @@ endif
 bin/fastspin.exe: spin2cpp/build-win32/fastspin.exe
 	mkdir -p bin
 	cp $< $@
+	$(SIGN) $@
 
 bin/proploader.exe: proploader-msys-build/bin/proploader.exe
 	mkdir -p bin
