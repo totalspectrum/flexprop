@@ -8,9 +8,10 @@
 # Top level program
 
 package require Tk
-package require autoscroll
+#package require autoscroll
 #package require ctext
 
+source src/autoscroll.tcl
 source src/ctext/ctext.tcl
 source src/checkserial.tcl
 source src/gui.tcl
