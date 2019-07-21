@@ -29,6 +29,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "osint.h"
+#include "loadelf.h"
 
 #define LOAD_CHIP   0
 #define LOAD_FPGA   1
@@ -86,7 +87,7 @@ promptexit(int r)
 static void Usage(void)
 {
 printf("\
-loadp2 - a loader for the propeller 2 - version 0.013, 2019-02-06\n\
+loadp2 - a loader for the propeller 2 - version 0.013 + ELF, 2019-07-21\n\
 usage: loadp2\n\
          [ -p port ]               serial port\n\
          [ -b baud ]               user baud rate (default is %d)\n\
@@ -124,29 +125,158 @@ int compute_checksum(int *ptr, int num)
     return checksum;
 }
 
-int loadfilesingle(char *fname)
+/*
+ * ultimately the final image to be loaded ends up in a binary blob pointed to
+ * by g_filedata, of size g_filesize. g_fileptr is used to stream the data
+ */
+
+uint8_t *g_filedata;
+int g_filesize;
+int g_fileptr;
+
+/*
+ * read an ELF file into memory
+ */
+int
+loadElfFile(FILE *infile, ElfHdr *hdr)
 {
-    FILE *infile;
-    int num, size, i;
-    int patch = patch_mode;
-    int totnum = 0;
-    int checksum = 0;
+    ElfContext *c;
+    ElfProgramHdr program;
+    int size = 0;
+    unsigned int base = -1;
+    unsigned int top = 0;
+    int i, r;
     
+    c = OpenElfFile(infile, hdr);
+    if (!c) {
+        printf("error: opening elf file\n");
+        return -1;
+    }
+    /* walk through the program table */
+    for (i = 0; i < c->hdr.phnum; i++) {
+        if (!LoadProgramTableEntry(c, i, &program)) {
+            printf("Error reading ELF program header %d\n", i);
+            return -1;
+        }
+        if (program.type != PT_LOAD) {
+            continue;
+        }
+        printf("load %d bytes at %x\n", program.filesz, program.paddr);
+        if (program.paddr < base) {
+            base = program.paddr;
+        }
+        if (program.memsz < program.filesz) {
+            printf("bad ELF file: program size in file too big\n");
+            return -1;
+        }
+        if (program.paddr + program.memsz > top) {
+            top = program.paddr + program.memsz;
+        }
+    }
+    size = top - size;
+    if (size > 0xffffff) {
+        printf("image size %d bytes is too large to handle\n", size);
+        return -1;
+    }
+    g_filedata = (uint8_t *)calloc(1, size);
+    if (!g_filedata) {
+        printf("Could not allocate %d bytes\n", size);
+        return -1;
+    }
+    g_filesize = size;
+    for (i = 0; i < c->hdr.phnum; i++) {
+        if (!LoadProgramTableEntry(c, i, &program)) {
+            printf("Error reading ELF program header %d\n", i);
+            return -1;
+        }
+        if (program.type != PT_LOAD) {
+            continue;
+        }
+        fseek(infile, program.offset, SEEK_SET);
+        r = fread(g_filedata + program.paddr - base, 1, program.filesz, infile);
+        if (r != program.filesz) {
+            printf("read error in ELF file\n");
+            return -1;
+        }
+    }
+    printf("ELF: total size = %d\n", size);
+    return size;
+}
+
+/*
+ * read a simple binary file into memory
+ * sets g_filedata to point to the data, 
+ * and g_filesize to the length
+ * returns g_filesize, or -1 on error
+ */
+
+int 
+loadBinaryFile(char *fname)
+{
+    int size;
+    FILE *infile;
+    ElfHdr hdr;
+    
+    g_fileptr = 0;
     infile = fopen(fname, "rb");
     if (!infile)
     {
         printf("Could not open %s\n", fname);
-        return 1;
+        return -1;
     }
+    if (ReadAndCheckElfHdr(infile, &hdr)) {
+        /* this is an ELF file, load using LoadElf instead */
+        return loadElfFile(infile, &hdr);
+    } else {
+        printf("not an ELF file\n");
+    }
+    
     fseek(infile, 0, SEEK_END);
     size = ftell(infile);
     fseek(infile, 0, SEEK_SET);
+    g_filedata = (uint8_t *)malloc(size);
+    if (!g_filedata) {
+        printf("Could not allocate %d bytes\n", size);
+        return -1;
+    }
+    size = g_filesize = fread(g_filedata, 1, size, infile);
+    fclose(infile);
+    return size;
+}
+
+int
+loadBytes(char *buffer, int size)
+{
+    int r = 0;
+    if (!g_filedata) {
+        printf("No file data present\n");
+        return 0;
+    }
+    while (size > 0 && g_fileptr < g_filesize) {
+        *buffer++ = g_filedata[g_fileptr++];
+        --size;
+        ++r;
+    }
+    return r;
+}
+
+int loadfilesingle(char *fname)
+{
+    int num, size, i;
+    int patch = patch_mode;
+    int totnum = 0;
+    int checksum = 0;
+
+    size = loadBinaryFile(fname);
+    if (size < 0) {
+        return 1;
+    }
     if (verbose) printf("Loading %s - %d bytes\n", fname, size);
     hwreset();
     msleep(50);
     tx((uint8_t *)"> Prop_Hex 0 0 0 0", 18);
 
-    while ((num=fread(binbuffer, 1, 128, infile)))
+    while ((num=loadBytes(binbuffer, 128)))
     {
         if (patch)
         {
@@ -200,7 +330,6 @@ int loadfilesingle(char *fname)
 
 int loadfile(char *fname, int address)
 {
-    FILE *infile;
     int num, size;
     int totnum = 0;
     int patch = patch_mode;
@@ -208,15 +337,12 @@ int loadfile(char *fname, int address)
     if (load_mode == LOAD_SINGLE)
         return loadfilesingle(fname);
 
-    infile = fopen(fname, "rb");
-    if (!infile)
+    size = loadBinaryFile(fname);
+    if (size < 0)
     {
         printf("Could not open %s\n", fname);
         return 1;
     }
-    fseek(infile, 0, SEEK_END);
-    size = ftell(infile);
-    fseek(infile, 0, SEEK_SET);
     if (verbose) printf("Loading %s - %d bytes\n", fname, size);
     hwreset();
     msleep(50);
@@ -232,7 +358,7 @@ int loadfile(char *fname, int address)
     txval(address);
     tx((uint8_t *)"~", 1);
     msleep(100);
-    while ((num=fread(buffer, 1, 1024, infile)))
+    while ((num=loadBytes(buffer, 1024)))
     {
         if (patch)
         {

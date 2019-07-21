@@ -1,1 +1,1 @@
-gcc -Wall loadp2.c osint_mingw.c -o loadp2
+gcc -Wall loadp2.c loadelf.c osint_mingw.c -o loadp2
