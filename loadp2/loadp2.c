@@ -161,7 +161,7 @@ loadElfFile(FILE *infile, ElfHdr *hdr)
         if (program.type != PT_LOAD) {
             continue;
         }
-        printf("load %d bytes at %x\n", program.filesz, program.paddr);
+        //printf("load %d bytes at %x\n", program.filesz, program.paddr);
         if (program.paddr < base) {
             base = program.paddr;
         }
@@ -199,7 +199,7 @@ loadElfFile(FILE *infile, ElfHdr *hdr)
             return -1;
         }
     }
-    printf("ELF: total size = %d\n", size);
+    //printf("ELF: total size = %d\n", size);
     return size;
 }
 
