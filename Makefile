@@ -3,12 +3,21 @@
 # Final output is in spin2gui.zip
 #
 
+# where the Tcl and Tk source code are checked out (side by side)
+TCLROOT=/home/ersmith/src/Tcl
+
 # if pandoc exists we can convert .md files to .pdf, but if it
 # doesn't we want the build to still succeeed, just without
 # the .pdfs
 PANDOC := pandoc
 PANDOC_EXISTS := $(shell $(PANDOC) --version 2>/dev/null)
 
+WINGCC = i686-w64-mingw32-gcc
+WINCFLAGS = -Os -DUNICODE -D_UNICODE -D_ATL_XP_TARGETING -DSTATIC_BUILD=1 -DUSE_TCL_STUBS
+WINLIBS = -lnetapi32 -lkernel32 -luser32 -ladvapi32 -luserenv -lws2_32 -lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32 -luuid -lole32 -loleaut32
+
+WINTK_INC = -I$(TCLROOT)/tk/xlib -I$(TCLROOT)/tcl/win -I$(TCLROOT)/tcl/generic -I$(TCLROOT)/tk/win -I$(TCLROOT)/tk/generic
+WINTK_LIBS = $(TCLROOT)/tk/win/libtk87.a $(TCLROOT)/tk/win/libtkstub87.a $(TCLROOT)/tcl/win/libtcl90.a $(TCLROOT)/tcl/win/libtclstub90.a $(WINLIBS) $(TCLROOT)/tk/win/wish.res.o -mwindows -pipe -static-libgcc -municode
 default: spin2gui.zip
 
 VPATH=.:spin2cpp/doc
@@ -22,12 +31,15 @@ BINFILES=bin/fastspin.exe bin/proploader.exe bin/loadp2.exe
 SIGN=./spin2cpp/sign.sh
 
 spin2gui.zip: spin2gui.exe $(BINFILES) $(PDFFILES) spin2gui_dir
-	$(SIGN) spin2gui.exe
+# signing spin2gui.exe does not work because it destroys the zip file info
+#	$(SIGN) spin2gui/spin2gui.exe
 	rm -f spin2gui.zip
 	zip -r spin2gui.zip spin2gui
 
-spin2gui.exe: spin2gui.tcl
-	/opt/freewrap/linux64/freewrap spin2gui.tcl -w /opt/freewrap/win32/freewrap.exe
+spin2gui.exe: src/spin2gui.c
+	$(WINGCC) $(WINCFLAGS) -o spin2gui.exe src/spin2gui.c $(WINTK_INC) $(WINTK_LIBS)
+
+#	/opt/freewrap/linux64/freewrap spin2gui.tcl -w /opt/freewrap/win32/freewrap.exe
 
 clean:
 	rm -rf spin2gui
