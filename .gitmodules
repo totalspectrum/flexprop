@@ -4,3 +4,6 @@
 [submodule "spin2cpp"]
 	path = spin2cpp
 	url = https://github.com/totalspectrum/spin2cpp
+[submodule "loadp2"]
+	path = loadp2
+	url = https://github.com/totalspectrum/loadp2
