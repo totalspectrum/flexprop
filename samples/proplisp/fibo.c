@@ -9,7 +9,7 @@
 #include "sys/p2es_clock.h"
 #define ARENA_SIZE 32768
 #else
-#define ARENA_SIZE 16000
+#define ARENA_SIZE 12000
 #endif
 
 int inchar() {
