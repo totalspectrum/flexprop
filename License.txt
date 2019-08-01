@@ -72,10 +72,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ============================================================================
-The spin2gui GUI front end is produced with the aid of Tcl/Tk and the
-freewrap program.
-
-freeWrap 6.64 is Copyright 1998-2014 by Dennis R. LaBelle. Used by permission.
+The spin2gui GUI front end is produced with the aid of Tcl/Tk.
 
 Tcl/Tk License Terms
 
