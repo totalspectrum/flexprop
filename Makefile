@@ -31,15 +31,12 @@ BINFILES=bin/fastspin.exe bin/proploader.exe bin/loadp2.exe
 SIGN=./spin2cpp/sign.sh
 
 spin2gui.zip: spin2gui.exe $(BINFILES) $(PDFFILES) spin2gui_dir
-# signing spin2gui.exe does not work because it destroys the zip file info
-#	$(SIGN) spin2gui/spin2gui.exe
 	rm -f spin2gui.zip
 	zip -r spin2gui.zip spin2gui
 
 spin2gui.exe: src/spin2gui.c
 	$(WINGCC) $(WINCFLAGS) -o spin2gui.exe src/spin2gui.c $(WINTK_INC) $(WINTK_LIBS)
-
-#	/opt/freewrap/linux64/freewrap spin2gui.tcl -w /opt/freewrap/win32/freewrap.exe
+	$(SIGN) spin2gui.exe
 
 clean:
 	rm -rf spin2gui
