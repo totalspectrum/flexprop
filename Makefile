@@ -4,7 +4,7 @@
 #
 
 # where the Tcl and Tk source code are checked out (side by side)
-TCLROOT=/home/ersmith/src/Tcl
+TCLROOT ?= /home/ersmith/src/Tcl
 
 # if pandoc exists we can convert .md files to .pdf, but if it
 # doesn't we want the build to still succeeed, just without
