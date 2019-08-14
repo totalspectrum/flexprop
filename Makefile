@@ -13,11 +13,16 @@ PANDOC := pandoc
 PANDOC_EXISTS := $(shell $(PANDOC) --version 2>/dev/null)
 
 WINGCC = i686-w64-mingw32-gcc
+WINRC = i686-w64-mingw32-windres
 WINCFLAGS = -Os -DUNICODE -D_UNICODE -D_ATL_XP_TARGETING -DSTATIC_BUILD=1 -DUSE_TCL_STUBS
 WINLIBS = -lnetapi32 -lkernel32 -luser32 -ladvapi32 -luserenv -lws2_32 -lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32 -luuid -lole32 -loleaut32
 
+RESDIR=src/rc
+RES_RC=$(RESDIR)/wish.rc
+RESOBJ=$(RESDIR)/wish.res.o
+
 WINTK_INC = -I$(TCLROOT)/tk/xlib -I$(TCLROOT)/tcl/win -I$(TCLROOT)/tcl/generic -I$(TCLROOT)/tk/win -I$(TCLROOT)/tk/generic
-WINTK_LIBS = $(TCLROOT)/tk/win/libtk87.a $(TCLROOT)/tk/win/libtkstub87.a $(TCLROOT)/tcl/win/libtcl90.a $(TCLROOT)/tcl/win/libtclstub90.a $(WINLIBS) $(TCLROOT)/tk/win/wish.res.o -mwindows -pipe -static-libgcc -municode
+WINTK_LIBS = $(TCLROOT)/tk/win/libtk87.a $(TCLROOT)/tk/win/libtkstub87.a $(TCLROOT)/tcl/win/libtcl90.a $(TCLROOT)/tcl/win/libtclstub90.a $(WINLIBS) $(RESOBJ) -mwindows -pipe -static-libgcc -municode
 default: spin2gui.zip
 
 VPATH=.:spin2cpp/doc
@@ -34,7 +39,7 @@ spin2gui.zip: spin2gui.exe $(BINFILES) $(PDFFILES) spin2gui_dir
 	rm -f spin2gui.zip
 	zip -r spin2gui.zip spin2gui
 
-spin2gui.exe: src/spin2gui.c
+spin2gui.exe: src/spin2gui.c $(RESOBJ)
 	$(WINGCC) $(WINCFLAGS) -o spin2gui.exe src/spin2gui.c $(WINTK_INC) $(WINTK_LIBS)
 	$(SIGN) spin2gui.exe
 
@@ -49,6 +54,7 @@ clean:
 	rm -rf samples/*.lst samples/*.pasm samples/*.p2asm
 	rm -rf samples/*/*.binary samples/*/*.pasm samples/*/*.p2asm
 	rm -rf samples/*/*.lst
+	rm -rf $(RESOBJ)
 
 spin2gui_dir:
 	mkdir -p spin2gui/bin
@@ -91,3 +97,5 @@ loadp2/build-win32/loadp2.exe:
 %.pdf: %.md
 	$(PANDOC) -f markdown_github -t latex -o $@ $<
 
+$(RESOBJ): $(RES_RC)
+	$(WINRC) -o $@ --define STATIC_BUILD --include "$(TCLROOT)/tk/generic" --include "$(TCLROOT)/tcl/generic" --include "$(RESDIR)" "$<"
