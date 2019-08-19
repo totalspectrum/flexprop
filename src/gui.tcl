@@ -989,7 +989,9 @@ proc searchrep'next w {
     set cmd [list $w search -count n -- $::Find insert+2c]
     if $::IgnoreCase {set cmd [linsert $cmd 2 -nocase]}
     set pos [eval $cmd]
-    if {$pos ne ""} {
+    if {$pos eq ""} {
+	tk_messageBox -icon info -type ok -message "Not found"
+    } else {
         $w mark set insert $pos
         $w see insert
         $w tag add hilite $pos $pos+${n}c
