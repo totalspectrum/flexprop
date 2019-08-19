@@ -495,7 +495,15 @@ proc saveFileAs {w} {
     global BINFILE
     global SpinTypes
     global config
-    set filename [tk_getSaveFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $config(lastdir) ]
+
+    if { [string length $filenames($w)] == 0 } {
+	set initdir $config(lastdir)
+	set initfilename ""
+    } else {
+	set initdir [file dirname $filenames($w)]
+	set initfilename [file tail $filenames($w)]
+    }
+    set filename [tk_getSaveFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $initdir -initialfile $initfilename ]
     if { [string length $filename] == 0 } {
 	return
     }
