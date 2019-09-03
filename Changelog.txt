@@ -1,6 +1,7 @@
 Version 3.9.30
 - In the "Save As..." dialog use the existing file name/directory as the base
 - Show a message if search terms are not found
+- Updated fastspin and loadp2 to latest versions
 
 Version 3.9.28
 - Adopted new build process which uses original Tcl/Tk libraries rather than freewrap; this allows signing of the built binary.
