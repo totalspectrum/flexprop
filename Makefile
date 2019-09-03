@@ -33,7 +33,14 @@ endif
 
 BINFILES=bin/fastspin.exe bin/proploader.exe bin/loadp2.exe
 
-SIGN=./spin2cpp/sign.sh
+# the script used for signing executables:
+#    $(SIGN) foo
+# produces foo.signed.exe from foo.exe
+#
+# to just do a regular build, do "make"
+# for a signed build, do "make SIGN=my_signing_script"
+
+SIGN ?= ./spin2cpp/sign.dummy.sh
 
 spin2gui.zip: spin2gui.exe $(BINFILES) $(PDFFILES) spin2gui_dir
 	rm -f spin2gui.zip
@@ -41,8 +48,8 @@ spin2gui.zip: spin2gui.exe $(BINFILES) $(PDFFILES) spin2gui_dir
 
 spin2gui.exe: src/spin2gui.c $(RESOBJ)
 	$(WINGCC) $(WINCFLAGS) -o spin2gui.exe src/spin2gui.c $(WINTK_INC) $(WINTK_LIBS)
-	$(SIGN) spin2gui.exe
-
+	$(SIGN) spin2gui
+	mv spin2gui.signed.exe spin2gui.exe
 clean:
 	rm -rf spin2gui
 	rm -rf *.exe *.zip
@@ -75,7 +82,8 @@ endif
 bin/fastspin.exe: spin2cpp/build-win32/fastspin.exe
 	mkdir -p bin
 	cp $< $@
-	$(SIGN) $@
+	$(SIGN) fastspin
+	mv bin/fastspin.signed.exe bin/fastspin.exe
 
 bin/proploader.exe: proploader-msys-build/bin/proploader.exe
 	mkdir -p bin
