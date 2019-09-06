@@ -34,8 +34,8 @@ endif
 BINFILES=bin/fastspin.exe bin/proploader.exe bin/loadp2.exe
 
 # the script used for signing executables:
-#    $(SIGN) foo
-# produces foo.signed.exe from foo.exe
+#    $(SIGN) bin/foo
+# produces bin/foo.signed.exe from bin/foo.exe
 #
 # to just do a regular build, do "make"
 # for a signed build, do "make SIGN=my_signing_script"
@@ -82,7 +82,7 @@ endif
 bin/fastspin.exe: spin2cpp/build-win32/fastspin.exe
 	mkdir -p bin
 	cp $< $@
-	$(SIGN) fastspin
+	$(SIGN) bin/fastspin
 	mv bin/fastspin.signed.exe bin/fastspin.exe
 
 bin/proploader.exe: proploader-msys-build/bin/proploader.exe
