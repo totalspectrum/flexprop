@@ -1,7 +1,7 @@
 Spin2gui
 ========
 
-Spin2gui is a very simple GUI for running applications on the Parallax Propeller 1 or 2, using the Spin language. It consists of a very basic front end (designed for working on one file at a time), the fastspin compiler, and Dave Hein's loadp2 program loader. I've also included David Betz's proploader.exe, which allows spin2gui to work on Propeller 1 systems as well (but the default configuration is for Prop2).
+Spin2gui is a very simple GUI for running applications on the Parallax Propeller 1 or 2, using the Spin language (and now BASIC and C as well). It consists of a very basic front end IDE, the fastspin compiler, and Dave Hein's loadp2 program loader. The default configuration is for the Prop2, but I've also included David Betz's proploader.exe, which allows spin2gui to work on Propeller 1 systems as well.
 
 To use it, create a directory called "spin2gui" (or whatever you'd like) and unpack the .zip file into that directory. Then run spin2gui.exe. The program will save its configuration in a file called .spin2gui.config in that directory.
 
