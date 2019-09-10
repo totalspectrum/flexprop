@@ -526,24 +526,31 @@ proc doHelp {} {
 }
 
 proc finderrorline {text} {
-    set index [string last "error:" $text]
+    set index [string last " error:" $text]
     if { $index == -1 } {
+#	tk_messageBox -message "bad index" -type ok
 	return ""
     }
-    set i2 [string last "(" $text $index]
+    set text [string range $text 0 $index]
+    set text [string trimright $text ": "]
+    set i2 [string last "(" $text]
     if { $i2 == -1 } {
-	set index [string last ":" $text $index]
+	set i2 [string last ":" $text]
     }
     if { $i2 == -1 } {
+#	tk_messageBox -message "bad index2: text=|$text| index=$index" -type ok
 	return ""
     }
     set i2 [ expr $i2 + 1 ]
     set first [string wordstart $text $i2]
     set last [string wordend $text $i2]
+#	tk_messageBox -message "first: $first last: $last" -type ok
     set last [expr $last - 1]
     set line [string range $text $first $last]
     set line [expr $line]
-    return $line
+    set fname [expr $first - 1]
+    set fname [string range $text 0 $fname]
+    return [list $fname $line]
 }
 
 #
@@ -554,12 +561,15 @@ proc doClickOnError {coord} {
     set first "$coord linestart"
     set last "$coord lineend"
     set text [$w get $first $last]
-    set line [finderrorline $text]
+    set linelist [finderrorline $text]
+    set fname [lindex $linelist 0]
+    set line [lindex $linelist 1]
+    #tk_messageBox -message "file: $fname line: $line" -type ok
+    
     if { $line != "" } {
 	set w [.p.nb select]
 	$w.txt see $line.0
     }
-#    tk_messageBox -message "go to line: $line" -type ok
 }
 
 #
