@@ -167,11 +167,11 @@ proc exitProgram { } {
 # close tab
 proc closeTab { } {
     global filenames
-    set w [.nb select]
+    set w [.p.nb select]
     if { $w ne "" } {
 	checkChanges $w
 	set filenames($w) ""
-	.nb forget $w
+	.p.nb forget $w
 	destroy $w
     }
 }
@@ -270,7 +270,7 @@ proc checkChanges {w} {
 
 # check all windows for changes
 proc checkAllChanges {} {
-    set t [.nb tabs]
+    set t [.p.nb tabs]
     set i 0
     set w [lindex $t $i]
     while { $w ne "" } {
@@ -295,7 +295,7 @@ proc newTabName {} {
     global TABCOUNTER
     set s "f$TABCOUNTER"
     set TABCOUNTER [expr "$TABCOUNTER + 1"]
-    return ".nb.$s"
+    return ".p.nb.$s"
 }
 
 proc createNewTab {} {
@@ -303,14 +303,14 @@ proc createNewTab {} {
     global config
     set w [newTabName]
     
-    .bot.txt delete 1.0 end
+    .p.bot.txt delete 1.0 end
     set filenames($w) ""
     setupFramedText $w
     #setHighlightingSpin $w.txt
     setfont $w.txt $config(font)
-    .nb add $w
-    .nb tab $w -text "New File"
-    .nb select $w
+    .p.nb add $w
+    .p.nb tab $w -text "New File"
+    .p.nb select $w
 }
 
 #
@@ -371,10 +371,10 @@ proc loadFileToTab {w filename title} {
 	set title [file tail $filename]
     }
     if {[winfo exists $w]} {
-	.nb select $w
+	.p.nb select $w
     } else {
 	setupFramedText $w
-	.nb add $w -text "$title"
+	.p.nb add $w -text "$title"
 	#setHighlightingSpin $w.txt
     }
 
@@ -384,8 +384,8 @@ proc loadFileToTab {w filename title} {
     $w.txt highlight 1.0 end
     ctext::comments $w.txt
     ctext::linemapUpdate $w.txt
-    .nb tab $w -text $title
-    .nb select $w
+    .p.nb tab $w -text $title
+    .p.nb select $w
     set filenames($w) $filename
     set filetimes($filename) [file mtime $filename]
 }
@@ -396,11 +396,11 @@ proc loadSpinFile {} {
     global SpinTypes
     global config
 
-    set w [.nb select]
+    set w [.p.nb select]
     
     if { $w eq "" || $filenames($w) ne ""} {
 	createNewTab
-	set w [.nb select]
+	set w [.p.nb select]
     }
     checkChanges $w
     
@@ -421,7 +421,7 @@ proc loadSpinFile {} {
 proc saveFilesForCompile {} {
     global filenames
     global filetimes
-    set t [.nb tabs]
+    set t [.p.nb tabs]
     set i 0
     set w [lindex $t $i]
     while { $w ne "" } {
@@ -464,7 +464,7 @@ proc saveFilesForCompile {} {
     
 # always save the current file
 proc saveCurFile {} {
-    set w [.nb select]
+    set w [.p.nb select]
     saveFile $w
 }
 		  
@@ -483,7 +483,7 @@ proc saveFile {w} {
 	set config(lastdir) [file dirname $filename]
 	set config(spinext) [file extension $filename]
 	set filenames($w) $filename
-	.nb tab $w -text [file root $filename]
+	.p.nb tab $w -text [file root $filename]
 	set BINFILE ""
     }
     
@@ -511,7 +511,7 @@ proc saveFileAs {w} {
     set config(spinext) [file extension $filename]
     set BINFILE ""
     set filenames($w) $filename
-    .nb tab $w -text [file tail $filename]
+    .p.nb tab $w -text [file tail $filename]
     saveFile $w
 }
 
@@ -521,8 +521,8 @@ proc doAbout {} {
 }
 
 proc doHelp {} {
-    loadFileToTab .nb.help "doc/help.txt" "Help"
-    makeReadOnly .nb.help.txt
+    loadFileToTab .p.nb.help "doc/help.txt" "Help"
+    makeReadOnly .p.nb.help.txt
 }
 
 proc finderrorline {text} {
@@ -550,13 +550,13 @@ proc finderrorline {text} {
 # parameter is text  coordinates like 2.72
 #
 proc doClickOnError {coord} {
-    set w .bot.txt
+    set w .p.bot.txt
     set first "$coord linestart"
     set last "$coord lineend"
     set text [$w get $first $last]
     set line [finderrorline $text]
     if { $line != "" } {
-	set w [.nb select]
+	set w [.p.nb select]
 	$w.txt see $line.0
     }
 #    tk_messageBox -message "go to line: $line" -type ok
@@ -622,7 +622,7 @@ menu .mbar.help -tearoff 0
 .mbar.file add command -label "New File" -accelerator "^N" -command { createNewTab }
 .mbar.file add command -label "Open File..." -accelerator "^O" -command { loadSpinFile }
 .mbar.file add command -label "Save File" -accelerator "^S" -command { saveCurFile }
-.mbar.file add command -label "Save File As..." -command { saveFileAs [.nb select] }
+.mbar.file add command -label "Save File As..." -command { saveFileAs [.p.nb select] }
 .mbar.file add separator
 .mbar.file add command -label "Library directory..." -command { getLibrary }
 .mbar.file add separator
@@ -678,33 +678,37 @@ foreach v $serlist {
 
 wm title . "Spin 2 GUI"
 
+ttk::panedwindow .p -orient vertical
+
 grid columnconfigure . {0 1} -weight 1
 grid rowconfigure . 1 -weight 1
-ttk::notebook .nb
-frame .bot
+ttk::notebook .p.nb
+frame .p.bot
 frame .toolbar -bd 1 -relief raised
 
 grid .toolbar -column 0 -row 0 -columnspan 2 -sticky nsew
-grid .nb -column 0 -row 1 -columnspan 2 -rowspan 1 -sticky nsew
-grid .bot -column 0 -row 2 -columnspan 2 -sticky nsew
+grid .p -column 0 -row 1 -columnspan 2 -rowspan 1 -sticky nsew
 
 button .toolbar.compile -text "Compile" -command doCompile
 button .toolbar.runBinary -text "Run Binary" -command doLoadRun
 button .toolbar.compileRun -text "Compile & Run" -command doCompileRun
 grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun -sticky nsew
 
-scrollbar .bot.v -orient vertical -command {.bot.txt yview}
-scrollbar .bot.h -orient horizontal -command {.bot.txt xview}
-text .bot.txt -wrap none -xscroll {.bot.h set} -yscroll {.bot.v set} -height 10 -font "courier 8"
-label .bot.label -background DarkGrey -foreground white -text "Compiler Output"
+scrollbar .p.bot.v -orient vertical -command {.p.bot.txt yview}
+scrollbar .p.bot.h -orient horizontal -command {.p.bot.txt xview}
+text .p.bot.txt -wrap none -xscroll {.p.bot.h set} -yscroll {.p.bot.v set} -height 10 -font "courier 8"
+label .p.bot.label -background DarkGrey -foreground white -text "Compiler Output" -font "courier 8"
 
-grid .bot.label      -sticky nsew
-grid .bot.txt .bot.v -sticky nsew
-grid .bot.h          -sticky nsew
-grid rowconfigure .bot .bot.txt -weight 1
-grid columnconfigure .bot .bot.txt -weight 1
+grid .p.bot.label      -sticky nsew
+grid .p.bot.txt .p.bot.v -sticky nsew
+grid .p.bot.h          -sticky nsew
+grid rowconfigure .p.bot .p.bot.txt -weight 1
+grid columnconfigure .p.bot .p.bot.txt -weight 1
 
-#bind .nb.main.txt <FocusIn> [list fontchooserFocus .nb.main.txt]
+.p add .p.nb
+.p add .p.bot
+
+#bind .p.nb.main.txt <FocusIn> [list fontchooserFocus .p.nb.main.txt]
 
 bind . <Control-n> { createNewTab }
 bind . <Control-o> { loadSpinFile }
@@ -716,16 +720,16 @@ bind . <Control-l> { doListing }
 bind . <Control-f> { searchrep [focus] 0 }
 bind . <Control-w> { closeTab }
 
-bind .bot.txt <Double-1> { doClickOnError "[%W index @%x,%y]" }
+bind .p.bot.txt <Double-1> { doClickOnError "[%W index @%x,%y]" }
 
 wm protocol . WM_DELETE_WINDOW {
     exitProgram
 }
 
-#autoscroll::autoscroll .nb.main.v
-#autoscroll::autoscroll .nb.main.h
-#autoscroll::autoscroll .bot.v
-#autoscroll::autoscroll .bot.h
+#autoscroll::autoscroll .p.nb.main.v
+#autoscroll::autoscroll .p.nb.main.h
+#autoscroll::autoscroll .p.bot.v
+#autoscroll::autoscroll .p.bot.h
 
 # actually read in our config info
 config_open
@@ -742,7 +746,7 @@ proc resetFont {w} {
     global config
     set fnt [font actual $w]
     set config(font) $fnt
-    setfont [.nb select].txt $fnt
+    setfont [.p.nb select].txt $fnt
 }
 
 # translate % escapes in our command line strings
@@ -757,7 +761,7 @@ proc mapPercent {str} {
 
 #    set fulloptions "$OPT $COMPRESS"
     set fulloptions "$OPT"
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%L" $config(library) "%S" $filenames([.nb select]) "%B" $BINFILE "%O" $fulloptions "%P" $COMPORT ]
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%O" $fulloptions "%P" $COMPORT ]
     set result [string map $percentmap $str]
     return $result
 }
@@ -818,14 +822,14 @@ proc doCompile {} {
     if {[catch $runcmd errout options]} {
 	set status 1
     }
-    .bot.txt replace 1.0 end "$cmdstr\n"
-    .bot.txt insert 2.0 $errout
-    tagerrors .bot.txt
+    .p.bot.txt replace 1.0 end "$cmdstr\n"
+    .p.bot.txt insert 2.0 $errout
+    tagerrors .p.bot.txt
     if { $status != 0 } {
 	tk_messageBox -icon error -type ok -message "Compilation failed" -detail "see compiler output window for details"
 	set BINFILE ""
     } else {
-	set BINFILE [file rootname $filenames([.nb select])]
+	set BINFILE [file rootname $filenames([.p.nb select])]
 	set BINFILE "$BINFILE.binary"
 	# load the listing if a listing window is open
 	if {[winfo exists .list]} {
@@ -837,7 +841,7 @@ proc doCompile {} {
 
 proc doListing {} {
     global filenames
-    set w [.nb select]
+    set w [.p.nb select]
     if { $w ne "" } {
 	set LSTFILE [file rootname $filenames($w)]
 	set LSTFILE "$LSTFILE.lst"
@@ -851,15 +855,15 @@ proc doJustRun {} {
     global BINFILE
     
     set cmdstr [mapPercent $config(runcmd)]
-    .bot.txt insert end "$cmdstr\n"
+    .p.bot.txt insert end "$cmdstr\n"
 
     set runcmd [list exec -ignorestderr]
     set runcmd [concat $runcmd $cmdstr]
     lappend runcmd "&"
 
     if {[catch $runcmd errout options]} {
-	.bot.txt insert 2.0 $errout
-	tagerrors .bot.txt
+	.p.bot.txt insert 2.0 $errout
+	tagerrors .p.bot.txt
     }
 }
 
@@ -873,14 +877,14 @@ proc doLoadRun {} {
 	return
     }
     set BINFILE $filename
-    .bot.txt delete 1.0 end
+    .p.bot.txt delete 1.0 end
     doJustRun
 }
 
 proc doCompileRun {} {
     set status [doCompile]
     if { $status eq 0 } {
-	.bot.txt insert end "\n"
+	.p.bot.txt insert end "\n"
 	doJustRun
     }
 }
@@ -1019,7 +1023,7 @@ proc searchrep'all w {
 # main code
 
 if { $::argc > 0 } {
-    loadFileToTab $argv .nb.main
+    loadFileToTab $argv .p.nb.main
 } else {
     createNewTab
 }
