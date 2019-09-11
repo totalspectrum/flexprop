@@ -12,7 +12,7 @@ set ROOTDIR [file dirname $::argv0]
 set CONFIG_FILE "$ROOTDIR/.spin2gui.config"
 set aboutMsg {
 GUI tool for fastspin
-Version 3.9.31
+Version 3.9.31-beta
 Copyright 2018-2019 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
@@ -621,6 +621,15 @@ proc setHighlightingSpin {w} {
     $w tag raise _cComment
 }
 
+menu .popup1 -tearoff 0
+.popup1 add command -label "Cut" -command {event generate [focus] <<Cut>>}
+.popup1 add command -label "Copy" -command {event generate [focus] <<Copy>>}
+.popup1 add command -label "Paste" -command {event generate [focus] <<Paste>>}
+.popup1 add command -label "Undo" -command {event generate [focus] <<Undo>>}
+.popup1 add separator
+.popup1 add command -label "Save File" -command { saveCurFile }
+.popup1 add command -label "Save File As..." -command { saveFileAs [.p.nb select] }
+
 menu .mbar
 . configure -menu .mbar
 menu .mbar.file -tearoff 0
@@ -733,6 +742,15 @@ bind . <Control-r> { doCompileRun }
 bind . <Control-l> { doListing }
 bind . <Control-f> { searchrep [focus] 0 }
 bind . <Control-w> { closeTab }
+
+# bind to right mouse button on Linux and Windows
+
+if {[tk windowingsystem]=="aqua"} {
+    bind . <2> "tk_popup .popup1 %X %Y"
+    bind . <Control-1> "tk_popup .popup1 %X %Y"
+} else {
+    bind . <3> "tk_popup .popup1 %X %Y"
+}
 
 bind .p.bot.txt <Double-1> { doClickOnError "[%W index @%x,%y]" }
 
