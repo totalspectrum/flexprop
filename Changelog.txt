@@ -1,6 +1,7 @@
 Version 3.9.31
 - Show previously selected font in the font chooser.
 - Use panes for the top level window, to allow resizing the command output
+- Print compilation time and machine
 
 Version 3.9.30
 - In the "Save As..." dialog use the existing file name/directory as the base

@@ -841,6 +841,7 @@ proc doCompile {} {
     .p.bot.txt insert end "\nFinished at "
     set now [clock seconds]
     .p.bot.txt insert end [clock format $now -format %c]
+    .p.bot.txt insert end " on [info hostname]"
     tagerrors .p.bot.txt
     if { $status != 0 } {
 	tk_messageBox -icon error -type ok -message "Compilation failed" -detail "see compiler output window for details"
