@@ -6,10 +6,6 @@
 #
 # The guts of the IDE GUI
 #
-
-# global variables
-set ROOTDIR [file dirname $::argv0]
-set CONFIG_FILE "$ROOTDIR/.spin2gui.config"
 set aboutMsg {
 GUI tool for fastspin
 Version 3.9.31-beta
@@ -18,6 +14,15 @@ Copyright 2018-2019 Total Spectrum Software Inc.
 There is no warranty and no guarantee that
 output will be correct.    
 }
+
+#
+# global variables
+# filenames($w) gives the file name in window $w, for all of the various tabs
+# filetimes($w) gives the last modified time for that file
+#
+
+set ROOTDIR [file dirname $::argv0]
+set CONFIG_FILE "$ROOTDIR/.spin2gui.config"
 
 
 if { $tcl_platform(platform) == "windows" } {
@@ -58,6 +63,22 @@ set COMPRESS "-z0"
 
 setShadowP2Defaults
 copyShadowToConfig
+
+#
+# see if there's already a tab which contains a file
+# if so, return the name of the tab
+# otherwise return ""
+#
+proc getTabFor { fname } {
+    global filenames
+    set tablist [.p.nb tabs]
+    foreach w $tablist {
+	if { "$filenames($w)" == "$fname" } {
+	    return $w
+	}
+    }
+    return ""
+}
 
 #
 # set font and tab stops for a window
@@ -228,6 +249,8 @@ proc saveFileFromWindow { fname win } {
 #
 proc tagerrors { w } {
     $w tag remove errtxt 0.0 end
+    $w tag remove errlink 0.0 end
+    
     # set current position at beginning of file
     set cur 1.0
     # search through looking for error:
@@ -235,9 +258,11 @@ proc tagerrors { w } {
 	set cur [$w search -count length "error:" $cur end]
 	if {$cur eq ""} {break}
 	$w tag add errtxt $cur "$cur lineend"
+	$w tag add errlink "$cur linestart" "$cur - 2 chars"
 	set cur [$w index "$cur + $length char"]
     }
     $w tag configure errtxt -foreground red
+    $w tag configure errlink -foreground blue -underline true
 }
 
 set SpinTypes {
@@ -305,7 +330,7 @@ proc createNewTab {} {
     global config
     set w [newTabName]
     
-    .p.bot.txt delete 1.0 end
+    #.p.bot.txt delete 1.0 end
     set filenames($w) ""
     setupFramedText $w
     #setHighlightingSpin $w.txt
@@ -313,6 +338,7 @@ proc createNewTab {} {
     .p.nb add $w
     .p.nb tab $w -text "New File"
     .p.nb select $w
+    return $w
 }
 
 #
@@ -392,30 +418,39 @@ proc loadFileToTab {w filename title} {
     set filetimes($filename) [file mtime $filename]
 }
 
-proc loadSpinFile {} {
-    global BINFILE
+proc loadSourceFile { filename } {
     global filenames
-    global SpinTypes
-    global config
 
-    set w [.p.nb select]
-    
-    if { $w eq "" || $filenames($w) ne ""} {
-	createNewTab
+    set w [getTabFor $filename]
+    if { $w ne "" } {
+	.p.nb select $w
+    } else {
 	set w [.p.nb select]
-    }
-    checkChanges $w
     
+	if { $w eq "" || $filenames($w) ne ""} {
+	    set w [createNewTab]
+	}
+	checkChanges $w
+    
+	loadFileToTab $w $filename ""
+    }
+    return $w
+}
+
+proc doOpenFile {} {
+    global config
+    global SpinTypes
+    global BINFILE
+
     set filename [tk_getOpenFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $config(lastdir) ]
     if { [string length $filename] == 0 } {
-	return
+	return ""
     }
     set config(lastdir) [file dirname $filename]
     set config(spinext) [file extension $filename]
-
-    loadFileToTab $w $filename ""
-    
     set BINFILE ""
+    
+    return [loadSourceFile $filename]
 }
 
 # maybe save the current file; used for compilation
@@ -527,49 +562,29 @@ proc doHelp {} {
     makeReadOnly .p.nb.help.txt
 }
 
-proc finderrorline {text} {
-    set index [string last " error:" $text]
-    if { $index == -1 } {
-#	tk_messageBox -message "bad index" -type ok
-	return ""
-    }
-    set text [string range $text 0 $index]
-    set text [string trimright $text ": "]
-    set i2 [string last "(" $text]
-    if { $i2 == -1 } {
-	set i2 [string last ":" $text]
-    }
-    if { $i2 == -1 } {
-#	tk_messageBox -message "bad index2: text=|$text| index=$index" -type ok
-	return ""
-    }
-    set i2 [ expr $i2 + 1 ]
-    set first [string wordstart $text $i2]
-    set last [string wordend $text $i2]
-#	tk_messageBox -message "first: $first last: $last" -type ok
-    set last [expr $last - 1]
-    set line [string range $text $first $last]
-    set line [expr $line]
-    set fname [expr $first - 1]
-    set fname [string range $text 0 $fname]
-    return [list $fname $line]
-}
-
 #
-# parameter is text  coordinates like 2.72
+# parameter is text coordinates like 2.72
 #
 proc doClickOnError {coord} {
     set w .p.bot.txt
     set first "$coord linestart"
     set last "$coord lineend"
-    set text [$w get $first $last]
-    set linelist [finderrorline $text]
-    set fname [lindex $linelist 0]
-    set line [lindex $linelist 1]
-    #tk_messageBox -message "file: $fname line: $line" -type ok
+    set linkptr [$w tag prevrange errlink $coord]
+    set link1 [lindex $linkptr 0]
+    set link2 [lindex $linkptr 1]
+    set linedata [.p.bot.txt get $link1 $link2]
+    set colonptr [string last ":" $linedata]
+    if { $colonptr eq "" } {
+	set fname ""
+	set line ""
+    } else {
+	set fname [string range $linedata 0 [expr $colonptr - 1]]
+	set line [string range $linedata [expr $colonptr + 1] end]
+    }
+    #tk_messageBox -message "data: <$linedata> fname: <$fname> line: <$line>" -type ok
     
-    if { $line != "" } {
-	set w [.p.nb select]
+    if { $fname != "" } {
+	set w [loadSourceFile $fname ]
 	$w.txt see $line.0
     }
 }
@@ -641,7 +656,7 @@ menu .mbar.help -tearoff 0
 
 .mbar add cascade -menu .mbar.file -label File
 .mbar.file add command -label "New File" -accelerator "^N" -command { createNewTab }
-.mbar.file add command -label "Open File..." -accelerator "^O" -command { loadSpinFile }
+.mbar.file add command -label "Open File..." -accelerator "^O" -command { doOpenFile }
 .mbar.file add command -label "Save File" -accelerator "^S" -command { saveCurFile }
 .mbar.file add command -label "Save File As..." -command { saveFileAs [.p.nb select] }
 .mbar.file add separator
@@ -734,7 +749,7 @@ grid columnconfigure .p.bot .p.bot.txt -weight 1
 #bind .p.nb.main.txt <FocusIn> [list fontchooserFocus .p.nb.main.txt]
 
 bind . <Control-n> { createNewTab }
-bind . <Control-o> { loadSpinFile }
+bind . <Control-o> { doOpenFile }
 bind . <Control-s> { saveCurFile }
 bind . <Control-b> { browseFile }
 bind . <Control-q> { exitProgram }
@@ -752,7 +767,12 @@ if {[tk windowingsystem]=="aqua"} {
     bind . <3> "tk_popup .popup1 %X %Y"
 }
 
-bind .p.bot.txt <Double-1> { doClickOnError "[%W index @%x,%y]" }
+#bind .p.bot.txt <Double-1> { doClickOnError "[%W index @%x,%y]" }
+set pbotcursor [.p.bot.txt cget -cursor]
+
+.p.bot.txt tag bind errlink <Enter> { .p.bot.txt configure -cursor fleur }
+.p.bot.txt tag bind errlink <Leave> { .p.bot.txt configure -cursor $pbotcursor }
+.p.bot.txt tag bind errlink <ButtonPress> { doClickOnError "[%W index @%x,%y]" }
 
 wm protocol . WM_DELETE_WINDOW {
     exitProgram
