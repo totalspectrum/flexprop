@@ -1,3 +1,6 @@
+Version 3.9.31
+- Show previously selected font in the font chooser.
+
 Version 3.9.30
 - In the "Save As..." dialog use the existing file name/directory as the base
 - Show a message if search terms are not found

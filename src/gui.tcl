@@ -732,7 +732,9 @@ config_open
 
 # font configuration stuff
 proc doSelectFont {} {
-    tk fontchooser configure -parent . -command resetFont
+    global config
+    set curfont $config(font)
+    tk fontchooser configure -parent . -font "$curfont" -command resetFont
     tk fontchooser show
 }
 
