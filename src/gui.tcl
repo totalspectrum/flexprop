@@ -4,7 +4,7 @@
 # see License.txt for details.
 #
 #
-# The guts of the interpreter
+# The guts of the IDE GUI
 #
 
 # global variables
