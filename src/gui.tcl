@@ -51,6 +51,7 @@ set config(library) "./include"
 set config(spinext) ".spin"
 set config(lastdir) "."
 set config(font) ""
+set config(sash) ""
 set COMPORT " "
 set OPT "-O1"
 set COMPRESS "-z0"
@@ -110,6 +111,12 @@ proc config_open {} {
 	}
     }
     close $fp
+    if {$config(sash) != ""} {
+	set sashx [lindex $config(sash) 0]
+	set sashy [lindex $config(sash) 1]
+	#tk_messageBox -icon info -type ok -message "sashx=$sashx sashy=$sashy"
+	.p sash place 0 $sashx $sashy
+    }
     return 1
 }
 
@@ -119,6 +126,7 @@ proc config_save {} {
     global OPT
     global COMPRESS
     global COMPORT
+    set config(sash) [.p sash coord 0]
     set fp [open $CONFIG_FILE w]
     puts $fp "# spin2gui config info"
     puts $fp "geometry\t[winfo geometry [winfo toplevel .]]"
@@ -688,7 +696,7 @@ foreach v $serlist {
 
 wm title . "Spin 2 GUI"
 
-ttk::panedwindow .p -orient vertical
+panedwindow .p -orient vertical
 
 grid columnconfigure . {0 1} -weight 1
 grid rowconfigure . 1 -weight 1
