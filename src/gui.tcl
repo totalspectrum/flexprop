@@ -111,12 +111,6 @@ proc config_open {} {
 	}
     }
     close $fp
-    if {$config(sash) != ""} {
-	set sashx [lindex $config(sash) 0]
-	set sashy [lindex $config(sash) 1]
-	#tk_messageBox -icon info -type ok -message "sashx=$sashx sashy=$sashy"
-	.p sash place 0 $sashx $sashy
-    }
     return 1
 }
 
@@ -725,6 +719,8 @@ grid columnconfigure .p.bot .p.bot.txt -weight 1
 
 .p add .p.nb
 .p add .p.bot
+.p paneconfigure .p.nb -stretch always
+.p paneconfigure .p.bot -stretch never
 
 #bind .p.nb.main.txt <FocusIn> [list fontchooserFocus .p.nb.main.txt]
 
@@ -842,6 +838,9 @@ proc doCompile {} {
     }
     .p.bot.txt replace 1.0 end "$cmdstr\n"
     .p.bot.txt insert 2.0 $errout
+    .p.bot.txt insert end "\nFinished at "
+    set now [clock seconds]
+    .p.bot.txt insert end [clock format $now -format %c]
     tagerrors .p.bot.txt
     if { $status != 0 } {
 	tk_messageBox -icon error -type ok -message "Compilation failed" -detail "see compiler output window for details"
@@ -1037,6 +1036,21 @@ proc searchrep'all w {
     set go 1
     while {$go} {set go [searchrep'rep1 $w]}
 }
+
+# set the sash position on .p
+proc setSash {} {
+    global config
+    if { $config(sash) != "" } {
+	set xval [lindex $config(sash) 0]
+	set yval [lindex $config(sash) 1]
+	.p sash place 0 $xval $yval
+        set config(sash) ""
+    }
+}
+
+set oldExpose [bind .p <Expose>]
+
+bind .p.bot.txt <Expose> +setSash
 
 # main code
 
