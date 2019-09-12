@@ -574,6 +574,7 @@ proc doClickOnError {coord} {
     set link2 [lindex $linkptr 1]
     set linedata [.p.bot.txt get $link1 $link2]
     set colonptr [string last ":" $linedata]
+
     if { $colonptr eq "" } {
 	set fname ""
 	set line ""
@@ -582,10 +583,17 @@ proc doClickOnError {coord} {
 	set line [string range $linedata [expr $colonptr + 1] end]
     }
     #tk_messageBox -message "data: <$linedata> fname: <$fname> line: <$line>" -type ok
-    
     if { $fname != "" } {
 	set w [loadSourceFile $fname ]
-	$w.txt see $line.0
+	set t $w.txt
+	$t tag config hilite -background yellow
+	# remove hilight
+	foreach {from to} [$t tag ranges hilite] {
+	    $t tag remove hilite $from $to
+	}
+	$t tag config hilite -background yellow
+	$t see $line.0
+	$t tag add hilite $line.0 $line.end
     }
 }
 
@@ -733,7 +741,7 @@ grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun -sticky nsew
 scrollbar .p.bot.v -orient vertical -command {.p.bot.txt yview}
 scrollbar .p.bot.h -orient horizontal -command {.p.bot.txt xview}
 text .p.bot.txt -wrap none -xscroll {.p.bot.h set} -yscroll {.p.bot.v set} -height 10 -font "courier 8"
-label .p.bot.label -background DarkGrey -foreground white -text "Compiler Output" -font "courier 8"
+label .p.bot.label -background DarkGrey -foreground white -text "Compiler Output" -font "courier 8" -relief flat -pady 0 -borderwidth 0
 
 grid .p.bot.label      -sticky nsew
 grid .p.bot.txt .p.bot.v -sticky nsew
