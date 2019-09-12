@@ -249,8 +249,13 @@ proc saveFileFromWindow { fname win } {
 #
 proc tagerrors { w } {
     $w tag remove errtxt 0.0 end
+    $w tag remove warntxt 0.0 end
     $w tag remove errlink 0.0 end
     
+    $w tag configure errtxt -foreground red
+    $w tag configure warntxt -foreground orange
+    $w tag configure errlink -foreground blue -underline true
+
     # set current position at beginning of file
     set cur 1.0
     # search through looking for error:
@@ -261,8 +266,18 @@ proc tagerrors { w } {
 	$w tag add errlink "$cur linestart" "$cur - 2 chars"
 	set cur [$w index "$cur + $length char"]
     }
-    $w tag configure errtxt -foreground red
-    $w tag configure errlink -foreground blue -underline true
+
+    # set current position at beginning of file
+    set cur 1.0
+    # search through looking for warning:
+    while 1 {
+	set cur [$w search -count length "warning:" $cur end]
+	if {$cur eq ""} {break}
+	$w tag add warntxt $cur "$cur lineend"
+	$w tag add errlink "$cur linestart" "$cur - 2 chars"
+	set cur [$w index "$cur + $length char"]
+    }
+    
 }
 
 set SpinTypes {
@@ -302,6 +317,21 @@ proc checkAllChanges {} {
     set w [lindex $t $i]
     while { $w ne "" } {
 	checkChanges $w
+	set i [expr "$i + 1"]
+	set w [lindex $t $i]
+    }
+}
+
+# clear all search tags
+proc clearAllSearchTags {} {
+    set t [.p.nb tabs]
+    set i 0
+    set w [lindex $t $i]
+    while { $w ne "" } {
+	set t $w.txt
+	foreach {from to} [$t tag ranges hilite] {
+	    $t tag remove hilite $from $to
+	}
 	set i [expr "$i + 1"]
 	set w [lindex $t $i]
     }
@@ -874,6 +904,7 @@ proc doCompile {} {
     global filenames
     
     set status 0
+    clearAllSearchTags
     saveFilesForCompile
     set cmdstr [mapPercent $config(compilecmd)]
     set runcmd [list exec -ignorestderr]

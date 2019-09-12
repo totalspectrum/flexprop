@@ -16,7 +16,7 @@ const ledpin = 16
 direction(ledpin) = output
 
 do
-  output(ledpin) = 1
+  output(ledpinx) = 1
   pausems 500
   output(ledpin) = 0
   pausems 500
