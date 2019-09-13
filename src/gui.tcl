@@ -49,6 +49,7 @@ proc copyShadowToConfig {} {
     global shadow
     set config(compilecmd) $shadow(compilecmd)
     set config(runcmd) $shadow(runcmd)
+    checkPropVersion
 }
 
 set config(library) "./include"
@@ -59,6 +60,24 @@ set config(sash) ""
 set COMPORT " "
 set OPT "-O1"
 set COMPRESS "-z0"
+set PROP_VERSION ""
+
+proc checkPropVersion {} {
+    global config
+    global PROP_VERSION
+    if {[string first " -2 " $config(compilecmd)] != -1} {
+	set PROP_VERSION "P2"
+	set otherProp "P1"
+    } else {
+	set PROP_VERSION "P1"
+	set otherProp "P2"
+    }
+    if { [winfo exists .toolbar] } {
+	.toolbar.compile configure -text "Compile for $PROP_VERSION"
+	.toolbar.compileRun configure -text "Compile & Run on $PROP_VERSION"
+	.toolbar.configmsg configure -text "    Use Commands>Configure Commands... to switch to $otherProp"
+    }
+}
 
 setShadowP2Defaults
 copyShadowToConfig
@@ -131,6 +150,7 @@ proc config_open {} {
 	}
     }
     close $fp
+    checkPropVersion
     return 1
 }
 
@@ -765,12 +785,14 @@ grid .p -column 0 -row 1 -columnspan 2 -rowspan 1 -sticky nsew
 button .toolbar.compile -text "Compile" -command doCompile
 button .toolbar.runBinary -text "Run Binary" -command doLoadRun
 button .toolbar.compileRun -text "Compile & Run" -command doCompileRun
-grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun -sticky nsew
+label  .toolbar.configmsg -text "   Use Commands>Configure Commands... to switch to P1" -font TkSmallCaptionFont
+
+grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun .toolbar.configmsg -sticky nsew
 
 scrollbar .p.bot.v -orient vertical -command {.p.bot.txt yview}
 scrollbar .p.bot.h -orient horizontal -command {.p.bot.txt xview}
 text .p.bot.txt -wrap none -xscroll {.p.bot.h set} -yscroll {.p.bot.v set} -height 10 -font "courier 8"
-label .p.bot.label -background DarkGrey -foreground white -text "Compiler Output" -font "courier 8" -relief flat -pady 0 -borderwidth 0
+label .p.bot.label -background DarkGrey -foreground white -text "Compiler Output" -font TkSmallCaptionFont -relief flat -pady 0 -borderwidth 0
 
 grid .p.bot.label      -sticky nsew
 grid .p.bot.txt .p.bot.v -sticky nsew
@@ -917,7 +939,7 @@ proc doCompile {} {
     .p.bot.txt insert end "\nFinished at "
     set now [clock seconds]
     .p.bot.txt insert end [clock format $now -format %c]
-    .p.bot.txt insert end " on [info hostname]"
+##    .p.bot.txt insert end " on [info hostname]"
     tagerrors .p.bot.txt
     if { $status != 0 } {
 	tk_messageBox -icon error -type ok -message "Compilation failed" -detail "see compiler output window for details"
