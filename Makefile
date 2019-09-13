@@ -3,6 +3,8 @@
 # Final output is in spin2gui.zip
 #
 
+default: spin2gui.zip
+
 # where the Tcl and Tk source code are checked out (side by side)
 TCLROOT ?= /home/ersmith/src/Tcl
 
@@ -42,7 +44,7 @@ BINFILES=bin/fastspin.exe bin/proploader.exe bin/loadp2.exe
 
 SIGN ?= ./spin2cpp/sign.dummy.sh
 
-spin2gui.zip: spin2gui.exe $(BINFILES) $(PDFFILES) spin2gui_dir
+spin2gui.zip: src/version.tcl spin2gui.exe $(BINFILES) $(PDFFILES) spin2gui_dir
 	rm -f spin2gui.zip
 	zip -r spin2gui.zip spin2gui
 
@@ -107,3 +109,6 @@ loadp2/build-win32/loadp2.exe:
 
 $(RESOBJ): $(RES_RC)
 	$(WINRC) -o $@ --define STATIC_BUILD --include "$(TCLROOT)/tk/generic" --include "$(TCLROOT)/tcl/generic" --include "$(RESDIR)" "$<"
+
+src/version.tcl: version.inp spin2cpp/version.h
+	cpp -DTCL_SRC < version.inp > $@

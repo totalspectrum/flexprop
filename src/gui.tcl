@@ -6,15 +6,14 @@
 #
 # The guts of the IDE GUI
 #
-set aboutMsg {
+set aboutMsg "
 GUI tool for fastspin
-Version 3.9.31-beta
+Version $spin2gui_version
 Copyright 2018-2019 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
-output will be correct.    
-}
-
+output will be correct.   
+"
 #
 # global variables
 # filenames($w) gives the file name in window $w, for all of the various tabs

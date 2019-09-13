@@ -3,9 +3,11 @@
 *.p2asm
 *.binary
 *.lst
+.spin2gui.config
 spin2gui
 spin2gui.exe
 bin
 loadp2/build-win32
 proploader-*-build
 spin2gui_dir
+src/rc/wish.res.o

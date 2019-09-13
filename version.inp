@@ -1,0 +1,12 @@
+#include "spin2cpp/version.h"
+
+set spin2gui_version_major VERSION_MAJOR
+set spin2gui_version_minor VERSION_MINOR
+set spin2gui_version_rev   VERSION_REV
+#ifdef BETA
+set spin2gui_beta BETA
+#else
+set spin2gui_beta ""
+#endif
+
+set spin2gui_version "$spin2gui_version_major.$spin2gui_version_minor.$spin2gui_version_rev$spin2gui_beta"
