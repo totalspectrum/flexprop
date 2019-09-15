@@ -752,7 +752,7 @@ menu .mbar.help -tearoff 0
 .mbar.edit add command -label "Find..." -accelerator "^F" -command {searchrep [focus] 0}
 .mbar.edit add separator
 
-.mbar.edit add command -label "Select Font..." -command { doSelectFont }
+#.mbar.edit add command -label "Select Font..." -command { doSelectFont }
 .mbar.edit add command -label "Editor Appearance..." -command { doAppearance }
 
 .mbar add cascade -menu .mbar.options -label Options
@@ -884,7 +884,7 @@ proc resetFont {w} {
 proc doneAppearance {} {
     global config
 
-    set config(tabwidth) [.editopts.font.tabstops get]
+    set config(tabwidth) [.editopts.font.tab.stops get]
     setnbfonts $config(font)
     wm withdraw .editopts
 }
@@ -903,21 +903,29 @@ proc doAppearance {} {
 	return
     }
     toplevel .editopts
+    frame .editopts.top
     frame .editopts.font
     frame .editopts.end
 
-    label  .editopts.font.la -text " Tab stops: "
-    spinbox .editopts.font.tabstops -from 1 -to 9 -width 2
-    .editopts.font.tabstops set $config(tabwidth)
+    label .editopts.top.l -text "\n  Editor Options  \n"
+
+    frame .editopts.font.tab
+    label  .editopts.font.tab.lab -text " Tab stops: "
+    spinbox .editopts.font.tab.stops -text "hello" -from 1 -to 9 -width 2
+    .editopts.font.tab.stops set $config(tabwidth)
+    label .editopts.font.lb -text "   "
     button .editopts.font.change -text " Change font... " -command doSelectFont
     button .editopts.end.ok -text " OK " -command doneAppearance
 
-    grid .editopts.font
-    grid .editopts.end
+    grid .editopts.top -sticky new
+    grid .editopts.font -sticky ew
+    grid .editopts.end -sticky sew
 
-    grid .editopts.font.la .editopts.font.tabstops .editopts.font.change
+    grid .editopts.top.l -sticky nsew 
+    grid .editopts.font.tab.lab .editopts.font.tab.stops
+    grid .editopts.font.tab .editopts.font.lb .editopts.font.change
 
-    grid .editopts.end.ok
+    grid .editopts.end.ok -sticky nsew
     wm title .editopts "Editor Appearance"
 }
 
