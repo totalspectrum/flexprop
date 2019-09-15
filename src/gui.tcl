@@ -57,6 +57,7 @@ set config(spinext) ".spin"
 set config(lastdir) "."
 set config(font) ""
 set config(sash) ""
+set config(tabwidth) 8
 set COMPORT " "
 set OPT "-O1"
 set COMPRESS "-z0"
@@ -102,17 +103,24 @@ proc getTabFor { fname } {
 # set font and tab stops for a window
 #
 proc setfont { w fnt } {
-    if { $fnt ne "" } {
-	$w configure -font $fnt
+    global config
+
+    if { $fnt eq "" } {
+	return
     }
+    set t1 [font measure $fnt " "]
+    set t2 [expr $config(tabwidth) * $t1]
+    set stops $t2
+    $w configure -font $fnt -tabs $stops
 }
 
 #
 # set font and tab stops for all notebook tabs
 #
 proc setnbfonts { fnt } {
-    set tablist [.p.nb tabs]
-    foreach w $tablist {
+    global config
+    set nbtablist [.p.nb tabs]
+    foreach w $nbtablist {
 	setfont $w.txt $fnt
     }
 }
@@ -745,7 +753,8 @@ menu .mbar.help -tearoff 0
 .mbar.edit add separator
 
 .mbar.edit add command -label "Select Font..." -command { doSelectFont }
-    
+.mbar.edit add command -label "Editor Appearance..." -command { doAppearance }
+
 .mbar add cascade -menu .mbar.options -label Options
 .mbar.options add radiobutton -label "No Optimization" -variable OPT -value "-O0"
 .mbar.options add radiobutton -label "Default Optimization" -variable OPT -value "-O1"
@@ -869,6 +878,47 @@ proc resetFont {w} {
     set config(font) $fnt
     #    setfont [.p.nb select].txt $fnt
     setnbfonts $fnt
+}
+
+
+proc doneAppearance {} {
+    global config
+
+    set config(tabwidth) [.editopts.font.tabstops get]
+    setnbfonts $config(font)
+    wm withdraw .editopts
+}
+
+#
+# editor appearance window
+#
+proc doAppearance {} {
+    global config
+
+    if {[winfo exists .editopts]} {
+	if {![winfo viewable .editopts]} {
+	    wm deiconify .editopts
+	}
+	raise .editopts
+	return
+    }
+    toplevel .editopts
+    frame .editopts.font
+    frame .editopts.end
+
+    label  .editopts.font.la -text " Tab stops: "
+    spinbox .editopts.font.tabstops -from 1 -to 9 -width 2
+    .editopts.font.tabstops set $config(tabwidth)
+    button .editopts.font.change -text " Change font... " -command doSelectFont
+    button .editopts.end.ok -text " OK " -command doneAppearance
+
+    grid .editopts.font
+    grid .editopts.end
+
+    grid .editopts.font.la .editopts.font.tabstops .editopts.font.change
+
+    grid .editopts.end.ok
+    wm title .editopts "Editor Appearance"
 }
 
 # translate % escapes in our command line strings
