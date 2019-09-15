@@ -62,6 +62,7 @@ set COMPORT " "
 set OPT "-O1"
 set COMPRESS "-z0"
 set PROP_VERSION ""
+set config(showlinenumbers) 1
 
 proc checkPropVersion {} {
     global config
@@ -412,6 +413,7 @@ proc createNewTab {} {
 # set up a framed text window
 #
 proc setupFramedText {w} {
+    global config
     frame $w
     set yscmd "$w.v set"
     set xscmd "$w.h set"
@@ -419,7 +421,7 @@ proc setupFramedText {w} {
     set xvcmd "$w.txt xview"
     set searchcmd "searchrep $w.txt 0"
 
-    ctext $w.txt -wrap none -yscrollcommand $yscmd -xscroll $xscmd -tabstyle wordprocessor
+    ctext $w.txt -wrap none -yscrollcommand $yscmd -xscroll $xscmd -tabstyle wordprocessor -linemap $config(showlinenumbers)
     scrollbar $w.v -orient vertical -command $yvcmd
     scrollbar $w.h -orient horizontal -command $xvcmd
 
@@ -880,6 +882,14 @@ proc resetFont {w} {
     setnbfonts $fnt
 }
 
+proc doShowLinenumbers {} {
+    global config
+    set tablist [.p.nb tabs]
+    foreach w $tablist {
+	$w.txt configure -linemap $config(showlinenumbers)
+	ctext::linemapUpdate $w.txt
+    }
+}
 
 proc doneAppearance {} {
     global config
@@ -904,7 +914,8 @@ proc doAppearance {} {
     }
     toplevel .editopts
     frame .editopts.top
-    frame .editopts.font
+    ttk::labelframe .editopts.font -text "Source code"
+    ttk::labelframe .editopts.bot -text "Compiler output"
     frame .editopts.end
 
     label .editopts.top.l -text "\n  Editor Options  \n"
@@ -915,16 +926,19 @@ proc doAppearance {} {
     .editopts.font.tab.stops set $config(tabwidth)
     label .editopts.font.lb -text "   "
     button .editopts.font.change -text " Change font... " -command doSelectFont
+    checkbutton .editopts.font.linenums -text "Show Linenumbers" -variable config(showlinenumbers) -command doShowLinenumbers
     button .editopts.end.ok -text " OK " -command doneAppearance
 
-    grid .editopts.top -sticky new
-    grid .editopts.font -sticky ew
-    grid .editopts.end -sticky sew
+    grid .editopts.top -sticky nsew
+    grid .editopts.font -sticky nsew
+    grid .editopts.bot -sticky nsew
+    grid .editopts.end -sticky nsew
 
     grid .editopts.top.l -sticky nsew 
     grid .editopts.font.tab.lab .editopts.font.tab.stops
     grid .editopts.font.tab .editopts.font.lb .editopts.font.change
-
+    grid .editopts.font.linenums
+    
     grid .editopts.end.ok -sticky nsew
     wm title .editopts "Editor Appearance"
 }
