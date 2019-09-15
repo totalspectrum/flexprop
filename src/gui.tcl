@@ -107,6 +107,16 @@ proc setfont { w fnt } {
     }
 }
 
+#
+# set font and tab stops for all notebook tabs
+#
+proc setnbfonts { fnt } {
+    set tablist [.p.nb tabs]
+    foreach w $tablist {
+	setfont $w.txt $fnt
+    }
+}
+
 # configuration settings
 proc config_open {} {
     global config
@@ -857,7 +867,8 @@ proc resetFont {w} {
     global config
     set fnt [font actual $w]
     set config(font) $fnt
-    setfont [.p.nb select].txt $fnt
+    #    setfont [.p.nb select].txt $fnt
+    setnbfonts $fnt
 }
 
 # translate % escapes in our command line strings
