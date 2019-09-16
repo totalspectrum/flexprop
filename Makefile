@@ -1,9 +1,9 @@
 #
-# Makefile for spin2gui (Windows version)
-# Final output is in spin2gui.zip
+# Makefile for flexgui (Windows version)
+# Final output is in flexgui.zip
 #
 
-default: spin2gui.zip
+default: flexgui.zip
 
 # where the Tcl and Tk source code are checked out (side by side)
 TCLROOT ?= /home/ersmith/src/Tcl
@@ -25,7 +25,7 @@ RESOBJ=$(RESDIR)/wish.res.o
 
 WINTK_INC = -I$(TCLROOT)/tk/xlib -I$(TCLROOT)/tcl/win -I$(TCLROOT)/tcl/generic -I$(TCLROOT)/tk/win -I$(TCLROOT)/tk/generic
 WINTK_LIBS = $(TCLROOT)/tk/win/libtk87.a $(TCLROOT)/tk/win/libtkstub87.a $(TCLROOT)/tcl/win/libtcl90.a $(TCLROOT)/tcl/win/libtclstub90.a $(WINLIBS) $(RESOBJ) -mwindows -pipe -static-libgcc -municode
-default: spin2gui.zip
+default: flexgui.zip
 
 VPATH=.:spin2cpp/doc
 
@@ -44,16 +44,16 @@ BINFILES=bin/fastspin.exe bin/proploader.exe bin/loadp2.exe
 
 SIGN ?= ./spin2cpp/sign.dummy.sh
 
-spin2gui.zip: src/version.tcl spin2gui.exe $(BINFILES) $(PDFFILES) spin2gui_dir
-	rm -f spin2gui.zip
-	zip -r spin2gui.zip spin2gui
+flexgui.zip: src/version.tcl flexgui.exe $(BINFILES) $(PDFFILES) flexgui_dir
+	rm -f flexgui.zip
+	zip -r flexgui.zip flexgui
 
-spin2gui.exe: src/spin2gui.c $(RESOBJ)
-	$(WINGCC) $(WINCFLAGS) -o spin2gui.exe src/spin2gui.c $(WINTK_INC) $(WINTK_LIBS)
-	$(SIGN) spin2gui
-	mv spin2gui.signed.exe spin2gui.exe
+flexgui.exe: src/flexgui.c $(RESOBJ)
+	$(WINGCC) $(WINCFLAGS) -o flexgui.exe src/flexgui.c $(WINTK_INC) $(WINTK_LIBS)
+	$(SIGN) flexgui
+	mv flexgui.signed.exe flexgui.exe
 clean:
-	rm -rf spin2gui
+	rm -rf flexgui
 	rm -rf *.exe *.zip
 	rm -rf $(BINFILES) $(PDFFILES)
 	rm -rf spin2cpp/build-win32/*
@@ -65,21 +65,21 @@ clean:
 	rm -rf samples/*/*.lst
 	rm -rf $(RESOBJ)
 
-spin2gui_dir:
-	mkdir -p spin2gui/bin
-	mkdir -p spin2gui/doc
-	cp -r spin2gui.exe README.md License.txt samples src spin2gui
+flexgui_dir:
+	mkdir -p flexgui/bin
+	mkdir -p flexgui/doc
+	cp -r flexgui.exe README.md License.txt samples src flexgui
 ifdef PANDOC_EXISTS
-	cp -r $(PDFFILES) spin2gui/doc
+	cp -r $(PDFFILES) flexgui/doc
 endif
-	cp -r spin2cpp/doc/* spin2gui/doc
-	cp -r spin2cpp/include spin2gui/
-	cp -r doc/*.txt spin2gui/doc
-	cp -r bin/*.exe spin2gui/bin
-	cp -r spin2gui.tcl spin2gui/
-	touch spin2gui_dir
+	cp -r spin2cpp/doc/* flexgui/doc
+	cp -r spin2cpp/include flexgui/
+	cp -r doc/*.txt flexgui/doc
+	cp -r bin/*.exe flexgui/bin
+	cp -r flexgui.tcl flexgui/
+	touch flexgui_dir
 
-.PHONY: spin2gui_dir
+.PHONY: flexgui_dir
 
 bin/fastspin.exe: spin2cpp/build-win32/fastspin.exe
 	mkdir -p bin

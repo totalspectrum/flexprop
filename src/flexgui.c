@@ -435,10 +435,10 @@ int fixup_argv(int *argc, TCHAR ***argv)
 {
     static int my_argc = 2;
     static TCHAR *my_argv[] = {
-        L"spin2gui.exe",
+        L"flexgui.exe",
 //        L"-name",
 //        L"spin2gui",
-        L"./spin2gui.tcl",
+        L"./flexgui.tcl",
         NULL
     };
     *argc = my_argc;

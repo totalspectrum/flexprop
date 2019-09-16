@@ -55,7 +55,7 @@ proc copyShadowToConfig {} {
 set config(library) "./include"
 set config(spinext) ".spin"
 set config(lastdir) "."
-set config(font) ""
+set config(font) "TkFixedFont"
 set config(sash) ""
 set config(tabwidth) 8
 set COMPORT " "
@@ -170,6 +170,11 @@ proc config_open {} {
     }
     close $fp
     checkPropVersion
+
+    # some sanity checks
+    if { "$config(font)" eq "" } {
+	set config(font) "TkFixedFont"
+    }
     return 1
 }
 
@@ -623,7 +628,7 @@ proc saveFileAs {w} {
 
 proc doAbout {} {
     global aboutMsg
-    tk_messageBox -icon info -type ok -message "Spin 2 GUI" -detail $aboutMsg
+    tk_messageBox -icon info -type ok -message "FlexGUI" -detail $aboutMsg
 }
 
 proc doHelp {} {
@@ -790,7 +795,7 @@ foreach v $serlist {
 .mbar.help add separator
 .mbar.help add command -label "About..." -command { doAbout }
 
-wm title . "Spin 2 GUI"
+wm title . "FlexGUI"
 
 panedwindow .p -orient vertical
 
