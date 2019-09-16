@@ -878,8 +878,8 @@ proc resetFont {w} {
     global config
     set fnt [font actual $w]
     set config(font) $fnt
-    #    setfont [.p.nb select].txt $fnt
     setnbfonts $fnt
+    .editopts.font.lb configure -font $fnt
 }
 
 proc doShowLinenumbers {} {
@@ -924,8 +924,8 @@ proc doAppearance {} {
     label  .editopts.font.tab.lab -text " Tab stops: "
     spinbox .editopts.font.tab.stops -text "hello" -from 1 -to 9 -width 2
     .editopts.font.tab.stops set $config(tabwidth)
-    label .editopts.font.lb -text "   "
-    button .editopts.font.change -text " Change font... " -command doSelectFont
+    label .editopts.font.lb -text " Text font " -font $config(font)
+    button .editopts.font.change -text " Change... " -command doSelectFont
     checkbutton .editopts.font.linenums -text "Show Linenumbers" -variable config(showlinenumbers) -command doShowLinenumbers
     button .editopts.end.ok -text " OK " -command doneAppearance
 
