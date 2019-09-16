@@ -24,8 +24,9 @@ The Edit menu is again pretty self-explanatory. The Undo/Redo
 functionality is quite limited; only one level of Redo is reliable,
 and trying to Redo again will produce unpredictable results.
 
-"Select Font..." allows you to change the font used for the currently
-selected tab. It's still somewhat experimental.
+"Editor Appearance..." dialog allows you to change the way the source
+code editor looks, e.g. changing the font used for the text, or the
+tab settings.
 
 ### Options
 
