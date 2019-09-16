@@ -105,7 +105,7 @@ loadp2/build-win32/loadp2.exe:
 	make -C loadp2 CROSS=win32
 
 %.pdf: %.md
-	$(PANDOC) -f markdown_github -t latex -o $@ $<
+	$(PANDOC) --toc -f markdown_github -t latex -o $@ $< pandoc.yml
 
 $(RESOBJ): $(RES_RC)
 	$(WINRC) -o $@ --define STATIC_BUILD --include "$(TCLROOT)/tk/generic" --include "$(TCLROOT)/tcl/generic" --include "$(RESDIR)" "$<"

@@ -21,7 +21,7 @@ output will be correct.
 #
 
 set ROOTDIR [file dirname $::argv0]
-set CONFIG_FILE "$ROOTDIR/.spin2gui.config"
+set CONFIG_FILE "$ROOTDIR/.flexgui.config"
 
 
 if { $tcl_platform(platform) == "windows" } {
@@ -186,7 +186,7 @@ proc config_save {} {
     global COMPORT
     set config(sash) [.p sash coord 0]
     set fp [open $CONFIG_FILE w]
-    puts $fp "# spin2gui config info"
+    puts $fp "# flexgui config info"
     puts $fp "geometry\t[winfo geometry [winfo toplevel .]]"
     puts $fp "opt\t\{$OPT\}"
     puts $fp "compress\t\{$COMPRESS\}"
@@ -1097,7 +1097,7 @@ set cmddialoghelptext {
   Strings for various commands
   Some special % escapes:
     %B = Replace with current binary file name
-    %D = Replace with directory of spin2gui executable
+    %D = Replace with directory of flexgui executable
     %L = Replace with library directory
     %O = Replace with optimization level
     %P = Replace with port to use

@@ -1,11 +1,11 @@
-Spin2gui
+FlexGUI
 ========
 
-Spin2gui is a very simple GUI for running applications on the Parallax Propeller 1 or 2, using the Spin language (and now BASIC and C as well). It consists of a very basic front end IDE, the fastspin compiler, and Dave Hein's loadp2 program loader. The default configuration is for the Prop2, but I've also included David Betz's proploader.exe, which allows spin2gui to work on Propeller 1 systems as well.
+FlexGUI is a very simple GUI for running applications on the Parallax Propeller 1 or 2, using the Spin language (and now BASIC and C as well). It consists of a very basic front end IDE, the fastspin compiler, and Dave Hein's loadp2 program loader. The default configuration is for the Prop2, but I've also included David Betz's proploader.exe, which allows flexgui to work on Propeller 1 systems as well.
 
-To use it, create a directory called "spin2gui" (or whatever you'd like) and unpack the .zip file into that directory. Then run spin2gui.exe. The program will save its configuration in a file called .spin2gui.config in that directory.
+To use it, create a directory called "flexgui" (or whatever you'd like) and unpack the .zip file into that directory. Then run flexgui.exe. The program will save its configuration in a file called .flexgui.config in that directory.
 
-Spin2gui is distributed under the MIT license; see the file License.txt for details.
+FlexGUI is distributed under the MIT license; see the file License.txt for details.
 
 ## Usage
 
@@ -19,11 +19,11 @@ Only the Windows executable is provided. For other platforms, grab the source co
 
 ### Modifying the GUI
 
-The scripts used are in the `src` subdirectory, so you can customize them to your heart's content. The main `spin2gui.exe` program is basically just the Tcl/Tk interpreter (from the FreeWrap project) with a tiny startup script that reads `src/gui.tcl`.
+The scripts used are in the `src` subdirectory, so you can customize them to your heart's content. The main `flexgui.exe` program is basically just the Tcl/Tk interpreter (from the standard Tk distribution) with a tiny startup script that reads `src/gui.tcl`.
 
 ## Features
 
-The main advantage of spin2gui over PNut (the "official" development tool for the Prop2) is that PNut doesn't yet support a high level language, whereas spin2gui supports both Spin and BASIC. You can basically write ordinary Spin code, with Prop2 assembly code in the DAT section (instead of Prop1 assembly code). This makes prototyping your applications much easier.
+The main advantage of flexgui over PNut (the "official" development tool for the Prop2) is that PNut doesn't yet support a high level language, whereas flexgui supports both Spin and BASIC. You can basically write ordinary Spin code, with Prop2 assembly code in the DAT section (instead of Prop1 assembly code). This makes prototyping your applications much easier.
 
 The Spin code is compiled to P2 assembler by fastspin. This is somewhat different from the way Spin works on the Prop1, where Spin code is typically compiled to bytecode and interpreted. (Note that fastspin does work for Prop1, though!)
 
