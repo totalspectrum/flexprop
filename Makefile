@@ -30,7 +30,7 @@ default: flexgui.zip
 VPATH=.:spin2cpp/doc
 
 ifdef PANDOC_EXISTS
-PDFFILES=spin2cpp/Fastspin.pdf spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
+PDFFILES=pandoc.yml spin2cpp/Fastspin.pdf spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
 endif
 
 BINFILES=bin/fastspin.exe bin/proploader.exe bin/loadp2.exe
@@ -64,6 +64,7 @@ clean:
 	rm -rf samples/*/*.binary samples/*/*.pasm samples/*/*.p2asm
 	rm -rf samples/*/*.lst
 	rm -rf $(RESOBJ)
+	rm -rf pandoc.yml
 
 flexgui_dir:
 	mkdir -p flexgui/bin
@@ -105,10 +106,13 @@ loadp2/build-win32/loadp2.exe:
 	make -C loadp2 CROSS=win32
 
 %.pdf: %.md
-	$(PANDOC) --toc -f markdown_github -t latex -o $@ $<
+	$(PANDOC) --metadata-file=pandoc.yml -s --toc -f gfm -t latex -o $@ $<
 
 $(RESOBJ): $(RES_RC)
 	$(WINRC) -o $@ --define STATIC_BUILD --include "$(TCLROOT)/tk/generic" --include "$(TCLROOT)/tcl/generic" --include "$(RESDIR)" "$<"
 
 src/version.tcl: version.inp spin2cpp/version.h
 	cpp -DTCL_SRC < version.inp > $@
+
+pandoc.yml: src/version.tcl src/makepandoc.tcl
+	tclsh src/makepandoc.tcl > $@
