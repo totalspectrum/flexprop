@@ -37,11 +37,18 @@ proc setShadowP1Defaults {} {
     set shadow(compilecmd) "\"%D/bin/fastspin\" -l %O -L \"%L\" \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader\" -Dbaudrate=115200 %P \"%B\" -r -t -k"
 }
-proc setShadowP2Defaults {} {
+proc setShadowP2aDefaults {} {
     global shadow
     global WINPREFIX
     
-    set shadow(compilecmd) "\"%D/bin/fastspin\" -2 -l %O -L \"%L\" \"%S\""
+    set shadow(compilecmd) "\"%D/bin/fastspin\" -2a -l %O -L \"%L\" \"%S\""
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -l230400 -b230400 \"%B\" -t -k"
+}
+proc setShadowP2bDefaults {} {
+    global shadow
+    global WINPREFIX
+    
+    set shadow(compilecmd) "\"%D/bin/fastspin\" -2b -l %O -L \"%L\" \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -l230400 -b230400 \"%B\" -t -k"
 }
 proc copyShadowToConfig {} {
@@ -67,8 +74,11 @@ set config(showlinenumbers) 1
 proc checkPropVersion {} {
     global config
     global PROP_VERSION
-    if {[string first " -2 " $config(compilecmd)] != -1} {
-	set PROP_VERSION "P2"
+    if {[string first " -2b " $config(compilecmd)] != -1} {
+	set PROP_VERSION "P2b"
+	set otherProp "P1"
+    } elseif {[string first " -2" $config(compilecmd)] != -1} {
+	set PROP_VERSION "P2a"
 	set otherProp "P1"
     } else {
 	set PROP_VERSION "P1"
@@ -81,7 +91,7 @@ proc checkPropVersion {} {
     }
 }
 
-setShadowP2Defaults
+setShadowP2aDefaults
 copyShadowToConfig
 
 #
@@ -929,15 +939,11 @@ proc doAppearance {} {
     label  .editopts.font.tab.lab -text " Tab stops: "
     spinbox .editopts.font.tab.stops -text "hello" -from 1 -to 9 -width 2
     .editopts.font.tab.stops set $config(tabwidth)
+
     label .editopts.font.lb -text " Text font " -font $config(font)
     button .editopts.font.change -text " Change... " -command doSelectFont
     checkbutton .editopts.font.linenums -text "Show Linenumbers" -variable config(showlinenumbers) -command doShowLinenumbers
     button .editopts.end.ok -text " OK " -command doneAppearance
-
-    grid .editopts.top -sticky nsew
-    grid .editopts.font -sticky nsew
-    grid .editopts.bot -sticky nsew
-    grid .editopts.end -sticky nsew
 
     grid .editopts.top.l -sticky nsew 
     grid .editopts.font.tab.lab .editopts.font.tab.stops
@@ -945,6 +951,11 @@ proc doAppearance {} {
     grid .editopts.font.linenums
     
     grid .editopts.end.ok -sticky nsew
+    grid .editopts.top -sticky nsew
+    grid .editopts.font -sticky nsew
+    grid .editopts.bot -sticky nsew
+    grid .editopts.end -sticky nsew
+
     wm title .editopts "Editor Appearance"
 }
 
@@ -1138,7 +1149,8 @@ proc doRunOptions {} {
     frame .runopts.change
     frame .runopts.end
 
-    button .runopts.change.p2 -text "P2 defaults" -command setShadowP2Defaults
+    button .runopts.change.p2a -text "P2a defaults" -command setShadowP2aDefaults
+    button .runopts.change.p2b -text "P2b defaults" -command setShadowP2bDefaults
     button .runopts.change.p1 -text "P1 defaults" -command setShadowP1Defaults
     
     button .runopts.end.ok -text " OK " -command {copyShadowClose .runopts}
@@ -1153,7 +1165,8 @@ proc doRunOptions {} {
     grid .runopts.a.compiletext
     grid .runopts.b.runtext
 
-    grid .runopts.change.p2 .runopts.change.p1
+    grid .runopts.change.p2a .runopts.change.p1
+    grid .runopts.change.p2b
     grid .runopts.end.ok .runopts.end.cancel
     
     wm title .runopts "Executable Paths"
