@@ -30,7 +30,7 @@ default: flexgui.zip
 VPATH=.:spin2cpp/doc
 
 ifdef PANDOC_EXISTS
-PDFFILES=pandoc.yml spin2cpp/Fastspin.pdf spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
+PDFFILES=spin2cpp/Fastspin.pdf spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
 endif
 
 BINFILES=bin/fastspin.exe bin/proploader.exe bin/loadp2.exe
@@ -44,7 +44,7 @@ BINFILES=bin/fastspin.exe bin/proploader.exe bin/loadp2.exe
 
 SIGN ?= ./spin2cpp/sign.dummy.sh
 
-flexgui.zip: src/version.tcl flexgui.exe $(BINFILES) $(PDFFILES) flexgui_dir
+flexgui.zip: src/version.tcl src/makepandoc.tcl flexgui.exe $(BINFILES) $(PDFFILES) flexgui_dir
 	rm -f flexgui.zip
 	zip -r flexgui.zip flexgui
 
@@ -106,6 +106,7 @@ loadp2/build-win32/loadp2.exe:
 	make -C loadp2 CROSS=win32
 
 %.pdf: %.md
+	tclsh src/makepandoc.tcl $< > pandoc.yml
 	$(PANDOC) --metadata-file=pandoc.yml -s --toc -f gfm -t latex -o $@ $<
 
 $(RESOBJ): $(RES_RC)
@@ -113,6 +114,3 @@ $(RESOBJ): $(RES_RC)
 
 src/version.tcl: version.inp spin2cpp/version.h
 	cpp -DTCL_SRC < version.inp > $@
-
-pandoc.yml: src/version.tcl src/makepandoc.tcl
-	tclsh src/makepandoc.tcl > $@
