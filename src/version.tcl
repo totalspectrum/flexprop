@@ -9,7 +9,7 @@
 
 set spin2gui_version_major 3
 set spin2gui_version_minor 9
-set spin2gui_version_rev 32
+set spin2gui_version_rev 33
 
 
 
