@@ -736,6 +736,8 @@ menu .popup1 -tearoff 0
 .popup1 add separator
 .popup1 add command -label "Save File" -command { saveCurFile }
 .popup1 add command -label "Save File As..." -command { saveFileAs [.p.nb select] }
+.popup1 add separator
+.popup1 add command -label "Close" -command { closeTab }
 
 menu .mbar
 . configure -menu .mbar
