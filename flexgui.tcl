@@ -8,15 +8,15 @@
 # Top level program
 
 variable myScript [file normalize [info script]]
-variable myDir [file dirname $myScript]
+variable ROOTDIR [file dirname $myScript]
 
 package require Tk
 #package require autoscroll
 #package require ctext
 
-source $myDir/src/version.tcl
-source $myDir/src/autoscroll.tcl
-source $myDir/src/ctext/ctext.tcl
-source $myDir/src/checkserial.tcl
-source $myDir/src/gui.tcl
+source $ROOTDIR/src/version.tcl
+source $ROOTDIR/src/autoscroll.tcl
+source $ROOTDIR/src/ctext/ctext.tcl
+source $ROOTDIR/src/checkserial.tcl
+source $ROOTDIR/src/gui.tcl
 

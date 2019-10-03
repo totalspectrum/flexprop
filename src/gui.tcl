@@ -20,7 +20,6 @@ output will be correct.
 # filetimes($w) gives the last modified time for that file
 #
 
-set ROOTDIR [file dirname $::argv0]
 set CONFIG_FILE "$ROOTDIR/.flexgui.config"
 
 
@@ -59,9 +58,9 @@ proc copyShadowToConfig {} {
     checkPropVersion
 }
 
-set config(library) "./include"
+set config(library) "$ROOTDIR/include"
 set config(spinext) ".spin"
-set config(lastdir) "."
+set config(lastdir) [pwd]
 set config(font) "TkFixedFont"
 set config(sash) ""
 set config(tabwidth) 8
@@ -644,7 +643,8 @@ proc doAbout {} {
 }
 
 proc doHelp {} {
-    loadFileToTab .p.nb.help "doc/help.txt" "Help"
+    global ROOTDIR
+    loadFileToTab .p.nb.help "$ROOTDIR/doc/help.txt" "Help"
     makeReadOnly .p.nb.help.txt
 }
 
@@ -823,9 +823,9 @@ frame .toolbar -bd 1 -relief raised
 grid .toolbar -column 0 -row 0 -columnspan 2 -sticky nsew
 grid .p -column 0 -row 1 -columnspan 2 -rowspan 1 -sticky nsew
 
-button .toolbar.compile -text "Compile" -command doCompile
+button .toolbar.compile -text "Compile for P2" -command doCompile
 button .toolbar.runBinary -text "Run Binary" -command doLoadRun
-button .toolbar.compileRun -text "Compile & Run" -command doCompileRun
+button .toolbar.compileRun -text "Compile & Run on P2" -command doCompileRun
 label  .toolbar.configmsg -text "   Use Commands>Configure Commands... to switch to P1" -font TkSmallCaptionFont
 
 grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun .toolbar.configmsg -sticky nsew
@@ -1261,7 +1261,9 @@ bind .p.bot.txt <Expose> +setSash
 # main code
 
 if { $::argc > 0 } {
-    loadSourceFile $argv
+    foreach argx $argv {
+        loadSourceFile $argx
+    }
 } else {
     createNewTab
 }

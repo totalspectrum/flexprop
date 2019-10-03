@@ -431,21 +431,85 @@ setargv(
 }
 #endif /* TCL_BROKEN_MAINARGS */
 
+#define MY_MAXPATH (2*MAX_PATH)
+
+static TCHAR *
+dyn_strcat(TCHAR *base, TCHAR *suffix)
+{
+    TCHAR *r;
+
+    r = malloc(sizeof(TCHAR) * (_tcslen(base) + _tcslen(suffix) + 2));
+    _tcscpy(r, base);
+    _tcscat(r, suffix);
+    return r;
+}
+
+static void
+MyRemoveFileSpec(TCHAR *orig_ptr)
+{
+    TCHAR *ptr = orig_ptr;
+    if (!*ptr) {
+        return;
+    }
+    // convert backslash to forward slash
+    while (ptr[1] != 0) {
+        if (*ptr == '\\') *ptr = '/';
+        ptr++;
+    }
+    while (*ptr != '/' && ptr > orig_ptr) {
+        --ptr;
+    }
+    if (ptr != orig_ptr) {
+        ptr[0] = 0;
+    }
+}
+
 int fixup_argv(int *argc, TCHAR ***argv)
 {
-    static int my_argc = 2;
-    static TCHAR *my_argv[] = {
-        L"flexgui.exe",
-//        L"-name",
-//        L"spin2gui",
-        L"./flexgui.tcl",
-        NULL
-    };
+    unsigned int r;
+    int i;
+    static TCHAR namebuffer[MY_MAXPATH];
+    static int my_argc;
+    TCHAR **my_argv;
+
+    //_tprintf(_T("fixup_argv called\n"));
+    
+    // get where the flexgui.exe executable is
+    r = GetModuleFileName(NULL, namebuffer, MAX_PATH);
+    //_tprintf(_T("fixup_argv: namebuffer=%s\n"), namebuffer);
+    if (r >= MY_MAXPATH-1) {
+        // not enough space... just fail
+        _tcscpy(namebuffer, TEXT("."));
+    } else {
+        MyRemoveFileSpec(namebuffer);
+    }
+    //_tprintf(_T("fixup_argv: revised namebuffer=%s\n"), namebuffer);
+    
+    my_argc = *argc + 1;
+    //_tprintf(_T("allocating my_argv (%d)\n"), my_argc);
+    my_argv = malloc( (my_argc+2) * sizeof(TCHAR *) );
+    my_argv[0] = (*argv)[0];
+    //_tprintf(_T("copying my_argv[1]\n"));
+    my_argv[1] =  dyn_strcat(namebuffer, TEXT("/flexgui.tcl"));
+    //_tprintf(_T("copying remaining argv\n"));
+    for (i = 2; i <= my_argc; i++) {
+        my_argv[i] = (*argv)[i-1];
+    }
+    //_tprintf(_T("terminating argv\n"));
+    my_argv[i] = NULL;
+
+#ifdef NEVER
+    _tprintf(_T("argv values=\n"));
+
+    for (int j = 0; j < i; j++) {
+        _tprintf(_T("argv[%d] = %s\n"), j, my_argv[j]);
+    }
+#endif    
     *argc = my_argc;
     *argv = my_argv;
 
-    _putenv_s("TCL_LIBRARY", "./src/tcl_library/tcl9.0");
-    _putenv_s("TK_LIBRARY", "./src/tcl_library/tk8.7");
+    _tputenv_s(TEXT("TCL_LIBRARY"), dyn_strcat(namebuffer, TEXT("/src/tcl_library/tcl9.0")));
+    _tputenv_s(TEXT("TK_LIBRARY"), dyn_strcat(namebuffer, TEXT("/src/tcl_library/tk8.7")));
     return 0;
 }      
 
