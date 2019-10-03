@@ -436,7 +436,7 @@ proc setupFramedText {w} {
     set xvcmd "$w.txt xview"
     set searchcmd "searchrep $w.txt 0"
 
-    ctext $w.txt -wrap none -yscrollcommand $yscmd -xscroll $xscmd -tabstyle wordprocessor -linemap $config(showlinenumbers)
+    ctext $w.txt -wrap none -yscrollcommand $yscmd -xscroll $xscmd -tabstyle wordprocessor -linemap $config(showlinenumbers) -undo 1
     scrollbar $w.v -orient vertical -command $yvcmd
     scrollbar $w.h -orient horizontal -command $xvcmd
 
