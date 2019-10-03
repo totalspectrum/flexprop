@@ -15,7 +15,7 @@ To change between P1 and P2 development use Configure Commands... and select the
 
 ### Other platforms
 
-Only the Windows executable is provided. For other platforms, grab the source code and run `gui.tcl`. You will need Tcl/Tk installed, but it is available for most versions of Unix (including Mac OS X).
+Only the Windows executable is provided. For other platforms, grab the source code and run `flexgui.tcl`. You will need Tcl/Tk installed, but it is available for most versions of Unix (including Mac OS X).
 
 ### Modifying the GUI
 

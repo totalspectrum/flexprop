@@ -1,3 +1,6 @@
+Version 3.9.34
+- Enable replace functionality
+
 Version 3.9.31
 - Show previously selected font in the font chooser.
 - Use panes for the top level window, to allow resizing the command output

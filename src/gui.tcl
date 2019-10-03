@@ -435,6 +435,7 @@ proc setupFramedText {w} {
     set yvcmd "$w.txt yview"
     set xvcmd "$w.txt xview"
     set searchcmd "searchrep $w.txt 0"
+    set replacecmd "searchrep $w.txt 1"
 
     ctext $w.txt -wrap none -yscrollcommand $yscmd -xscroll $xscmd -tabstyle wordprocessor -linemap $config(showlinenumbers) -undo 1
     scrollbar $w.v -orient vertical -command $yvcmd
@@ -445,6 +446,7 @@ proc setupFramedText {w} {
     grid rowconfigure $w $w.txt -weight 1
     grid columnconfigure $w $w.txt -weight 1
     bind $w.txt <Control-f> $searchcmd
+    bind $w.txt <Control-k> $replacecmd
 }
 
 #
@@ -769,6 +771,7 @@ menu .mbar.help -tearoff 0
 .mbar.edit add command -label "Redo" -accelerator "^Y" -command {event generate [focus] <<Redo>>}
 .mbar.edit add separator
 .mbar.edit add command -label "Find..." -accelerator "^F" -command {searchrep [focus] 0}
+.mbar.edit add command -label "Replace..." -accelerator "^K" -command {searchrep [focus] 1}
 .mbar.edit add separator
 
 #.mbar.edit add command -label "Select Font..." -command { doSelectFont }
@@ -853,6 +856,7 @@ bind . <Control-q> { exitProgram }
 bind . <Control-r> { doCompileRun }
 bind . <Control-l> { doListing }
 bind . <Control-f> { searchrep [focus] 0 }
+bind . <Control-k> { searchrep [focus] 1 }
 bind . <Control-w> { closeTab }
 
 # bind to right mouse button on Linux and Windows
@@ -1257,7 +1261,7 @@ bind .p.bot.txt <Expose> +setSash
 # main code
 
 if { $::argc > 0 } {
-    loadFileToTab $argv .p.nb.main
+    loadSourceFile $argv
 } else {
     createNewTab
 }
