@@ -1182,7 +1182,9 @@ proc doRunOptions {} {
 # simple search and replace widget by Richard Suchenwirth, from wiki.tcl.tk
 #
 proc searchrep {t {replace 1}} {
+   global replacesDone
    set w .sr
+   set replacesDone 0 
    if ![winfo exists $w] {
        toplevel $w
        wm title $w "Search"
@@ -1212,14 +1214,19 @@ proc searchrep {t {replace 1}} {
 
 # Find the next instance
 proc searchrep'next w {
+    global replacesDone
     foreach {from to} [$w tag ranges hilite] {
         $w tag remove hilite $from $to
     }
-    set cmd [list $w search -count n -- $::Find insert+2c]
+    set cmd [list $w search -forwards -count n -- $::Find insert+2c end]
     if $::IgnoreCase {set cmd [linsert $cmd 2 -nocase]}
     set pos [eval $cmd]
     if {$pos eq ""} {
-	tk_messageBox -icon info -type ok -message "Not found"
+	if {$replacesDone} {
+	    tk_messageBox -icon info -type ok -message "Replaced $replacesDone occurences"
+	} else {
+	    tk_messageBox -icon info -type ok -message "Not found"
+	}
     } else {
         $w mark set insert $pos
         $w see insert
@@ -1229,9 +1236,12 @@ proc searchrep'next w {
 
 # Replace the current instance, and find the next
 proc searchrep'rep1 w {
+    global replacesDone
     if {[$w tag ranges hilite] ne ""} {
+	set replacesDone [expr $replacesDone + 1]
         $w delete insert insert+[string length $::Find]c
         $w insert insert $::Replace
+	
         searchrep'next $w
         return 1
     } else {return 0}
