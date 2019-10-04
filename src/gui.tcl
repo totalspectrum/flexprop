@@ -823,9 +823,9 @@ frame .toolbar -bd 1 -relief raised
 grid .toolbar -column 0 -row 0 -columnspan 2 -sticky nsew
 grid .p -column 0 -row 1 -columnspan 2 -rowspan 1 -sticky nsew
 
-button .toolbar.compile -text "Compile for P2" -command doCompile
-button .toolbar.runBinary -text "Run Binary" -command doLoadRun
-button .toolbar.compileRun -text "Compile & Run on P2" -command doCompileRun
+ttk::button .toolbar.compile -text "Compile for P2" -command doCompile
+ttk::button .toolbar.runBinary -text "Run Binary" -command doLoadRun
+ttk::button .toolbar.compileRun -text "Compile & Run on P2" -command doCompileRun
 label  .toolbar.configmsg -text "   Use Commands>Configure Commands... to switch to P1" -font TkSmallCaptionFont
 
 grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun .toolbar.configmsg -sticky nsew
@@ -947,9 +947,9 @@ proc doAppearance {} {
     .editopts.font.tab.stops set $config(tabwidth)
 
     label .editopts.font.lb -text " Text font " -font $config(font)
-    button .editopts.font.change -text " Change... " -command doSelectFont
+    ttk::button .editopts.font.change -text " Change... " -command doSelectFont
     checkbutton .editopts.font.linenums -text "Show Linenumbers" -variable config(showlinenumbers) -command doShowLinenumbers
-    button .editopts.end.ok -text " OK " -command doneAppearance
+    ttk::button .editopts.end.ok -text " OK " -command doneAppearance
 
     grid .editopts.top.l -sticky nsew 
     grid .editopts.font.tab.lab .editopts.font.tab.stops
@@ -1022,6 +1022,18 @@ bind $hWnd <<Paste>> "break"
 bind $hWnd <<Cut>> "break"
 }
 
+### utility: check for file not found errors in a window
+proc fileNotFoundErrors {t} {
+    set cur [$t search "Can't open include files" 1.0 end]
+    if {$cur eq ""} {
+	set cur [$t search "Unable to open file" 1.0 end]
+    }
+    if {$cur ne ""} {
+	return 1
+    }
+    return 0
+}
+
 ### utility: compile the program
 
 proc doCompile {} {
@@ -1047,7 +1059,11 @@ proc doCompile {} {
 ##    .p.bot.txt insert end " on [info hostname]"
     tagerrors .p.bot.txt
     if { $status != 0 } {
-	tk_messageBox -icon error -type ok -message "Compilation failed" -detail "see compiler output window for details"
+	if { [fileNotFoundErrors .p.bot.txt] } {
+	    tk_messageBox -icon error -type ok -message "Compilation failed" -detail "Some files were not found. Check your library path."
+	} else {
+	    tk_messageBox -icon error -type ok -message "Compilation failed" -detail "See compiler output window for details."
+	}
 	set BINFILE ""
     } else {
 	set BINFILE [file rootname $filenames([.p.nb select])]
@@ -1155,12 +1171,12 @@ proc doRunOptions {} {
     frame .runopts.change
     frame .runopts.end
 
-    button .runopts.change.p2a -text "P2a defaults" -command setShadowP2aDefaults
-    button .runopts.change.p2b -text "P2b defaults" -command setShadowP2bDefaults
-    button .runopts.change.p1 -text "P1 defaults" -command setShadowP1Defaults
+    ttk::button .runopts.change.p2a -text "P2a defaults" -command setShadowP2aDefaults
+    ttk::button .runopts.change.p2b -text "P2b defaults" -command setShadowP2bDefaults
+    ttk::button .runopts.change.p1 -text "P1 defaults" -command setShadowP1Defaults
     
-    button .runopts.end.ok -text " OK " -command {copyShadowClose .runopts}
-    button .runopts.end.cancel -text " Cancel " -command {wm withdraw .runopts}
+    ttk::button .runopts.end.ok -text " OK " -command {copyShadowClose .runopts}
+    ttk::button .runopts.end.cancel -text " Cancel " -command {wm withdraw .runopts}
     
     grid .runopts.toplabel
     grid .runopts.a
@@ -1189,19 +1205,19 @@ proc searchrep {t {replace 1}} {
        toplevel $w
        wm title $w "Search"
        grid [label $w.1 -text Find:] [entry $w.f -textvar Find] \
-               [button $w.bn -text Next \
+               [ttk::button $w.bn -text Next \
                -command [list searchrep'next $t]] -sticky ew
        bind $w.f <Return> [list $w.bn invoke]
        if $replace {
            grid [label $w.2 -text Replace:] [entry $w.r -textvar Replace] \
-                   [button $w.br -text Replace \
+                   [ttk::button $w.br -text Replace \
                    -command [list searchrep'rep1 $t]] -sticky ew
            bind $w.r <Return> [list $w.br invoke]
-           grid x x [button $w.ba -text "Replace all" \
+           grid x x [ttk::button $w.ba -text "Replace all" \
                    -command [list searchrep'all $t]] -sticky ew
        }
        grid x [checkbutton $w.i -text "Ignore case" -variable IgnoreCase] \
-               [button $w.c -text Cancel -command "destroy $w"] -sticky ew
+               [ttk::button $w.c -text Cancel -command "destroy $w"] -sticky ew
        grid $w.i -sticky w
        grid columnconfigure $w 1 -weight 1
        $t tag config hilite -background yellow
