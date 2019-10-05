@@ -41,14 +41,14 @@ proc setShadowP2aDefaults {} {
     global WINPREFIX
     
     set shadow(compilecmd) "\"%D/bin/fastspin\" -2a -l %O -L \"%L\" \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -l230400 -b230400 \"%B\" -t -k"
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" -t -k"
 }
 proc setShadowP2bDefaults {} {
     global shadow
     global WINPREFIX
     
     set shadow(compilecmd) "\"%D/bin/fastspin\" -2b -l %O -L \"%L\" \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -l230400 -b230400 \"%B\" -t -k"
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" -t -k"
 }
 proc copyShadowToConfig {} {
     global config
@@ -1284,11 +1284,13 @@ set oldExpose [bind .p <Expose>]
 
 bind .p.bot.txt <Expose> +setSash
 
-# main code
+# needs to be initialized
+set BINFILE ""
 
+# main code
 if { $::argc > 0 } {
     foreach argx $argv {
-        loadSourceFile $argx
+        loadSourceFile [file normalize $argx]
     }
 } else {
     createNewTab
