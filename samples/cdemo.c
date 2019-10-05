@@ -31,7 +31,7 @@ void main()
     DIRB |= pinmask; // set pins as output
     for(;;) {
         OUTB ^= pinmask;
-        waitcnt(getcnt() + CLKFREQ/4);
+        waitcnt(getcnt() + _CLOCKFREQ/4);
         printf("Toggle %u\n", i++);
     }
 }
