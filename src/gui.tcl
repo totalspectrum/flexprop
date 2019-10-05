@@ -1024,7 +1024,7 @@ bind $hWnd <<Cut>> "break"
 
 ### utility: check for file not found errors in a window
 proc fileNotFoundErrors {t} {
-    set cur [$t search "Can't open include files" 1.0 end]
+    set cur [$t search "Can't open include file" 1.0 end]
     if {$cur eq ""} {
 	set cur [$t search "Unable to open file" 1.0 end]
     }
@@ -1060,7 +1060,7 @@ proc doCompile {} {
     tagerrors .p.bot.txt
     if { $status != 0 } {
 	if { [fileNotFoundErrors .p.bot.txt] } {
-	    tk_messageBox -icon error -type ok -message "Compilation failed" -detail "Some files were not found. Check your library path."
+	    tk_messageBox -icon error -type ok -message "Compilation failed" -detail "Some files were not found. Check your library directory."
 	} else {
 	    tk_messageBox -icon error -type ok -message "Compilation failed" -detail "See compiler output window for details."
 	}
