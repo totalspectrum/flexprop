@@ -9,7 +9,9 @@ FlexGUI is distributed under the MIT license; see the file License.txt for detai
 
 ## Usage
 
-Not much to say here; I hope the menus will be self explanatory. Use the `File` menu to open a Spin or BASIC file. You can only work on one file at a time; this will be treated as the top level project if you try to compile and/or run. The commands used for compiling or running are settable from the `Commands > Configure Commands...` menu item. Compiling and running on Prop2 is the main focus, but you can configure for virtually any situation where just one file is compiled. So for example it should be feasible to use this GUI for `p2gcc` with a bit of tweaking.
+Run flexgui.exe. Use the `File` menu to open a Spin or BASIC file. You may open multiple files. The one that is currently selected will be treated as the top level project if you try to compile and/or run. The commands used for compiling or running are settable from the `Commands > Configure Commands...` menu item. Compiling and running on Prop2 is the main focus, but you can configure for virtually any situation where just one file is compiled. So for example it should be feasible to use this GUI for `p2gcc` with a bit of tweaking.
+
+Also under the Commands menu is an option for viewing the listing file. This will only be useful after a program is compiled.
 
 To change between P1 and P2 development use Configure Commands... and select the appropriate default.
 
@@ -25,31 +27,6 @@ The scripts used are in the `src` subdirectory, so you can customize them to you
 
 The main advantage of flexgui over PNut (the "official" development tool for the Prop2) is that PNut doesn't yet support a high level language, whereas flexgui supports both Spin and BASIC. You can basically write ordinary Spin code, with Prop2 assembly code in the DAT section (instead of Prop1 assembly code). This makes prototyping your applications much easier.
 
-The Spin code is compiled to P2 assembler by fastspin. This is somewhat different from the way Spin works on the Prop1, where Spin code is typically compiled to bytecode and interpreted. (Note that fastspin does work for Prop1, though!)
+The code is compiled to P2 assembler by fastspin. This is somewhat different from the way Spin works on the Prop1, where Spin code is typically compiled to bytecode and interpreted. (Note that fastspin does work for Prop1, though!)
 
-### Preprocessor
-
-Like openspin, bstc, and homespun, fastspin supports a basic preprocessor with such commands as `#define`, `#ifdef`, `#else`, and `#endif`. Note that while compiling for the Prop2 the define `__P2__` is automatically defined. See the file `samples/SimpleSerial` for an example of how to write code that will work on both Prop1 and Prop2 using the preprocessor.
-
-### Inline assembly
-
-fastspin allows simple inline assembly between the keywords `asm` and `endasm`. The `asm` and `endasm` must be indented properly according to the Spin language semantics, but the inline assembly between them does not have to be.
-
-### Multiple assignment
-
-fastspin also supports assignment of multiple values, and functions which return multiple values. This is a feature which has been proposed for Spin2. For now only simple assignment (`:=`) of multiple values is permitted. For example:
-```
-   a,b := b,a
-```
-exchanges the variables `a` and `b`.
-
-Functions which return mutiple values are declared similarly to regular Spin functions, but have more than one return variable defined. For example:
-```
-PUB quotrem(a, b): q, r
-   q := a/b
-   r := a//b
-```
-defines a function which returns two values (the quotient and remainder of `a` divided by `b`). It may be used like:
-```
-  val, digit := quotrem(val, 10)
-```
+Documentation for the various languages supported is in the `doc` folder of the unpacked flexgui. BASIC is the best documented. The Spin documentation assumes familiarity with the original (Propeller1) Spin manual, and outlines the differences in the language fastspin accepts. The C documentation is a placeholder for now and mostly covers the fastspin specific extensions to C.
