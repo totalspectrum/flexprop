@@ -14,6 +14,7 @@ hello.spin: Print "Hello world" on the terminal
 multest.spin2: Test multiply speed on P2
   multiply.spin: routines used by multest.spin2
   multiply.cog.spin: multiply.spin running in its own COG
+rtc.bas: simple real-time clock using a COG to keep track of time
 smartpin.spin2: Print to serial port using smart pins
 
 proplisp: Lisp interpreter written in C
