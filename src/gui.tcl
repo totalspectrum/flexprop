@@ -408,8 +408,6 @@ proc updateLibraryList {} {
     global config
     if { [winfo exists .pb] } {
 	set config(liblist) [.pb.pathbox get 0 end]
-    } else {
-	set config(liblist) [list $config(library)]
     }
 }
 
