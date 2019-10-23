@@ -28,17 +28,17 @@ proc do_pb_create {} {
     global config
     
     toplevel .pb
-    listbox .pb.pathbox
+    listbox .pb.pathbox -width 72
     scrollbar .pb.sb -command [list .pb.pathbox yview]
     .pb.pathbox configure -yscrollcommand [list .pb.sb set]
     foreach i $config(liblist) {
 	.pb.pathbox insert end $i
     }
     frame .pb.buttons
-    button .pb.buttons.ok -text "OK" -command do_pb_ok
-    button .pb.buttons.add -text "Add..." -command do_pb_add
-    button .pb.buttons.delete -text "Delete" -command do_pb_delete
-    #button .pb.buttons.print -text "Print" -command { puts [.pb.pathbox get 0 end] }
+    ttk::button .pb.buttons.ok -text "OK" -command do_pb_ok
+    ttk::button .pb.buttons.add -text "Add..." -command do_pb_add
+    ttk::button .pb.buttons.delete -text "Delete" -command do_pb_delete
+
     grid .pb.buttons.ok .pb.buttons.add .pb.buttons.delete
     grid columnconfigure .pb.buttons 0 -weight 1
     grid rowconfigure .pb.buttons 0 -weight 1
