@@ -1,3 +1,6 @@
+Version 4.0.0
+- Allow choosing multiple include directories via the GUI
+
 Version 3.9.34
 - Enable replace functionality
 

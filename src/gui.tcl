@@ -1189,10 +1189,10 @@ proc doRunOptions {} {
     toplevel .runopts
     label .runopts.toplabel -text $cmddialoghelptext
     ttk::labelframe .runopts.a -text "Compile command"
-    entry .runopts.a.compiletext -textvariable shadow(compilecmd)
+    entry .runopts.a.compiletext -width 32 -textvariable shadow(compilecmd)
 
     ttk::labelframe .runopts.b -text "Run command"
-    entry .runopts.b.runtext -textvariable shadow(runcmd)
+    entry .runopts.b.runtext -width 32 -textvariable shadow(runcmd)
 
     frame .runopts.change
     frame .runopts.end
@@ -1217,9 +1217,6 @@ proc doRunOptions {} {
     grid .runopts.change.p2a .runopts.change.p1 -sticky nsew
     grid .runopts.change.p2b -sticky nsew
     grid .runopts.end.ok .runopts.end.cancel -sticky nsew
-    grid .runopts
-    
-    grid rowconfigure .runopts .runopts.a -weight 1
     
     wm title .runopts "Executable Paths"
 }
