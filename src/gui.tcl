@@ -33,21 +33,21 @@ proc setShadowP1Defaults {} {
     global shadow
     global WINPREFIX
     
-    set shadow(compilecmd) "\"%D/bin/fastspin\" -l %O -L \"%L\" \"%S\""
+    set shadow(compilecmd) "\"%D/bin/fastspin\" -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader\" -Dbaudrate=115200 %P \"%B\" -r -t -k"
 }
 proc setShadowP2aDefaults {} {
     global shadow
     global WINPREFIX
     
-    set shadow(compilecmd) "\"%D/bin/fastspin\" -2a -l %O -L \"%L\" \"%S\""
+    set shadow(compilecmd) "\"%D/bin/fastspin\" -2a -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" -t -k"
 }
 proc setShadowP2bDefaults {} {
     global shadow
     global WINPREFIX
     
-    set shadow(compilecmd) "\"%D/bin/fastspin\" -2b -l %O -L \"%L\" \"%S\""
+    set shadow(compilecmd) "\"%D/bin/fastspin\" -2b -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" -t -k"
 }
 proc copyShadowToConfig {} {
@@ -59,6 +59,7 @@ proc copyShadowToConfig {} {
 }
 
 set config(library) "$ROOTDIR/include"
+set config(liblist) [list $config(library)]
 set config(spinext) ".spin"
 set config(lastdir) [pwd]
 set config(font) "TkFixedFont"
@@ -193,6 +194,8 @@ proc config_save {} {
     global OPT
     global COMPRESS
     global COMPORT
+
+    updateLibraryList
     set config(sash) [.p sash coord 0]
     set fp [open $CONFIG_FILE w]
     puts $fp "# flexgui config info"
@@ -392,10 +395,21 @@ proc clearAllSearchTags {} {
 # choose the library directory
 proc getLibrary {} {
     global config
-    
-    set lib [tk_chooseDirectory -title "Choose library directory" -initialdir $config(library) ]
-    if { $lib ne "" } {
-	set config(library) $lib
+
+    if { [winfo exists .pb] } {
+	raise .pb
+    } else {
+	do_pb_create
+    }
+}
+
+# proc retrieve the library list
+proc updateLibraryList {} {
+    global config
+    if { [winfo exists .pb] } {
+	set config(liblist) [.pb.pathbox get 0 end]
+    } else {
+	set config(liblist) [list $config(library)]
     }
 }
 
@@ -756,7 +770,7 @@ menu .mbar.help -tearoff 0
 .mbar.file add command -label "Save File" -accelerator "^S" -command { saveCurFile }
 .mbar.file add command -label "Save File As..." -command { saveFileAs [.p.nb select] }
 .mbar.file add separator
-.mbar.file add command -label "Library directory..." -command { getLibrary }
+.mbar.file add command -label "Library directories..." -command { getLibrary }
 .mbar.file add separator
 .mbar.file add command -label "Close tab" -accelerator "^W" -command { closeTab }
 .mbar.file add separator
@@ -965,6 +979,18 @@ proc doAppearance {} {
     wm title .editopts "Editor Appearance"
 }
 
+proc get_includepath {} {
+    global config
+
+    updateLibraryList
+    set path ""
+    set llist $config(liblist)
+    foreach i $llist {
+	append path "-I \"" $i "\" " 
+    }
+    return $path
+}
+
 # translate % escapes in our command line strings
 proc mapPercent {str} {
     global filenames
@@ -977,7 +1003,7 @@ proc mapPercent {str} {
 
 #    set fulloptions "$OPT $COMPRESS"
     set fulloptions "$OPT"
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%O" $fulloptions "%P" $COMPORT ]
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%O" $fulloptions "%P" $COMPORT ]
     set result [string map $percentmap $str]
     return $result
 }
@@ -1131,7 +1157,7 @@ set cmddialoghelptext {
   Some special % escapes:
     %B = Replace with current binary file name
     %D = Replace with directory of flexgui executable
-    %L = Replace with library directory
+    %I = Replace with all library/include directories
     %O = Replace with optimization level
     %P = Replace with port to use
     %S = Replace with current source file name
@@ -1163,10 +1189,10 @@ proc doRunOptions {} {
     toplevel .runopts
     label .runopts.toplabel -text $cmddialoghelptext
     ttk::labelframe .runopts.a -text "Compile command"
-    entry .runopts.a.compiletext -width 32 -textvariable shadow(compilecmd)
+    entry .runopts.a.compiletext -textvariable shadow(compilecmd)
 
     ttk::labelframe .runopts.b -text "Run command"
-    entry .runopts.b.runtext -width 32 -textvariable shadow(runcmd)
+    entry .runopts.b.runtext -textvariable shadow(runcmd)
 
     frame .runopts.change
     frame .runopts.end
@@ -1177,19 +1203,23 @@ proc doRunOptions {} {
     
     ttk::button .runopts.end.ok -text " OK " -command {copyShadowClose .runopts}
     ttk::button .runopts.end.cancel -text " Cancel " -command {wm withdraw .runopts}
-    
-    grid .runopts.toplabel
-    grid .runopts.a
-    grid .runopts.b
-    grid .runopts.change
-    grid .runopts.end
-    
-    grid .runopts.a.compiletext
-    grid .runopts.b.runtext
 
-    grid .runopts.change.p2a .runopts.change.p1
-    grid .runopts.change.p2b
-    grid .runopts.end.ok .runopts.end.cancel
+    grid .runopts.toplabel -sticky nsew
+    grid rowconfigure .runopts .runopts.toplabel -weight 0
+    grid .runopts.a -sticky nsew
+    grid .runopts.b -sticky nsew
+    grid .runopts.change -sticky nsew
+    grid .runopts.end -sticky nsew
+    
+    grid .runopts.a.compiletext -sticky nsew
+    grid .runopts.b.runtext -sticky nsew
+
+    grid .runopts.change.p2a .runopts.change.p1 -sticky nsew
+    grid .runopts.change.p2b -sticky nsew
+    grid .runopts.end.ok .runopts.end.cancel -sticky nsew
+    grid .runopts
+    
+    grid rowconfigure .runopts .runopts.a -weight 1
     
     wm title .runopts "Executable Paths"
 }
