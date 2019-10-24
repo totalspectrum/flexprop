@@ -12,9 +12,9 @@ file...". If you use "Open Spin file..." with the current tab holding
 an empty, unmodified new file, the file will be opened in that tab,
 otherwise it will be opened in a new tab.
 
-The "Library directory..." entry allows you to pick a directory that
-will be searched for OBJ declarations automatically. It defaults to
-the lib directory in the spin2gui distribution.
+The "Library directories..." entry allows you to pick a directories that
+will be searched for OBJ declarations and include files automatically.
+The directories are searched in the order in which they are listed.
 
 "Close tab" closes the currently selected tab.
 
