@@ -7,10 +7,12 @@ blink1.bas: BASIC program to blink an LED
 blink1.spin2: Same but for Spin (Only works on P2)
 blink2.bas: BASIC program using 2 COGs to blink 2 LEDs
 blink_all_cogs.spin: blink 8 LEDs using 8 COGs
+classic.bi: header file to assist in compiling old BASIC programs
 cdemo.c: C program to blink a pin and print a message on the terminal
 fibo.bas: Recursive Fibonacci in BASIC
 fibo.spin: Recursive Fibonacci in Spin
 hello.spin: Print "Hello world" on the terminal
+lunar.bas: Old-style BASIC program; land a rocket on the moon
 multest.spin2: Test multiply speed on P2
   multiply.spin: routines used by multest.spin2
   multiply.cog.spin: multiply.spin running in its own COG
