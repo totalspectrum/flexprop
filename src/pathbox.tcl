@@ -21,7 +21,7 @@ proc do_pb_ok {} {
     global config
 
     set config(liblist) [.pb.pathbox get 0 end]
-    wm withdraw .pb
+    destroy .pb
 }
 
 proc do_pb_create {} {
