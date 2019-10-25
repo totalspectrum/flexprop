@@ -768,6 +768,8 @@ menu .mbar.help -tearoff 0
 .mbar.file add command -label "Save File" -accelerator "^S" -command { saveCurFile }
 .mbar.file add command -label "Save File As..." -command { saveFileAs [.p.nb select] }
 .mbar.file add separator
+.mbar.file add command -label "Open listing file" -accelerator "^L" -command { doListing }
+.mbar.file add separator
 .mbar.file add command -label "Library directories..." -command { getLibrary }
 .mbar.file add separator
 .mbar.file add command -label "Close tab" -accelerator "^W" -command { closeTab }
@@ -801,8 +803,6 @@ menu .mbar.help -tearoff 0
 .mbar.run add command -label "Compile" -command { doCompile }
 .mbar.run add command -label "Run binary on device" -command { doLoadRun }
 .mbar.run add command -label "Compile and run" -accelerator "^R" -command { doCompileRun }
-.mbar.run add separator
-.mbar.run add command -label "Open listing file" -accelerator "^L" -command { doListing }
 .mbar.run add separator
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
 

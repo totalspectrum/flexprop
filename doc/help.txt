@@ -1,4 +1,4 @@
-Spin2gui help
+FlexGUI help
 =============
 
 Menus
@@ -11,6 +11,11 @@ file in a new tab with "New File" or open an existing file with "Open Spin
 file...". If you use "Open Spin file..." with the current tab holding
 an empty, unmodified new file, the file will be opened in that tab,
 otherwise it will be opened in a new tab.
+
+The default configuration always creates a listing file (.lst), which
+you can load into a window by selecting "Open Listing File" under the
+File menu. If the listing file window is open it will
+automatically be updated on every recompile.
 
 The "Library directories..." entry allows you to pick a directories that
 will be searched for OBJ declarations and include files automatically.
@@ -39,11 +44,6 @@ The Commands menu allow you to compile, run a binary, or both compile
 and run. The current file (the one in the currently selected tab) is
 always the one compiled, so it should be your top level Spin file. It
 will be saved automatically before any compilation.
-
-The default configuration always creates a listing file (.lst), which
-you can load into a window by selecting "Open Listing File" under the
-Commands menu. If the listing file window is open it will
-automatically be updated on every recompile.
 
 Run Binary allows you to choose a binary that you compiled off-line
 (or that was compiled earlier) and run it on the device.

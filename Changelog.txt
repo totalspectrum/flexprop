@@ -1,3 +1,7 @@
+Version 4.0.1
+- Fixed some problems with dialog boxes
+- Moved the "Open Listing File..." option to the File menu
+
 Version 4.0.0
 - Allow choosing multiple include directories via the GUI
 
