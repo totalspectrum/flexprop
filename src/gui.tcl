@@ -262,6 +262,7 @@ proc loadFileToWindow { fname win } {
     $win insert end $file_data
     $win edit modified false
     set filetimes($fname) [file mtime $fname]
+    focus $win
 }
 
 # save contents of a window to a file
