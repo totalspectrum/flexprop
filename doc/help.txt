@@ -62,20 +62,40 @@ Configure Commands... menu). In the "Run command" replace `%P` with
 `-p COM20` or `-p /dev/tty.usbmodem123` (or whatever the port you wish
 to use is).
 
+### Special
+
+The `Special` menu presents some options for interacting with P2
+boards.
+
+#### Enter ROM Monitor
+
+Opens a terminal window connected to the built in P2 ROM debug monitor.
+
+#### Enter TAQOZ
+
+Opens a terminal window connected to the version of Peter Jakacki's
+Forth interpreter TAQOZ that is built into the P2 ROM.
+
+#### uPython
+
+Runs the microPython interpreter on the P2. This is loaded from the
+`samples/upython` directory.
+
+
 Configuring Commands
 --------------------
 
 You can change the commands used for compiling and running
 programs. Since the commands are flexible, you can acutally use
-spin2gui for compiling and running programs on the P1. The "P1
+flexgui for compiling and running programs on the P1. The "P1
 defaults" button sets the commands for this (you will need to supply
 propeller-load.exe yourself). "P2 defaults" restores the settings to
 the original Prop2 development.
 
 Config File
 -----------
-Settings for spin2gui are saved in a file called ".spin2gui.config" in
+Settings for flexgui are saved in a file called ".flexgui.config" in
 the HOME directory of the user (usually something like
 C:\Users\MyName). If something gets really messed up, deleting that
-file will restore spin2gui to its default state.
+file will restore flexgui to its default state.
 

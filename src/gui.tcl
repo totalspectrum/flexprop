@@ -91,7 +91,7 @@ proc checkPropVersion {} {
     }
 }
 
-setShadowP2aDefaults
+setShadowP2bDefaults
 copyShadowToConfig
 
 #
@@ -147,6 +147,7 @@ proc config_open {} {
     if {[file exists $CONFIG_FILE]} {
 	set fp [open $CONFIG_FILE r]
     } else {
+	checkPropVersion
 	return 0
     }
     
@@ -661,6 +662,25 @@ proc doHelp {} {
     makeReadOnly .p.nb.help.txt
 }
 
+proc doSpecial {name} {
+    global ROOTDIR
+    global BINFILE
+    global PROP_VERSION
+
+    if { $PROP_VERSION eq "P1" } {
+	tk_messageBox -icon error -type ok -message "Hardware not supported" -detail "Special features only work on P2 boards"
+	return 0
+    }
+    if { [string equal -length 1 "$name" "-"] } {
+	set BINFILE $name
+    } else {
+	set BINFILE "$ROOTDIR/$name"
+    }
+    .p.bot.txt delete 1.0 end
+    doJustRun
+    return 1
+}
+
 #
 # parameter is text coordinates like 2.72
 #
@@ -761,6 +781,7 @@ menu .mbar.edit -tearoff 0
 menu .mbar.options -tearoff 0
 menu .mbar.run -tearoff 0
 menu .mbar.comport -tearoff 0
+menu .mbar.special -tearoff 0
 menu .mbar.help -tearoff 0
 
 .mbar add cascade -menu .mbar.file -label File
@@ -817,6 +838,11 @@ foreach v $serlist {
     set portval [string map {\\ \\\\} "-p $v"]
     .mbar.comport add radiobutton -label $comname -variable COMPORT -value $portval
 }
+
+.mbar add cascade -menu .mbar.special -label Special
+.mbar.special add command -label "Enter P2 ROM monitor" -command { doSpecial "-xDEBUG" }
+.mbar.special add command -label "Enter P2 ROM TAQOZ" -command { doSpecial "-xTAQOZ" }
+.mbar.special add command -label "Run uPython on P2" -command { doSpecial "samples/upython/upython.binary" }
 
 .mbar add cascade -menu .mbar.help -label Help
 .mbar.help add command -label "Help" -command { doHelp }
