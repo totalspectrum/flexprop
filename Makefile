@@ -52,6 +52,10 @@ flexgui.exe: src/flexgui.c $(RESOBJ)
 	$(WINGCC) $(WINCFLAGS) -o flexgui.exe src/flexgui.c $(WINTK_INC) $(WINTK_LIBS)
 	$(SIGN) flexgui
 	mv flexgui.signed.exe flexgui.exe
+
+#
+# be careful to leave samples/upython/upython.binary during make clean
+#
 clean:
 	rm -rf flexgui
 	rm -rf *.exe *.zip
@@ -61,8 +65,8 @@ clean:
 	rm -rf loadp2/build-win32/*
 	rm -rf samples/*.elf samples/*.binary samples/*~
 	rm -rf samples/*.lst samples/*.pasm samples/*.p2asm
-	rm -rf samples/*/*.binary samples/*/*.pasm samples/*/*.p2asm
-	rm -rf samples/*/*.lst
+	rm -rf samples/*/*.lst samples/*/*.pasm samples/*/*.p2asm
+	rm -rf samples/proplisp/*.binary
 	rm -rf $(RESOBJ)
 	rm -rf pandoc.yml
 
