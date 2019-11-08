@@ -19,6 +19,8 @@ multest.spin2: Test multiply speed on P2
 rtc.bas: simple real-time clock using a COG to keep track of time
 smartpin.spin2: Print to serial port using smart pins
 
+LED_Matrix: Samples for the P2 LED Matrix accessory board
+
 proplisp: Lisp interpreter written in C
   proplisp/README.md: Documentation
   proplisp/lisp.c: Interactive interpreter
