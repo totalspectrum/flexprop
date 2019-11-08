@@ -8,7 +8,7 @@ Menus
 
 The File menu should be pretty self explanatory. You can create a new
 file in a new tab with "New File" or open an existing file with "Open Spin
-file...". If you use "Open Spin file..." with the current tab holding
+file...". If you use "Open file..." with the current tab holding
 an empty, unmodified new file, the file will be opened in that tab,
 otherwise it will be opened in a new tab.
 
@@ -29,20 +29,29 @@ The Edit menu is again pretty self-explanatory. The Undo/Redo
 functionality is quite limited; only one level of Redo is reliable,
 and trying to Redo again will produce unpredictable results.
 
-"Editor Appearance..." dialog allows you to change the way the source
+The "Editor Appearance..." dialog allows you to change the way the source
 code editor looks, e.g. changing the font used for the text, or the
 tab settings.
 
 ### Options
 
 The Options menu lets you change compiler options. For now just the
-optimization level can be changed.
+optimization level can be changed. The default optimization level is
+probably suitable for most purposes.
+
+"No Optimization" is only recommended for checking for compiler
+bugs (if the program works with no optimization but fails with
+optimization enabled, then either there's a timing issue or a compiler
+bug).
+
+"Full Optimization" may produce faster code, but it will typically
+consume more resources (including COG memory).
 
 ### Commands
 
 The Commands menu allow you to compile, run a binary, or both compile
 and run. The current file (the one in the currently selected tab) is
-always the one compiled, so it should be your top level Spin file. It
+always the one compiled, so it should be your top level file. It
 will be saved automatically before any compilation.
 
 Run Binary allows you to choose a binary that you compiled off-line
@@ -52,8 +61,7 @@ Run Binary allows you to choose a binary that you compiled off-line
 
 Presents a menu of ports that may be selected. The default is to tell
 the loader program (loadp2 or proploader) to scan for a port to
-use. But you may override this by selecting a specific serial port
-from COM1 to COM9.
+use. But you may override this by selecting a specific serial port.
 
 If for some reason the port you wish to use is not listed (this will
 be quite common on Mac OS X, for example) then you can still override

@@ -23,3 +23,9 @@ proplisp: Lisp interpreter written in C
   proplisp/README.md: Documentation
   proplisp/lisp.c: Interactive interpreter
   proplisp/fibo.c: Recursive fibonacci in Lisp
+
+upython: MicroPython interpreter for P2
+  This is a binary-only package, which may be run using the `Special`
+  menu or the `Run Binary` button. See the README for some information
+  on micropython features.
+  
