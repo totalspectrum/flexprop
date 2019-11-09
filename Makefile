@@ -56,6 +56,8 @@ flexgui.exe: src/flexgui.c $(RESOBJ)
 #
 # be careful to leave samples/upython/upython.binary during make clean
 #
+SUBSAMPLES={LED_Matrix, proplisp}
+
 clean:
 	rm -rf flexgui
 	rm -rf *.exe *.zip
@@ -66,7 +68,7 @@ clean:
 	rm -rf samples/*.elf samples/*.binary samples/*~
 	rm -rf samples/*.lst samples/*.pasm samples/*.p2asm
 	rm -rf samples/*/*.lst samples/*/*.pasm samples/*/*.p2asm
-	rm -rf samples/proplisp/*.binary
+	rm -rf samples/$(SUBSAMPLES)/*.binary
 	rm -rf $(RESOBJ)
 	rm -rf pandoc.yml
 
