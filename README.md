@@ -12,12 +12,19 @@ FlexGUI is distributed under the MIT license; see the file License.txt for detai
 * Options for interacting directly with P2 ROM monitor and ROM TAQOZ
 * Micropython for P2 sample included
 
-### Spin enhancments
+### PASM enhancements
 
-The ordinary P1 Spin language is supported, with some enhancements:
-
+* Both P1 and P2 assembly language supported
 * Preprocessor supporting `#define`, `#ifdef`, and `#include`
 * Absolute address operator `@@@`
+* Warnings for common mistakes like forgetting `#` in a jump
+* Can compile assembly-only files (no Spin methods required)
+
+### Spin enhancements
+
+The original Spin language is supported, with some enhancements:
+
+* Generates optimized PASM instead of bytecode
 * `case_fast` to force `case` to produce a jump table
 * Conditional expressions like `(x < y) ? x : y`
 * Inline assembly inside PUB and PRI functions
@@ -36,12 +43,14 @@ See `doc/spin.md` for more details.
 
 fastspin supports a fairly complete version of BASIC, based on traditional Microsoft BASICs. Please see `doc/basic.md` for details. Notable features are:
 
+* Structured programming features
 * Line numbers are optional
 * Garbage collected memory allocation
-* Support for classes
-* Support for importing Spin objects as classes
+* Support for classes, and importing Spin objects as classes
 * Function closures and immediate functions
-* Generic functions
+* `try` / `catch`
+* Inline assembly
+* Generic functions and templates
 
 ### C Language
 
