@@ -31,7 +31,7 @@ The scripts used are in the `src` subdirectory, so you can customize them to you
 * Supports PASM, Spin, BASIC, and C
 * View output PASM code
 * Built in terminal emulator
-* 
+* Options for interacting with P2 ROM 
 
 ## High level languages
 
