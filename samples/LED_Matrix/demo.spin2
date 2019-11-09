@@ -10,7 +10,7 @@ obj
   c: "charlieplex_text.spin2"
   ser: "spin/SmartSerial"
 
-pub main | i'
+pub main | i
 
     clkset(oscmode, freq)
     ser.start(63, 62, 0, 230_400)
