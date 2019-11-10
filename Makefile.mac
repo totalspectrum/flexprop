@@ -1,13 +1,13 @@
 
 
-default: spin2gui.zip
+default: flexgui.zip
 
-spin2gui.zip: spin2gui.tcl bin/fastspin bin/proploader bin/loadp2 spin2gui_dir
-	rm -f spin2gui.zip
-	zip -r spin2gui.zip spin2gui
+fastgui.zip: fastgui.tcl bin/fastspin bin/proploader bin/loadp2 fastgui_dir
+	rm -f fastgui.zip
+	zip -r fastgui.zip fastgui
 
 clean:
-	rm -rf spin2gui
+	rm -rf fastgui
 	rm -rf *.zip
 	rm -rf spin2cpp/build
 	rm -rf proploader-macosx-build
@@ -15,16 +15,16 @@ clean:
 	rm -rf samples/*.elf samples/*.binary samples/*~
 	rm -rf samples/*.lst samples/*.pasm samples/*.p2asm
 
-spin2gui_dir:
-	mkdir -p spin2gui/bin
-	mkdir -p spin2gui/doc
-	cp -r spin2gui.tcl README.md License.txt samples src spin2gui
-	cp -r spin2cpp/doc/* spin2gui/doc
-	cp -r bin/* spin2gui/bin
-	cp -r spin2gui.tcl spin2gui/
-	touch spin2gui_dir
+fastgui_dir:
+	mkdir -p fastgui/bin
+	mkdir -p fastgui/doc
+	cp -r fastgui.tcl README.md License.txt samples src fastgui
+	cp -r spin2cpp/doc/* fastgui/doc
+	cp -r bin/* fastgui/bin
+	cp -r fastgui.tcl fastgui/
+	touch fastgui_dir
 
-.PHONY: spin2gui_dir
+.PHONY: fastgui_dir
 
 bin/fastspin: spin2cpp/build/fastspin
 	mkdir -p bin
