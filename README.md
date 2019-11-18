@@ -6,16 +6,17 @@ FlexGUI is distributed under the MIT license; see the file License.txt for detai
 
 ## Features
 
+* Both Prop1 and Prop2 are supported
 * Supports PASM, Spin, BASIC, and C
 * View output PASM code
 * Built in terminal emulator
-* Checks files for external changes, so you may use any editor and compile in FlexGUI
+* GUI checks files for external changes, so you may use any editor and compile in FlexGUI
 * Options for interacting directly with P2 ROM monitor and ROM TAQOZ
 * Micropython for P2 sample included
 
 ### PASM enhancements
 
-* Both P1 and P2 assembly language supported
+* P1 and P2 assembly languages supported
 * Preprocessor supporting `#define`, `#ifdef`, and `#include`
 * Absolute address operator `@@@`
 * Warnings for common mistakes like forgetting `#` in a jump
