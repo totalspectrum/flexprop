@@ -1,7 +1,7 @@
 #!/usr/bin/wish
 #
 # Simple GUI for Spin
-# Copyright 2018 Total Spectrum Software
+# Copyright 2018-2019 Total Spectrum Software
 # Distributed under the terms of the MIT license;
 # see License.txt for details.
 #
