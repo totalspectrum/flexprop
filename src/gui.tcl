@@ -35,6 +35,7 @@ proc setShadowP1Defaults {} {
     
     set shadow(compilecmd) "\"%D/bin/fastspin\" -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader\" -Dbaudrate=115200 %P \"%B\" -r -t -k"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader\" -Dbaudrate=115200 %P \"%B\" -e -k"
 }
 proc setShadowP2aDefaults {} {
     global shadow
@@ -42,19 +43,22 @@ proc setShadowP2aDefaults {} {
     
     set shadow(compilecmd) "\"%D/bin/fastspin\" -2a -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" -t -k"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"@0=%D/board/P2ES_flashloader.bin,@1000+%B\" -t -k"
 }
 proc setShadowP2bDefaults {} {
     global shadow
     global WINPREFIX
     
-    set shadow(compilecmd) "\"%D/bin/fastspin\" -2b -l %O %I \"%S\""
+    set shadow(compilecmd) "\"%D/bin/fastspin\" -2 -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" -t -k"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"@0=%D/board/P2ES_flashloader.bin,@1000+%B\" -t -k"
 }
 proc copyShadowToConfig {} {
     global config
     global shadow
     set config(compilecmd) $shadow(compilecmd)
     set config(runcmd) $shadow(runcmd)
+    set config(flashcmd) $shadow(flashcmd)
     checkPropVersion
 }
 
@@ -74,11 +78,11 @@ set config(showlinenumbers) 1
 proc checkPropVersion {} {
     global config
     global PROP_VERSION
-    if {[string first " -2b " $config(compilecmd)] != -1} {
-	set PROP_VERSION "P2b"
+    if {[string first " -2a " $config(compilecmd)] != -1} {
+	set PROP_VERSION "P2a"
 	set otherProp "P1"
     } elseif {[string first " -2" $config(compilecmd)] != -1} {
-	set PROP_VERSION "P2a"
+	set PROP_VERSION "P2"
 	set otherProp "P1"
     } else {
 	set PROP_VERSION "P1"
@@ -823,8 +827,11 @@ menu .mbar.help -tearoff 0
 
 .mbar add cascade -menu .mbar.run -label Commands
 .mbar.run add command -label "Compile" -command { doCompile }
-.mbar.run add command -label "Run binary on device" -command { doLoadRun }
+.mbar.run add command -label "Run binary on device..." -command { doLoadRun }
 .mbar.run add command -label "Compile and run" -accelerator "^R" -command { doCompileRun }
+.mbar.run add separator
+.mbar.run add command -label "Compile and flash" -accelerator "^E" -command { doCompileFlash }
+.mbar.run add command -label "Flash binary file..." -command { doLoadFlash }
 .mbar.run add separator
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
 
@@ -893,6 +900,7 @@ bind . <Control-s> { saveCurFile }
 bind . <Control-b> { browseFile }
 bind . <Control-q> { exitProgram }
 bind . <Control-r> { doCompileRun }
+bind . <Control-e> { doCompileFlash }
 bind . <Control-l> { doListing }
 bind . <Control-f> { searchrep [focus] 0 }
 bind . <Control-k> { searchrep [focus] 1 }
@@ -1138,11 +1146,7 @@ proc doListing {} {
     }
 }
 
-proc doJustRun {} {
-    global config
-    global BINFILE
-    
-    set cmdstr [mapPercent $config(runcmd)]
+proc doJustRunCmd {cmdstr} {
     .p.bot.txt insert end "$cmdstr\n"
 
     set runcmd [list exec -ignorestderr]
@@ -1153,6 +1157,32 @@ proc doJustRun {} {
 	.p.bot.txt insert 2.0 $errout
 	tagerrors .p.bot.txt
     }
+}
+
+proc doJustRun {} {
+    global config
+    global BINFILE
+    
+    set cmdstr [mapPercent $config(runcmd)]
+    doJustRunCmd $cmdstr
+}
+set flashMsg "
+Note that many boards require jumpers or switches
+to be set before programming flash and/or
+before booting from it.
+
+Please ensure your board is configured for flash
+programming.
+"
+
+proc doJustFlash {} {
+    global config
+    global BINFILE
+    global flashMsg
+    
+    tk_messageBox -icon info -type ok -message "Flash SPI" -detail $flashMsg
+    set cmdstr [mapPercent $config(flashcmd)]
+    doJustRunCmd $cmdstr
 }
 
 proc doLoadRun {} {
@@ -1169,11 +1199,33 @@ proc doLoadRun {} {
     doJustRun
 }
 
+proc doLoadFlash {} {
+    global config
+    global BINFILE
+    global BinTypes
+    
+    set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $config(lastdir)]
+    if { [string length $filename] == 0 } {
+	return
+    }
+    set BINFILE $filename
+    .p.bot.txt delete 1.0 end
+    doJustFlash
+}
+
 proc doCompileRun {} {
     set status [doCompile]
     if { $status eq 0 } {
 	.p.bot.txt insert end "\n"
 	doJustRun
+    }
+}
+
+proc doCompileFlash {} {
+    set status [doCompile]
+    if { $status eq 0 } {
+	.p.bot.txt insert end "\n"
+	doJustFlash
     }
 }
 
