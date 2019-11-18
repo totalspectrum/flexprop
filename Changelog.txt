@@ -1,3 +1,6 @@
+Version 4.0.4
+- Added ability to program SPI flash
+
 Version 4.0.3
 - Made version 2b the P2 default
 - Added "Special" menu for running the P2 ROM monitor, TAQOZ, or micropython
