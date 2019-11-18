@@ -5,6 +5,9 @@
 
 default: flexgui.zip
 
+CROSS ?= win32
+EXE ?= .exe
+
 # where the Tcl and Tk source code are checked out (side by side)
 TCLROOT ?= /home/ersmith/src/Tcl
 
@@ -33,7 +36,16 @@ ifdef PANDOC_EXISTS
 PDFFILES=spin2cpp/Fastspin.pdf spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
 endif
 
-BINFILES=bin/fastspin.exe bin/proploader.exe bin/loadp2.exe
+#
+# board support files (e.g. for flash programming)
+#
+BOARDFILES=board/P2ES_flashloader.bin
+
+#
+# binaries to make
+#
+
+BINFILES=bin/fastspin$(EXE) bin/proploader$(EXE) bin/loadp2$(EXE) $(BOARDFILES)
 
 # the script used for signing executables:
 #    $(SIGN) bin/foo
@@ -44,7 +56,7 @@ BINFILES=bin/fastspin.exe bin/proploader.exe bin/loadp2.exe
 
 SIGN ?= ./spin2cpp/sign.dummy.sh
 
-flexgui.zip: src/version.tcl src/makepandoc.tcl flexgui.exe $(BINFILES) $(PDFFILES) flexgui_dir
+flexgui.zip: src/version.tcl src/makepandoc.tcl flexgui$(EXE) $(BINFILES) $(PDFFILES) flexgui_dir
 	rm -f flexgui.zip
 	zip -r flexgui.zip flexgui
 
@@ -61,10 +73,11 @@ SUBSAMPLES={LED_Matrix, proplisp}
 clean:
 	rm -rf flexgui
 	rm -rf *.exe *.zip
+	rm -rf board/*.bin
 	rm -rf $(BINFILES) $(PDFFILES)
-	rm -rf spin2cpp/build-win32/*
+	rm -rf spin2cpp/build-$(CROSS)/*
 	rm -rf proploader-*-build
-	rm -rf loadp2/build-win32/*
+	rm -rf loadp2/build-$(CROSS)/*
 	rm -rf samples/*.elf samples/*.binary samples/*~
 	rm -rf samples/*.lst samples/*.pasm samples/*.p2asm
 	rm -rf samples/*/*.lst samples/*/*.pasm samples/*/*.p2asm
@@ -75,6 +88,7 @@ clean:
 flexgui_dir:
 	mkdir -p flexgui/bin
 	mkdir -p flexgui/doc
+	mkdir -p flexgui/board
 	cp -r flexgui.exe README.md License.txt samples src flexgui
 ifdef PANDOC_EXISTS
 	cp -r $(PDFFILES) flexgui/doc
@@ -83,33 +97,34 @@ endif
 	cp -r spin2cpp/include flexgui/
 	cp -r doc/*.txt flexgui/doc
 	cp -r bin/*.exe flexgui/bin
+	cp -r board/*.bin flexgui/board
 	cp -r flexgui.tcl flexgui/
 	touch flexgui_dir
 
 .PHONY: flexgui_dir
 
-bin/fastspin.exe: spin2cpp/build-win32/fastspin.exe
+bin/fastspin$(EXE): spin2cpp/build-$(CROSS)/fastspin$(EXE)
 	mkdir -p bin
 	cp $< $@
 	$(SIGN) bin/fastspin
-	mv bin/fastspin.signed.exe bin/fastspin.exe
+	mv bin/fastspin.signed$(EXE) bin/fastspin$(EXE)
 
-bin/proploader.exe: proploader-msys-build/bin/proploader.exe
+bin/proploader$(EXE): proploader-msys-build/bin/proploader$(EXE)
 	mkdir -p bin
 	cp $< $@
 
-bin/loadp2.exe: loadp2/build-win32/loadp2.exe
+bin/loadp2$(EXE): loadp2/build-$(CROSS)/loadp2$(EXE)
 	mkdir -p bin
 	cp $< $@
 
-spin2cpp/build-win32/fastspin.exe:
-	make -C spin2cpp CROSS=win32
+spin2cpp/build-$(CROSS)/fastspin$(EXE):
+	make -C spin2cpp CROSS=$(CROSS)
 
-proploader-msys-build/bin/proploader.exe:
-	make -C PropLoader CROSS=win32
+proploader-msys-build/bin/proploader$(EXE):
+	make -C PropLoader CROSS=$(CROSS)
 
-loadp2/build-win32/loadp2.exe:
-	make -C loadp2 CROSS=win32
+loadp2/build-win32/loadp2$(EXE):
+	make -C loadp2 CROSS=$(CROSS)
 
 %.pdf: %.md
 	tclsh src/makepandoc.tcl $< > pandoc.yml
@@ -120,3 +135,7 @@ $(RESOBJ): $(RES_RC)
 
 src/version.tcl: version.inp spin2cpp/version.h
 	cpp -DTCL_SRC < version.inp > $@
+
+board/P2ES_flashloader.bin: loadp2/build-$(CROSS)/loadp2$(EXE)
+	mkdir -p board
+	cp loadp2/board/P2ES_flashloader.bin $@
