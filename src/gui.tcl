@@ -279,7 +279,7 @@ proc saveFileFromWindow { fname win } {
         set disktime [file mtime $fname]
         if { $disktime > $filetimes($fname) } {
 	    set answer [tk_messageBox -icon question -type yesno -message "File $fname has changed on disk; overwrite it?" -default no]
-	    if { $answer eq no } {
+	    if { $answer eq "no" } {
 	        return
 	    }
 	}
@@ -365,7 +365,7 @@ proc checkChanges {w} {
     }
     if {[$w.txt edit modified]==1} {
 	set answer [tk_messageBox -icon question -type yesno -message "Save file $s?" -default yes]
-	if { $answer eq yes } {
+	if { $answer eq "yes" } {
 	    saveFile $w
 	}
     }
@@ -1181,9 +1181,11 @@ proc doJustFlash {} {
     global BINFILE
     global flashMsg
     
-    tk_messageBox -icon info -type ok -message "Flash SPI" -detail $flashMsg
-    set cmdstr [mapPercent $config(flashcmd)]
-    doJustRunCmd $cmdstr
+    set answer [tk_messageBox -icon info -type okcancel -message "Flash Binary" -detail $flashMsg]
+    if { $answer eq "ok" } {
+	set cmdstr [mapPercent $config(flashcmd)]
+	doJustRunCmd $cmdstr
+    }
 }
 
 proc doLoadRun {} {
