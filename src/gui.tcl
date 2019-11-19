@@ -850,6 +850,7 @@ foreach v $serlist {
 .mbar.special add command -label "Enter P2 ROM monitor" -command { doSpecial "-xDEBUG" }
 .mbar.special add command -label "Enter P2 ROM TAQOZ" -command { doSpecial "-xTAQOZ" }
 .mbar.special add command -label "Run uPython on P2" -command { doSpecial "samples/upython/upython.binary" }
+.mbar.special add command -label "Terminal only" -command { doSpecial "-n" }
 
 .mbar add cascade -menu .mbar.help -label Help
 .mbar.help add command -label "Help" -command { doHelp }

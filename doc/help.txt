@@ -89,6 +89,10 @@ Forth interpreter TAQOZ that is built into the P2 ROM.
 Runs the microPython interpreter on the P2. This is loaded from the
 `samples/upython` directory.
 
+#### Terminal only
+
+Opens a terminal window. Does not scan for a P2, so the port to use must
+be explicitly set in the `Port` menu.
 
 Configuring Commands
 --------------------
