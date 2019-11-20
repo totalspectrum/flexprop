@@ -73,7 +73,7 @@ To install, download the flexgui.zip file from the releases. The latest release 
 
    https://github.com/totalspectrum/flexgui/releases/latest
    
-Create a directory called "flexgui" (or whatever you'd like) and unpack the .zip file into that directory. Make sure the directory you create is writable, so do not unpack into a system directory like Programs -- use your desktop or a folder directly under C: instead.
+Create a directory called "flexgui" (or whatever you'd like) and unpack the .zip file into that directory. Make sure the directory you create is writable, so do not unpack into a system directory like "Program Files". Use your desktop or a folder directly under "C:" instead.
 
 
 ## Running on Windows
@@ -97,13 +97,13 @@ Under the `File` menu is an option for viewing the listing file, which shows the
 
 ## Other platforms
 
-Only a Windows binary is provided. For other platforms, run the `flexgui.tcl` script. You will need Tcl/Tk installed, but it is available for most versions of Unix (including Mac OS X).
+Only a Windows binary is provided. For other platforms, run the `flexgui.tcl` script. You will need Tcl/Tk installed, but it is available for most versions of Unix (including Mac OS X). You'll also need to get binary versions of `fastspin` and `loadp2` for your platform, and copy them into the `bin` folder.
 
 ## High level languages
 
 The main advantage of flexgui over PNut (the "official" development tool for the Prop2) is that PNut doesn't yet support a high level language, whereas flexgui supports Spin, BASIC, and C. You can basically write ordinary Spin code, with Prop2 assembly code in the DAT section (instead of Prop1 assembly code). This makes prototyping your applications much easier.
 
-The code is compiled to P2 assembler by fastspin. This is somewhat different from the way Spin traditionally on the Prop1, where Spin code is typically compiled to bytecode and interpreted. (Note that fastspin does work for Prop1, and compiles to P1 assembler in that case.)
+The code is compiled to P2 assembler by fastspin. This is somewhat different from the way Spin traditionally worked on the Prop1, where Spin code is typically compiled to bytecode and interpreted. (Note that fastspin does work for Prop1, and compiles to P1 assembler in that case.)
 
 Documentation for the various languages supported is in the `doc` folder of the unpacked flexgui. BASIC is the best documented. The Spin documentation assumes familiarity with the original (Propeller1) Spin manual, and outlines the differences in the language fastspin accepts. The C documentation is a placeholder for now and mostly covers the fastspin specific extensions to C.
 
