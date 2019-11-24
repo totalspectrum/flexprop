@@ -18,26 +18,26 @@ FlexGUI is distributed under the MIT license; see the file License.txt for detai
 
 * P1 and P2 assembly languages supported
 * Preprocessor supporting `#define`, `#ifdef`, and `#include`
-* Absolute address operator `@@@`
+* Absolute address operator `@@@` (only needed for P1)
 * Warnings for common mistakes like forgetting `#` in a jump
 * Can compile assembly-only files (no Spin methods required)
 
 ### Spin enhancements
 
-The original Spin language is supported, with some enhancements:
+The original Spin language is supported, with some enhancements from Spin2:
 
 * Generates optimized PASM instead of bytecode
 * `case_fast` to force `case` to produce a jump table
 * Conditional expressions like `(x < y) ? x : y`
-* Inline assembly inside PUB and PRI functions
-* Object pointers
-* `pub file` and `pri file` to include functions from other languages (C, BASIC)
 * Multiple return values and assignments, e.g. `x,y := y,x`
+* Unsigned operators `+/`, `+//`, `+<`, `+=<`, `+>`, `+=>`
+* Spin2 operators `\`, `<=>`
+* Pointers to objects
+* Inline assembly inside PUB and PRI functions
+* `pub file` and `pri file` to include functions from other languages (C, BASIC)
 * Default parameter values for functions
 * Optional type specifiers for function parameters and return values
 * Automatic passing of strings as pointers in some cases
-* Unsigned operators `+/`, `+//`, `+<`, `+=<`, `+>`, `+=>`
-* Spin2 operators `\`, `<=>`
 
 See `doc/spin.md` for more details.
 

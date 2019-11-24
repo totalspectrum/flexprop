@@ -39,7 +39,7 @@ endif
 #
 # board support files (e.g. for flash programming)
 #
-BOARDFILES=board/P2ES_flashloader.bin
+BOARDFILES=board/P2ES_flashloader.bin board/P2ES_flashloader.spin
 
 #
 # binaries to make
@@ -140,3 +140,7 @@ src/version.tcl: version.inp spin2cpp/version.h
 board/P2ES_flashloader.bin: loadp2/build-$(CROSS)/loadp2$(EXE)
 	mkdir -p board
 	cp loadp2/board/P2ES_flashloader.bin $@
+
+board/P2ES_flashloader.spin2: loadp2/build-$(CROSS)/loadp2$(EXE)
+	mkdir -p board
+	cp loadp2/board/P2ES_flashloader.spin2 $@
