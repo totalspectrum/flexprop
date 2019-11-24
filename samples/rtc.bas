@@ -38,7 +38,7 @@ sub updateClock
   dim nextSecond
   dim FREQUENCY
 
-  FREQUENCY = clkfreq()
+  FREQUENCY = clkfreq
   nextSecond = getcnt() + FREQUENCY
   do
     waitcnt(nextSecond)
