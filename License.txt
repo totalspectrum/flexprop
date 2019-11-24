@@ -86,3 +86,14 @@ THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY WARRANTIES, INCLUDING, BU
 
 GOVERNMENT USE: If you are acquiring this software on behalf of the U.S. government, the Government shall have only "Restricted Rights" in the software and related documentation as defined in the Federal Acquisition Regulations (FARs) in Clause 52.227.19 (c) (2). If you are acquiring the software on behalf of the Department of Defense, the software shall be classified as "Commercial Computer Software" and the Government shall have only "Restricted Rights" as defined in Clause 252.227-7013 (c) (1) of DFARs. Notwithstanding the foregoing, the authors grant the U.S. Government and others acting in its behalf permission to use and distribute the software in accordance with the terms specified in this license.
 
+============================================================================
+The Parallax forum (https://forums.parallax.com) is a wonderful
+resource, and some of the samples and board programming examples
+presented here came from there and are used by permission of the
+authors, including:
+
+- The P2ES_flashloader.spin2 for programming SPI flash was written by
+  forum users ozpropdev and evanh
+
+- The mandelbrot sample was written by forum user yeti
+
