@@ -69,7 +69,7 @@ there are the following additional functions:
 (waitms n) -- wait for n milliseconds
 (pinhi p) -- drive pin p high
 (pinlo p) -- drive pin p low
-(pintoggel p) -- toggle output value of pin p
+(pintoggle p) -- toggle output value of pin p
 (pinout p x) -- set pin p to low (if x == 0) or high (if x <> 0)
 (pinin p) -- return the value of input pin p (1 or 0)
 (getcnt)  -- get the low 28 bits of the current system timer value 

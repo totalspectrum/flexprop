@@ -12,6 +12,9 @@ cdemo.c: C program to blink a pin and print a message on the terminal
 fibo.bas: Recursive Fibonacci in BASIC
 fibo.spin: Recursive Fibonacci in Spin
 hello.spin: Print "Hello world" on the terminal
+led_server_asm.c: Run an LED blinker in another COG (with C style assembly)
+led_server_pasm.c: Run an LED blinker in another COG (with Spin style assembly)
+led_server.bas: Run an LED blinker in another COG (BASIC version)
 lunar.bas: Old-style BASIC program; land a rocket on the moon
 multest.spin2: Test multiply speed on P2
   multiply.spin: routines used by multest.spin2
