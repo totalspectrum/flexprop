@@ -39,7 +39,7 @@ endif
 #
 # board support files (e.g. for flash programming)
 #
-BOARDFILES=board/P2ES_flashloader.bin board/P2ES_flashloader.spin
+BOARDFILES=board/P2ES_flashloader.bin board/P2ES_flashloader.spin2
 
 #
 # binaries to make

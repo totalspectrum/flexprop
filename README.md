@@ -111,3 +111,9 @@ Documentation for the various languages supported is in the `doc` folder of the 
 
 The scripts used are in the `src` subdirectory, so you can customize them to your heart's content. The main `flexgui.exe` program is basically just the Tcl/Tk interpreter (from the standard Tk distribution) with a tiny startup script that reads `src/gui.tcl`.
 
+# Supporting FlexGUI development
+
+If you find FlexGUI useful, please contribute to support its development. Contributions of code, documentation, and other suggestions are welcome. Monetary donations are also very welcome. The generous donations of our supporters on Patreon have enabled us to provide a signed Windows binary.
+
+To support FlexGUI on Patreon: https://patreon.com/totalspectrum
+To support FlexGUI on Paypal:  https://paypal.me/totalspectrum
