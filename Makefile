@@ -9,8 +9,20 @@
 #    Final output is in flexgui.zip
 #
 
-default: install
+default: errmessage
 zip: flexgui.zip
+
+errmessage:
+	@echo
+	@echo "Usage:"
+	@echo "  make install"
+	@echo "  make zip"
+	@echo
+	@echo "make install copies flexgui to the INSTALL directory (default is $(HOME)/flexgui)"
+	@echo "for example to install in /opt/flexgui do:"
+	@echo "    make install INSTALL=/opt/flexgui"
+	@echo
+	@echo "make zip creates a flexgui.zip for Windows"
 
 # where to install: default is $(HOME)/flexgui
 INSTALL ?= $(HOME)/flexgui
