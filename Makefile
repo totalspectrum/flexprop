@@ -12,18 +12,6 @@
 default: errmessage
 zip: flexgui.zip
 
-errmessage:
-	@echo
-	@echo "Usage:"
-	@echo "  make install"
-	@echo "  make zip"
-	@echo
-	@echo "make install copies flexgui to the INSTALL directory (default is $(HOME)/flexgui)"
-	@echo "for example to install in /opt/flexgui do:"
-	@echo "    make install INSTALL=/opt/flexgui"
-	@echo
-	@echo "make zip creates a flexgui.zip for Windows"
-
 # where to install: default is $(HOME)/flexgui
 INSTALL ?= $(HOME)/flexgui
 
@@ -41,12 +29,38 @@ ifndef OS
 	endif
 endif
 
+ifndef OPENSPIN
+	OPENSPIN := $(shell which openspin)
+endif
+
+errmessage:
+	@echo
+	@echo "Usage:"
+	@echo "  make install"
+	@echo "  make zip"
+	@echo
+	@echo "make install copies flexgui to the INSTALL directory (default is $(HOME)/flexgui)"
+	@echo "for example to install in /opt/flexgui do:"
+	@echo "    make install INSTALL=/opt/flexgui"
+	@echo
+	@echo "make zip creates a flexgui.zip for Windows"
+	@echo
+ifndef OPENSPIN
+	@echo "Note that the P1 version of flexgui depends on openspin being installed; if it is not,"
+	@echo "  then only P2 support is enabled"
+endif
+
 #
 # binaries to make
 #
 
-WIN_BINARIES=flexgui.exe bin/fastspin.exe bin/proploader.exe bin/loadp2.exe
-NATIVE_BINARIES=bin/fastspin bin/proploader bin/loadp2
+ifdef OPENSPIN
+WIN_BINARIES=flexgui.exe bin/fastspin.exe bin/loadp2.exe bin/proploader.exe
+NATIVE_BINARIES=bin/fastspin bin/loadp2 bin/proploader
+else
+WIN_BINARIES=flexgui.exe bin/fastspin.exe bin/loadp2.exe
+NATIVE_BINARIES=bin/fastspin bin/loadp2
+endif
 
 install: flexgui_base $(NATIVE_BINARIES)
 	mkdir -p $(INSTALL)
@@ -167,8 +181,8 @@ bin/loadp2: loadp2/build/loadp2
 spin2cpp/build/fastspin:
 	make -C spin2cpp
 
-proploader-$(OS)-build/bin/proploader:
-	make -C PropLoader OS=$(OS)
+proploader-$(OS)-build/bin/proploader: bin/fastspin
+	make -C PropLoader OS=$(OS) SPINCMP=$(OPENSPIN)
 
 loadp2/build/loadp2:
 	make -C loadp2
