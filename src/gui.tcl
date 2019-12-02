@@ -20,7 +20,7 @@ output will be correct.
 # filetimes($w) gives the last modified time for that file
 #
 
-set CONFIG_FILE "$ROOTDIR/.flexgui.config"
+set CONFIG_FILE "$::env(HOME)/.flexgui.config"
 
 
 if { $tcl_platform(platform) == "windows" } {
