@@ -32,7 +32,7 @@ if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start \"Propeller Output\""
 } elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
     set WINPREFIX "/etc/alternatives/x-terminal-emulator -fs 14 -e"
-} else if { $tcl_platform(platform) == "Darwin" } {
+} elseif { $tcl_platform(platform) == "Darwin" } {
     set WINPREFIX $ROOTDIR/bin/mac_terminal.sh
 } else {
     set WINPREFIX "xterm -fs 14 -e"
