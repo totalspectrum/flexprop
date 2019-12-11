@@ -66,6 +66,7 @@ install: flexgui_base $(NATIVE_BINARIES)
 	mkdir -p $(INSTALL)
 	mkdir -p flexgui/bin
 	cp -r $(NATIVE_BINARIES) flexgui/bin
+	cp -r mac_scripts/* flexgui/bin
 	cp -r flexgui/* $(INSTALL)
 
 # where the Tcl and Tk source code are checked out (side by side)
