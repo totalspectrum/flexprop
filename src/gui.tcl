@@ -77,6 +77,7 @@ set config(liblist) [list $config(library)]
 set config(spinext) ".spin"
 set config(lastdir) [pwd]
 set config(font) "TkFixedFont"
+set config(botfont) "courier 10"
 set config(sash) ""
 set config(tabwidth) 8
 set COMPORT " "
@@ -910,7 +911,7 @@ grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun .toolbar.configmsg 
 
 scrollbar .p.bot.v -orient vertical -command {.p.bot.txt yview}
 scrollbar .p.bot.h -orient horizontal -command {.p.bot.txt xview}
-text .p.bot.txt -wrap none -xscroll {.p.bot.h set} -yscroll {.p.bot.v set} -height 10 -font "courier 10"
+text .p.bot.txt -wrap none -xscroll {.p.bot.h set} -yscroll {.p.bot.v set} -height 10 -font $config(botfont)
 label .p.bot.label -background DarkGrey -foreground white -text "Compiler Output" -font TkSmallCaptionFont -relief flat -pady 0 -borderwidth 0
 
 grid .p.bot.label      -sticky nsew
@@ -974,12 +975,25 @@ proc doSelectFont {} {
     tk fontchooser show
 }
 
+proc doSelectBottomFont {} {
+    global config
+    tk fontchooser configure -parent . -font "$config(botfont)" -command resetBottomFont
+    tk fontchooser show
+}
+
 proc resetFont {w} {
     global config
     set fnt [font actual $w]
     set config(font) $fnt
     setnbfonts $fnt
     .editopts.font.lb configure -font $fnt
+}
+
+proc resetBottomFont {w} {
+    set fnt [font actual $w]
+    set config(botfont) $fnt
+    .p.bot.txt configure -font $fnt
+    .editopts.bot.lb configure -font $fnt
 }
 
 proc doShowLinenumbers {} {
@@ -1030,10 +1044,14 @@ proc doAppearance {} {
     checkbutton .editopts.font.linenums -text "Show Linenumbers" -variable config(showlinenumbers) -command doShowLinenumbers
     ttk::button .editopts.end.ok -text " OK " -command doneAppearance
 
+    label .editopts.bot.lb -text "Compiler output font " -font $config(botfont)
+    ttk::button .editopts.bot.change -text " Change... " -command doSelectBottomFont
+    
     grid .editopts.top.l -sticky nsew 
     grid .editopts.font.tab.lab .editopts.font.tab.stops
     grid .editopts.font.tab .editopts.font.lb .editopts.font.change
     grid .editopts.font.linenums
+    grid .editopts.bot.lb .editopts.bot.change
     
     grid .editopts.end.ok -sticky nsew
     grid .editopts.top -sticky nsew
