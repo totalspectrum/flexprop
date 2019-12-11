@@ -2,9 +2,9 @@
 # Makefile for flexgui
 #
 # Options:
-# make INSTALL=dir
+# make install INSTALL=dir
 #    Makes for Linux or Mac; requires Tcl/Tk to already be installed
-# make zip
+# make zip SIGN=sign_script
 #    Makes for Windows, linking against prebuild Tcl/Tk libraries in $(TCLROOT)
 #    Final output is in flexgui.zip
 #
@@ -44,6 +44,7 @@ errmessage:
 	@echo "    make install INSTALL=/opt/flexgui"
 	@echo
 	@echo "make zip creates a flexgui.zip for Windows"
+	@echo "    This requires cross tools and is probably not what you want"
 	@echo
 ifndef OPENSPIN
 	@echo "Note that the P1 version of flexgui depends on openspin being installed; if it is not,"
