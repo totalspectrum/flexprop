@@ -253,7 +253,7 @@ LispCFunction defs[] = {
     { "pinhi",     "nn",  (GenericFunc)pinhi_fn },
     { "pintoggle", "nn",  (GenericFunc)pintoggle_fn },
     { "pinin",     "nn",  (GenericFunc)pinin_fn },
-    { "waitms",    "nn",  (GenericFunc)waitms_fn },
+    { "pausems",   "nn",  (GenericFunc)waitms_fn },
 #else
     { "dsqr",      "nnn", (GenericFunc)testfunc },
 #endif
