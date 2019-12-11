@@ -25,6 +25,8 @@ set CONFIG_FILE "$ROOTDIR/.flexgui.config"
 
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start \"Propeller Output\""
+} elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
+    set WINPREFIX "/etc/alternatives/x-terminal-emulator -fs 14 -e"
 } else {
     set WINPREFIX "xterm -fs 14 -e"
 }
