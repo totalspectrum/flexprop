@@ -132,8 +132,8 @@ timer, so they do not roll over nearly as quickly as they used to.
 ## SD Card
 
 There is a standard SDCard type implemented in the `pyb` module. If an
-SD card is inserted when micropython is started up, it is
-automatically mounted.
+SD card is inserted when micropython is started up, it is normally
+mounted automatically.
 
 The `os` module is implemented, so you can get a listing of the SD
 card contents via:
@@ -142,32 +142,170 @@ import os
 os.listdir()
 ```
 
-To mount an SD card after boot, do:
-```
-import pyb
-import os
-sd=pyb.SDCard()
-os.mount(sd, '/sd')
-os.chdir('/sd')
-```
-
 You can run a script from a file via something like:
 ```
 execfile("perftest.py")
 ```
 
-### Manual detection of SD Cards
+Sometimes an SD card is not automatically detected (different cards
+seem to have different characteristics and micropython doesn't detect
+them all). In this case you should follow the steps for inserting an
+SD card after boot.
 
-Sometimes the SD card isn't automatically detected. In that case you
-can force it on by doing:
+### Inserting an SD card after boot
+
+To mount an SD card after boot, do:
 ```
+import pyb
 sd=pyb.SDCard()
+sd.present()
+```
+
+`sd.present()` should return `True`. If it does not, then you'll have
+to power the card on manually:
+```
 sd.power(1)
 ```
-This should return `True` if a card is detected and initialized
-properly. You can also see if a card is found by checking
-`sd.present()`, which will be true or false. Once the card is detected
-you can manually mount it as described above.
+
+Now you can mount the drive. This is a two step process; first we use
+`os.mount()` to establish a name for the SD card, then we use
+`os.chdir()` to switch to it.
+
+```
+import os
+os.mount(sd, '/sd')
+os.chdir('/sd')
+```
+
+This code should be entered manually, and only has to be done
+once. Once the card is mounted, it stays mounted.
+
+NOTE: it is important to mount the SD only once. Do not add this code
+to any scripts that run more than once. Do not try to do mount from a
+python program which is intended to run from the SD card. There's no
+need (if the program is able to run, the SD is clearly mounted
+already) and it will confuse micropython.
+
+## CPUs
+
+It is possible to run code in other CPUs ("cogs") using the Cpu
+object. This has methods `start` and `stop`, used as follows:
+```
+import pyb
+x=pyb.Cpu()
+
+# code is a byte array containing the program to execute
+# this can come from a file on disk, or by constructing a binary
+# object using a PNut or fastspin listing file
+
+# data is an optional mutable bytearray which the cpu object can
+# read from and can change
+
+x.start(code, data)
+x.stop()
+```
+
+For example, consider a small PASM program to flash a pin. Here is the
+PASM source code:
+```
+'
+' simple blinking demo
+' enter with ptra pointing at a mailbox
+' ptra[0] is the pin to blink
+' ptra[1] is the time to wait between blinks
+' ptra[2] is a count which we will update
+'
+dat
+	org	0
+	rdlong	pinnum, ptra[0]
+	rdlong	delay, ptra[1]
+	rdlong	count, ptra[2]
+loop
+	drvnot	pinnum		' toggle pin
+	add	count, #1
+	wrlong	count, ptra[2]	' update count
+	waitx	delay		' wait
+	jmp	#loop
+
+pinnum	long	0
+delay	long	0
+count	long	0
+```
+
+To get this into python, we have to compile it first with a PASM
+assembler such as fastspin or PNut. For example, with fastspin save
+the above code as blink.spin2 and compile it with:
+```
+fastspin -l -2 blink.spin2
+```
+
+This produces both a binary file, `blink.binary`, and a listing file
+`blink.lst`. Now we have to get that into a Python bytearray in
+micropython. There are two approaches. The easiest is if we have
+access to an SD card. Then we can just put `blink.binary` onto the
+card and read it from there with micropython:
+```
+f=open("blink.binary","rb")
+code=f.read()
+f.close()
+```
+Now `code` is a bytearray containing the bytes we need.
+
+If for some reason using an SD card isn't practical, we can put the
+necessary bytes directly into a bytearray. The blink.lst file shows us
+the hex bytes, or we can use a tool like xxd to dump them from the
+binary. Then assign them to a variable. Micropython as a ubinascii
+module which allows conversion from hex to bytes, so we can do:
+```
+import ubinascii
+code=ubinascii.unhexlify('001104fb011304fb021504fb5f1060fd011404f1021564fc1f1260fdecff9ffd0000000000000000000000000000000000000000000000000000000000000000')
+```
+
+We also need to prepare one or more data mailboxes for the COG
+code. The easiest way to do this is with Python's array of integers:
+```
+import array
+data=array.array('i', [57, 40000000, 0])
+```
+This creates an array of 3 integers, which will be the parameters to
+the COG program (passed in `ptra`). The first is the pin to toggle,
+the second is the time in cycles to wait between toggles, and the
+third is the initial count of toggles. This will be updated by the COG.
+
+Now we can run our program:
+```
+import pyb
+
+cog=pyb.Cpu()   # create an object for the CPU
+cog.start(code, data)
+```
+Note that `data[2]` will keep updating as the COG blinks.
+
+We could also start a second COG up on pin 56. We can re-use the same
+code object, but should create a new data mailbox:
+```
+data2=array.array('i', [56, 20000000, 0])
+cog2=pyb.Cpu()
+cog2.start(code, data2) # start on pin 56
+```
+
+We can stop either of the CPUs via their `stop` method:
+```
+cog2.stop()
+```
+
+### Restrictions on Cpu code
+
+Note that the code cannot, in general, know its own HUB address,
+because micropython assigns that at run time with dynamic memory
+allocation. So the code loaded into the Cpu *must* be position
+independent. If it needs to access some HUB addresses (e.g. to load
+LUT code or to run some hubexec code) then it must save the initial
+value of `ptrb` passed to it when it starts. The P2 `coginit`
+instruction places the HUB address of the loaded code into
+`ptrb`. This may then be used to calculate the actual HUB address
+needed.
+
 
 ## Other Notes
 
@@ -192,9 +330,8 @@ initialization time.
 ### Memory map
 
 ```
-$00000 - $03FFF: RISC-V emulation code
-$04000 - $6FFFF: python space
-$70000 - $7BFFF: cache space
+$00000 - $0FFFF: RISC-V emulation code
+$10000 - $7BFFF: python space
 $7C000 - $7FFFF: debug space
 ```
 
