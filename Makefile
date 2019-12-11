@@ -132,9 +132,9 @@ clean:
 	rm -rf bin
 	rm -rf board
 	rm -rf $(BINFILES) $(PDFFILES)
-	rm -rf spin2cpp/build-win32/*
+	rm -rf spin2cpp/build*
 	rm -rf proploader-*-build
-	rm -rf loadp2/build-win32/*
+	rm -rf loadp2/build*
 	rm -rf loadp2/board/*.bin
 	rm -rf samples/*.elf samples/*.binary samples/*~
 	rm -rf samples/*.lst samples/*.pasm samples/*.p2asm
