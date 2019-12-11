@@ -217,7 +217,7 @@ $(RESOBJ): $(RES_RC)
 	$(WINRC) -o $@ --define STATIC_BUILD --include "$(TCLROOT)/tk/generic" --include "$(TCLROOT)/tcl/generic" --include "$(RESDIR)" "$<"
 
 src/version.tcl: version.inp spin2cpp/version.h
-	cpp -DTCL_SRC < version.inp > $@
+	cpp -xc++ -DTCL_SRC < version.inp > $@
 
 board/P2ES_flashloader.bin: bin/fastspin board/P2ES_flashloader.spin2
 	bin/fastspin -2 -o $@ board/P2ES_flashloader.spin2
