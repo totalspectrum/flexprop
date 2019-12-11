@@ -153,7 +153,7 @@ endif
 	cp -r spin2cpp/doc/* flexgui/doc
 	cp -r spin2cpp/include flexgui/
 	cp -r doc/*.txt flexgui/doc
-	cp -r board/*.bin flexgui/board
+	cp -r board/* flexgui/board
 	cp -r flexgui.tcl flexgui/
 
 .PHONY: flexgui_base
