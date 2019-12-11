@@ -124,8 +124,10 @@ flexgui.exe: src/flexgui.c $(RESOBJ)
 
 #
 # be careful to leave samples/upython/upython.binary during make clean
+# Also samples/proplisp/lisp.binary
 #
-SUBSAMPLES={LED_Matrix, proplisp}
+
+SUBSAMPLES={LED_Matrix}
 
 clean:
 	rm -rf flexgui

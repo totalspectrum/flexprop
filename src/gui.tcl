@@ -874,7 +874,6 @@ foreach v $serlist {
 }
 
 .mbar add cascade -menu .mbar.special -label Special
-.mbar.special add command -label "Enter P2 ROM monitor" -command { doSpecial "-xDEBUG" "" }
 .mbar.special add separator
 .mbar.special add command -label "Enter P2 ROM TAQOZ" -command { doSpecial "-xTAQOZ" "" }
 .mbar.special add command -label "Load current buffer into TAQOZ" -command { doSpecial "-xTAQOZ" [scriptSendCurFile] }
@@ -882,6 +881,10 @@ foreach v $serlist {
 .mbar.special add command -label "Run uPython on P2" -command { doSpecial "samples/upython/upython.binary" "" }
 .mbar.special add command -label "Load current buffer into uPython on P2" -command { doSpecial "samples/upython/upython.binary" [scriptSendCurFile] }
 .mbar.special add separator
+.mbar.special add command -label "Run proplisp on P2" -command { doSpecial "samples/proplisp/lisp.binary" "" }
+.mbar.special add command -label "Load current buffer into proplisp on P2" -command { doSpecial "samples/proplisp/lisp.binary" [scriptSendCurFile] }
+.mbar.special add separator
+.mbar.special add command -label "Enter P2 ROM monitor" -command { doSpecial "-xDEBUG" "" }
 .mbar.special add command -label "Terminal only" -command { doSpecial "-n" "" }
 
 .mbar add cascade -menu .mbar.help -label Help
