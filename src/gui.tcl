@@ -353,9 +353,8 @@ proc tagerrors { w } {
 
 set SpinTypes {
     {{FastSpin files}   {.bas .bi .c .h .spin2 .spin .spinh} }
-    {{Spin2 files}   {.spin2 .spin .spinh} }
-    {{BASIC files}   {.bas .bi} }
-    {{C files}   {.c .h} }
+    {{Interpreter files}   {.py .lsp .fth} }
+    {{C files}   {.c .cpp .cxx .cc .h .hh .hpp} }
     {{All files}    *}
 }
 
@@ -612,13 +611,16 @@ proc saveFilesForCompile {} {
 	set w [lindex $t $i]
     }
 }
-    
-# always save the current file
+
+# save the current file
+# returns the file name
 proc saveCurFile {} {
     set w [.p.nb select]
-    saveFile $w
+    return [saveFile $w]
 }
-		  
+
+# save the file belonging to window w
+# returns the file name or "" if aborted
 proc saveFile {w} {
     global filenames
     global filetimes
@@ -629,16 +631,19 @@ proc saveFile {w} {
     if { [string length $filenames($w)] == 0 } {
 	set filename [tk_getSaveFile -initialfile $filenames($w) -filetypes $SpinTypes -defaultextension $config(spinext) ]
 	if { [string length $filename] == 0 } {
-	    return
+	    return ""
 	}
 	set config(lastdir) [file dirname $filename]
 	set config(spinext) [file extension $filename]
 	set filenames($w) $filename
 	.p.nb tab $w -text [file root $filename]
 	set BINFILE ""
+    } else {
+	set filename $filenames($w)
     }
     
-    saveFileFromWindow $filenames($w) $w.txt
+    saveFileFromWindow $filename $w.txt
+    return $filename
 }
 
 proc saveFileAs {w} {
@@ -663,9 +668,19 @@ proc saveFileAs {w} {
     set BINFILE ""
     set filenames($w) $filename
     .p.nb tab $w -text [file tail $filename]
-    saveFile $w
+    return [saveFile $w]
 }
 
+# get a loadp2 script to send a particular file
+proc scriptSendCurFile {} {
+    set fname [saveCurFile]
+#    if { $fname == "" } {
+#	return ""
+#    }
+    return "-e \"pausems(1500) textfile($fname)\""
+}
+	
+# show the about message
 proc doAbout {} {
     global aboutMsg
     tk_messageBox -icon info -type ok -message "FlexGUI" -detail $aboutMsg
@@ -677,7 +692,7 @@ proc doHelp {} {
     makeReadOnly .p.nb.help.txt
 }
 
-proc doSpecial {name} {
+proc doSpecial {name extraargs} {
     global ROOTDIR
     global BINFILE
     global PROP_VERSION
@@ -692,7 +707,7 @@ proc doSpecial {name} {
 	set BINFILE "$ROOTDIR/$name"
     }
     .p.bot.txt delete 1.0 end
-    doJustRun
+    doJustRun $extraargs
     return 1
 }
 
@@ -858,10 +873,15 @@ foreach v $serlist {
 }
 
 .mbar add cascade -menu .mbar.special -label Special
-.mbar.special add command -label "Enter P2 ROM monitor" -command { doSpecial "-xDEBUG" }
-.mbar.special add command -label "Enter P2 ROM TAQOZ" -command { doSpecial "-xTAQOZ" }
-.mbar.special add command -label "Run uPython on P2" -command { doSpecial "samples/upython/upython.binary" }
-.mbar.special add command -label "Terminal only" -command { doSpecial "-n" }
+.mbar.special add command -label "Enter P2 ROM monitor" -command { doSpecial "-xDEBUG" "" }
+.mbar.special add separator
+.mbar.special add command -label "Enter P2 ROM TAQOZ" -command { doSpecial "-xTAQOZ" "" }
+.mbar.special add command -label "Load current buffer into TAQOZ" -command { doSpecial "-xTAQOZ" [scriptSendCurFile] }
+.mbar.special add separator
+.mbar.special add command -label "Run uPython on P2" -command { doSpecial "samples/upython/upython.binary" "" }
+.mbar.special add command -label "Load current buffer into uPython on P2" -command { doSpecial "samples/upython/upython.binary" [scriptSendCurFile] }
+.mbar.special add separator
+.mbar.special add command -label "Terminal only" -command { doSpecial "-n" "" }
 
 .mbar add cascade -menu .mbar.help -label Help
 .mbar.help add command -label "Help" -command { doHelp }
@@ -890,7 +910,7 @@ grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun .toolbar.configmsg 
 
 scrollbar .p.bot.v -orient vertical -command {.p.bot.txt yview}
 scrollbar .p.bot.h -orient horizontal -command {.p.bot.txt xview}
-text .p.bot.txt -wrap none -xscroll {.p.bot.h set} -yscroll {.p.bot.v set} -height 10 -font "courier 8"
+text .p.bot.txt -wrap none -xscroll {.p.bot.h set} -yscroll {.p.bot.v set} -height 10 -font "courier 10"
 label .p.bot.label -background DarkGrey -foreground white -text "Compiler Output" -font TkSmallCaptionFont -relief flat -pady 0 -borderwidth 0
 
 grid .p.bot.label      -sticky nsew
@@ -1158,9 +1178,12 @@ proc doListing {} {
     }
 }
 
-proc doJustRunCmd {cmdstr} {
+proc doJustRunCmd {cmdstr extraargs} {
+    if { $extraargs ne "" } {
+	set cmdstr [concat $cmdstr " " $extraargs]
+    }
     .p.bot.txt insert end "$cmdstr\n"
-
+    
     set runcmd [list exec -ignorestderr]
     set runcmd [concat $runcmd $cmdstr]
     lappend runcmd "&"
@@ -1171,12 +1194,12 @@ proc doJustRunCmd {cmdstr} {
     }
 }
 
-proc doJustRun {} {
+proc doJustRun {extraargs} {
     global config
     global BINFILE
     
     set cmdstr [mapPercent $config(runcmd)]
-    doJustRunCmd $cmdstr
+    doJustRunCmd $cmdstr $extraargs
 }
 set flashMsg "
 Note that many boards require jumpers or switches
@@ -1195,7 +1218,7 @@ proc doJustFlash {} {
     set answer [tk_messageBox -icon info -type okcancel -message "Flash Binary" -detail $flashMsg]
     if { $answer eq "ok" } {
 	set cmdstr [mapPercent $config(flashcmd)]
-	doJustRunCmd $cmdstr
+	doJustRunCmd $cmdstr ""
     }
 }
 
@@ -1210,7 +1233,7 @@ proc doLoadRun {} {
     }
     set BINFILE $filename
     .p.bot.txt delete 1.0 end
-    doJustRun
+    doJustRun ""
 }
 
 proc doLoadFlash {} {
@@ -1231,7 +1254,7 @@ proc doCompileRun {} {
     set status [doCompile]
     if { $status eq 0 } {
 	.p.bot.txt insert end "\n"
-	doJustRun
+	doJustRun ""
     }
 }
 
