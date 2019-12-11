@@ -22,14 +22,22 @@ output will be correct.
 
 set CONFIG_FILE "$ROOTDIR/.flexgui.config"
 
+if { [tk windowingsystem] == "aqua" } {
+    set CTRL_PREFIX "Command"
+} else {
+    set CTRL_PREFIX "Control"
+}
 
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start \"Propeller Output\""
 } elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
     set WINPREFIX "/etc/alternatives/x-terminal-emulator -fs 14 -e"
+} else if { $tcl_platform(platform) == "Darwin" } {
+    set WINPREFIX $ROOTDIR/bin/mac_terminal.sh
 } else {
     set WINPREFIX "xterm -fs 14 -e"
 }
+
 # provide some default settings
 proc setShadowP1Defaults {} {
     global shadow
@@ -448,6 +456,7 @@ proc createNewTab {} {
 #
 proc setupFramedText {w} {
     global config
+    global CTRL_PREFIX
     frame $w
     set yscmd "$w.v set"
     set xscmd "$w.h set"
@@ -464,8 +473,8 @@ proc setupFramedText {w} {
     grid $w.h -sticky nsew
     grid rowconfigure $w $w.txt -weight 1
     grid columnconfigure $w $w.txt -weight 1
-    bind $w.txt <Control-f> $searchcmd
-    bind $w.txt <Control-k> $replacecmd
+    bind $w.txt <$CTRL_PREFIX-f> $searchcmd
+    bind $w.txt <$CTRL_PREFIX-k> $replacecmd
 }
 
 #
@@ -791,29 +800,29 @@ menu .mbar.special -tearoff 0
 menu .mbar.help -tearoff 0
 
 .mbar add cascade -menu .mbar.file -label File
-.mbar.file add command -label "New File" -accelerator "^N" -command { createNewTab }
-.mbar.file add command -label "Open File..." -accelerator "^O" -command { doOpenFile }
-.mbar.file add command -label "Save File" -accelerator "^S" -command { saveCurFile }
+.mbar.file add command -label "New File" -accelerator "$CTRL_PREFIX-N" -command { createNewTab }
+.mbar.file add command -label "Open File..." -accelerator "$CTRL_PREFIX-O" -command { doOpenFile }
+.mbar.file add command -label "Save File" -accelerator "$CTRL_PREFIX-S" -command { saveCurFile }
 .mbar.file add command -label "Save File As..." -command { saveFileAs [.p.nb select] }
 .mbar.file add separator
-.mbar.file add command -label "Open listing file" -accelerator "^L" -command { doListing }
+.mbar.file add command -label "Open listing file" -accelerator "$CTRL_PREFIX-L" -command { doListing }
 .mbar.file add separator
 .mbar.file add command -label "Library directories..." -command { getLibrary }
 .mbar.file add separator
-.mbar.file add command -label "Close tab" -accelerator "^W" -command { closeTab }
+.mbar.file add command -label "Close tab" -accelerator "$CTRL_PREFIX-W" -command { closeTab }
 .mbar.file add separator
-.mbar.file add command -label Exit -accelerator "^Q" -command { exitProgram }
+.mbar.file add command -label Exit -accelerator "$CTRL_PREFIX-Q" -command { exitProgram }
 
 .mbar add cascade -menu .mbar.edit -label Edit
-.mbar.edit add command -label "Cut" -accelerator "^X" -command {event generate [focus] <<Cut>>}
-.mbar.edit add command -label "Copy" -accelerator "^C" -command {event generate [focus] <<Copy>>}
-.mbar.edit add command -label "Paste" -accelerator "^V" -command {event generate [focus] <<Paste>>}
+.mbar.edit add command -label "Cut" -accelerator "$CTRL_PREFIX-X" -command {event generate [focus] <<Cut>>}
+.mbar.edit add command -label "Copy" -accelerator "$CTRL_PREFIX-C" -command {event generate [focus] <<Copy>>}
+.mbar.edit add command -label "Paste" -accelerator "$CTRL_PREFIX-V" -command {event generate [focus] <<Paste>>}
 .mbar.edit add separator
-.mbar.edit add command -label "Undo" -accelerator "^Z" -command {event generate [focus] <<Undo>>}
-.mbar.edit add command -label "Redo" -accelerator "^Y" -command {event generate [focus] <<Redo>>}
+.mbar.edit add command -label "Undo" -accelerator "$CTRL_PREFIX-Z" -command {event generate [focus] <<Undo>>}
+.mbar.edit add command -label "Redo" -accelerator "$CTRL_PREFIX-Y" -command {event generate [focus] <<Redo>>}
 .mbar.edit add separator
-.mbar.edit add command -label "Find..." -accelerator "^F" -command {searchrep [focus] 0}
-.mbar.edit add command -label "Replace..." -accelerator "^K" -command {searchrep [focus] 1}
+.mbar.edit add command -label "Find..." -accelerator "$CTRL_PREFIX-F" -command {searchrep [focus] 0}
+.mbar.edit add command -label "Replace..." -accelerator "$CTRL_PREFIX-K" -command {searchrep [focus] 1}
 .mbar.edit add separator
 
 #.mbar.edit add command -label "Select Font..." -command { doSelectFont }
@@ -897,17 +906,17 @@ grid columnconfigure .p.bot .p.bot.txt -weight 1
 
 #bind .p.nb.main.txt <FocusIn> [list fontchooserFocus .p.nb.main.txt]
 
-bind . <Control-n> { createNewTab }
-bind . <Control-o> { doOpenFile }
-bind . <Control-s> { saveCurFile }
-bind . <Control-b> { browseFile }
-bind . <Control-q> { exitProgram }
-bind . <Control-r> { doCompileRun }
-bind . <Control-e> { doCompileFlash }
-bind . <Control-l> { doListing }
-bind . <Control-f> { searchrep [focus] 0 }
-bind . <Control-k> { searchrep [focus] 1 }
-bind . <Control-w> { closeTab }
+bind . <$CTRL_PREFIX-n> { createNewTab }
+bind . <$CTRL_PREFIX-o> { doOpenFile }
+bind . <$CTRL_PREFIX-s> { saveCurFile }
+bind . <$CTRL_PREFIX-b> { browseFile }
+bind . <$CTRL_PREFIX-q> { exitProgram }
+bind . <$CTRL_PREFIX-r> { doCompileRun }
+bind . <$CTRL_PREFIX-e> { doCompileFlash }
+bind . <$CTRL_PREFIX-l> { doListing }
+bind . <$CTRL_PREFIX-f> { searchrep [focus] 0 }
+bind . <$CTRL_PREFIX-k> { searchrep [focus] 1 }
+bind . <$CTRL_PREFIX-w> { closeTab }
 
 # bind to right mouse button on Linux and Windows
 
