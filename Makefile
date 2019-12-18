@@ -37,7 +37,7 @@ errmessage:
 	@echo
 	@echo "Usage:"
 	@echo "  make install"
-	@echo "  make zip"
+	@echo "  make zip SIGN=signscript"
 	@echo
 	@echo "make install copies flexgui to the INSTALL directory (default is $(HOME)/flexgui)"
 	@echo "for example to install in /opt/flexgui do:"
@@ -206,6 +206,8 @@ bin/proploader.exe: proploader-msys-build/bin/proploader.exe
 bin/loadp2.exe: loadp2/build-win32/loadp2.exe
 	mkdir -p bin
 	cp $< $@
+	$(SIGN) bin/loadp2
+	mv bin/loadp2.signed.exe bin/loadp2.exe
 
 spin2cpp/build-win32/fastspin.exe:
 	make -C spin2cpp CROSS=win32
