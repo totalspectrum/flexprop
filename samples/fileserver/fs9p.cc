@@ -128,7 +128,9 @@ fs_file *fs_getroot()
 }
 
 // walk from fid "dir" along path, creating fid "newfile"
-int fs_walk(fs_file *dir, fs_file *newfile, char *path)
+// if "skipLast" is nonzero, then do not try to walk the last element
+// (needed for create or other operations where the file may not exist)
+static int do_fs_walk(fs_file *dir, fs_file *newfile, const char *path, int skipLast)
 {
     uint8_t *ptr;
     uint8_t *sizeptr;
@@ -136,6 +138,7 @@ int fs_walk(fs_file *dir, fs_file *newfile, char *path)
     uint32_t curdir = (uint32_t) dir;
     int len;
     int r;
+    int sentone = 0;
     
     do {
         ptr = doPut4(txbuf, 0); // space for size
@@ -154,12 +157,23 @@ int fs_walk(fs_file *dir, fs_file *newfile, char *path)
                 *ptr++ = *path++;
                 len++;
             }
-            doPut2(sizeptr, (uint32_t)(ptr - (sizeptr+2)));
+	    if (skipLast && !*path) {
+	      if (sentone) {
+		return 0;
+	      } else {
+		doPut2(sizeptr, 1);
+		ptr = sizeptr+2;
+		ptr = doPut1(ptr, '.');
+	      }
+	    } else {
+	      doPut2(sizeptr, (uint32_t)(ptr - (sizeptr+2)));
+	    }
         } else {
             ptr = doPut2(ptr, 0);
         }
 
         r = (*sendRecv)(txbuf, ptr, maxlen);
+	sentone = 1;
         if (txbuf[4] != r_walk) {
             return -1;
         }
@@ -167,13 +181,18 @@ int fs_walk(fs_file *dir, fs_file *newfile, char *path)
     return 0;
 }
 
-int fs_open(fs_file *f, char *path, int fs_mode)
+int fs_walk(fs_file *dir, fs_file *newfile, const char *path)
+{
+    return do_fs_walk(dir, newfile, path, 0);
+}
+
+int fs_open_relative(fs_file *dir, fs_file *f, const char *path, int fs_mode)
 {
     int r;
     uint8_t *ptr;
-    uint8_t mode = 0;
-    
-    r = fs_walk(&rootdir, f, path);
+    uint8_t mode = fs_mode;
+
+    r = fs_walk(dir, f, path);
     if (r != 0) return r;
     ptr = doPut4(txbuf, 0); // space for size
     ptr = doPut1(ptr, t_open);
@@ -185,6 +204,52 @@ int fs_open(fs_file *f, char *path, int fs_mode)
         return -1;
     }
     f->offlo = f->offhi = 0;
+    return 0;
+}
+
+int fs_open(fs_file *f, const char *path, int fs_mode)
+{
+    return fs_open_relative(&rootdir, f, path, fs_mode);
+}
+
+int fs_create(fs_file *f, const char *path)
+{
+    int r;
+    fs_file dir;
+    uint8_t *ptr;
+    uint32_t permissions = 0666; // rw for all
+    const char *lastname;
+    
+    // first, walk to the directory containing our target file
+    r = do_fs_walk(&rootdir, f, path, 1);
+    if (r < 0) {
+        // directory not found
+        return -2;
+    }
+    lastname = strrchr(path, '/');
+    if (!lastname) {
+        lastname = path;
+    } else {
+        lastname++;
+    }
+    // try to create the file
+    ptr = doPut4(txbuf, 0); // space for size
+    ptr = doPut1(ptr, t_create);
+    ptr = doPut2(ptr, NOTAG);
+    ptr = doPut4(ptr, (uint32_t)f);
+    ptr = doPutStr(ptr, lastname);
+    ptr = doPut4(ptr, permissions);
+    ptr = doPut1(ptr, FS_MODE_TRUNC | FS_MODE_WRITE);
+    r = (*sendRecv)(txbuf, ptr, maxlen);
+    if (r >= 0 && txbuf[4] == r_create) {
+      return r;
+    }
+    
+    // can we open the file with truncation set?
+    r = fs_open_relative(f, f, lastname, FS_MODE_TRUNC | FS_MODE_WRITE);
+    if (r < 0) {
+        return r;
+    }
     return 0;
 }
 

@@ -26,6 +26,7 @@ smartpin.spin2: Print to serial port using smart pins
 fileserver: Samples for the loadp2 9P file server
   ls.spin:  list the current directory
   test9p.c: read the file "fs9p.h"
+  writer.bas: writes a file "hello.txt"
   
 LED_Matrix: Samples for the P2 LED Matrix accessory board
 

@@ -50,7 +50,7 @@ typedef int (*sendrecv_func)(uint8_t *startbuf, uint8_t *endbuf, int maxlen);
 int fs_init(sendrecv_func fn) _IMPL("fs9p.cc");
 
 // walk a file from fid "dir" along path, creating fid "newfile"
-int fs_walk(fs_file *dir, fs_file *newfile, char *path);
+int fs_walk(fs_file *dir, fs_file *newfile, const char *path);
 
 // open a file f using path "path" (relative to root directory)
 // for reading or writing
@@ -58,7 +58,11 @@ int fs_open(fs_file *f, char *path, int fs_mode);
 
 #define FS_MODE_READ 0
 #define FS_MODE_WRITE 1
+#define FS_MODE_TRUNC 16
 
+// create a new file if necessary, or truncate an existing one
+int fs_create(fs_file *f, const char *path);
+    
 // close a file
 int fs_close(fs_file *f);
 
