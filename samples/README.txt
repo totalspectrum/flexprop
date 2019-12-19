@@ -23,12 +23,16 @@ multest.spin2:  Test multiply speed on P2
 rtc.bas:        Simple real-time clock using a COG to keep track of time
 smartpin.spin2: Print to serial port using smart pins
 
+fileserver: Samples for the loadp2 9P file server
+  ls.spin:  list the current directory
+  test9p.c: read the file "fs9p.h"
+  
 LED_Matrix: Samples for the P2 LED Matrix accessory board
 
 proplisp: Lisp interpreter written in C
-  proplisp/README.md: Documentation
-  proplisp/lisp.c: Interactive interpreter
-  proplisp/fibo.c: Recursive fibonacci in Lisp
+  README.md: Documentation
+  lisp.c: Interactive interpreter
+  fibo.c: Recursive fibonacci in Lisp
 
 upython: MicroPython interpreter for P2
   This is a binary-only package, which may be run using the `Special`
