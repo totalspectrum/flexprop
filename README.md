@@ -1,6 +1,6 @@
 # Introduction
 
-FlexGUI is a simple GUI for creating applications on the Parallax Propeller 2 (or 1), using the Spin, BASIC or C. It consists of a very plain front end IDE, the fastspin compiler, and Dave Hein's loadp2 program loader. The default configuration is for the Prop2, but I've also included David Betz's proploader.exe, which allows flexgui to work on Propeller 1 systems as well.
+FlexGUI is a simple GUI for creating applications on the Parallax Propeller 2 (or 1), using assembler, Spin, BASIC or C. It consists of a very plain front end IDE, the fastspin compiler, and Dave Hein's loadp2 program loader. The default configuration is for the Prop2, but I've also included David Betz's proploader.exe, which allows flexgui to work on Propeller 1 systems as well.
 
 FlexGUI is distributed under the MIT license; see the file License.txt for details.
 
