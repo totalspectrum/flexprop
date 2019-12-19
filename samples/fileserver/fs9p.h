@@ -1,6 +1,8 @@
 #ifndef FS9P_H
 #define FS9P_H
 
+#include <compiler.h>
+
 #define NOTAG 0xffffU
 #define NOFID 0xffffffffU
 
@@ -45,7 +47,7 @@ typedef struct fsfile {
 typedef int (*sendrecv_func)(uint8_t *startbuf, uint8_t *endbuf, int maxlen);
 
 // initialize
-int fs_init(sendrecv_func fn);
+int fs_init(sendrecv_func fn) _IMPL("fs9p.cc");
 
 // walk a file from fid "dir" along path, creating fid "newfile"
 int fs_walk(fs_file *dir, fs_file *newfile, char *path);
