@@ -52,7 +52,7 @@ proc setShadowP2aDefaults {} {
     global WINPREFIX
     
     set shadow(compilecmd) "\"%D/bin/fastspin\" -2a -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" -t -k"
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" \"-9%b\" -q -k"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"@0=%D/board/P2ES_flashloader.bin,@1000+%B\" -t -k"
 }
 proc setShadowP2bDefaults {} {
@@ -60,7 +60,7 @@ proc setShadowP2bDefaults {} {
     global WINPREFIX
     
     set shadow(compilecmd) "\"%D/bin/fastspin\" -2 -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" -t -k"
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" \"-9%b\" -q -k"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"@0=%D/board/P2ES_flashloader.bin,@1000+%B\" -t -k"
 }
 proc copyShadowToConfig {} {
@@ -1094,7 +1094,8 @@ proc mapPercent {str} {
     } else {
 	set fullcomport ""
     }
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT ]
+    set bindir [file dirname $BINFILE]
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT ]
     set result [string map $percentmap $str]
     return $result
 }
@@ -1296,10 +1297,12 @@ set cmddialoghelptext {
   Strings for various commands
   Some special % escapes:
     %B = Replace with current binary file name
+    %b = Replace with directory containing current binary file
     %D = Replace with directory of flexgui executable
     %I = Replace with all library/include directories
     %O = Replace with optimization level
-    %P = Replace with port to use
+    %p = Replace with port to use
+    %P = Replace with port to use prefixed by -p
     %S = Replace with current source file name
     %% = Insert a % character
 }
