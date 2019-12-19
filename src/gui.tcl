@@ -29,13 +29,13 @@ if { [tk windowingsystem] == "aqua" } {
 }
 
 if { $tcl_platform(platform) == "windows" } {
-    set WINPREFIX "cmd.exe /c start \"Propeller Output\""
+    set WINPREFIX "cmd.exe /c start \"Propeller Output %p\""
 } elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
-    set WINPREFIX "/etc/alternatives/x-terminal-emulator -fs 14 -e"
+    set WINPREFIX "/etc/alternatives/x-terminal-emulator -T \"Propeller Output %p\" -fs 14 -e"
 } elseif { [tk windowingsystem] == "aqua" } {
     set WINPREFIX $ROOTDIR/bin/mac_terminal.sh
 } else {
-    set WINPREFIX "xterm -fs 14 -e"
+    set WINPREFIX "xterm -fs 14 -T \"Propeller Output %p\" -e"
 }
 
 # provide some default settings
@@ -869,7 +869,7 @@ menu .mbar.help -tearoff 0
 set serlist [serial::listports]
 foreach v $serlist {
     set comname [lrange [split $v "\\"] end end]
-    set portval [string map {\\ \\\\} "-p $v"]
+    set portval [string map {\\ \\\\} "$v"]
     .mbar.comport add radiobutton -label $comname -variable COMPORT -value $portval
 }
 
@@ -1089,7 +1089,12 @@ proc mapPercent {str} {
 
 #    set fulloptions "$OPT $COMPRESS"
     set fulloptions "$OPT"
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%O" $fulloptions "%P" $COMPORT ]
+    if { $COMPORT ne " " } {
+	set fullcomport "-p $COMPORT"
+    } else {
+	set fullcomport ""
+    }
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT ]
     set result [string map $percentmap $str]
     return $result
 }
