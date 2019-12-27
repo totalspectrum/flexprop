@@ -22,12 +22,22 @@ output will be correct.
 
 set CONFIG_FILE "$::env(HOME)/.flexgui.config"
 
+if { [tk windowingsystem] == "aqua" } {
+    set CTRL_PREFIX "Command"
+} else {
+    set CTRL_PREFIX "Control"
+}
 
 if { $tcl_platform(platform) == "windows" } {
-    set WINPREFIX "cmd.exe /c start \"Propeller Output\""
+    set WINPREFIX "cmd.exe /c start \"Propeller Output %p\""
+} elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
+    set WINPREFIX "/etc/alternatives/x-terminal-emulator -T \"Propeller Output %p\" -fs 14 -e"
+} elseif { [tk windowingsystem] == "aqua" } {
+    set WINPREFIX $ROOTDIR/bin/mac_terminal.sh
 } else {
-    set WINPREFIX "xterm -fs 14 -e"
+    set WINPREFIX "xterm -fs 14 -T \"Propeller Output %p\" -e"
 }
+
 # provide some default settings
 proc setShadowP1Defaults {} {
     global shadow
@@ -42,7 +52,7 @@ proc setShadowP2aDefaults {} {
     global WINPREFIX
     
     set shadow(compilecmd) "\"%D/bin/fastspin\" -2a -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" -t -k"
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" \"-9%b\" -q -k"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"@0=%D/board/P2ES_flashloader.bin,@1000+%B\" -t -k"
 }
 proc setShadowP2bDefaults {} {
@@ -50,7 +60,7 @@ proc setShadowP2bDefaults {} {
     global WINPREFIX
     
     set shadow(compilecmd) "\"%D/bin/fastspin\" -2 -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" -t -k"
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" \"-9%b\" -q -k"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"@0=%D/board/P2ES_flashloader.bin,@1000+%B\" -t -k"
 }
 proc copyShadowToConfig {} {
@@ -67,6 +77,7 @@ set config(liblist) [list $config(library)]
 set config(spinext) ".spin"
 set config(lastdir) [pwd]
 set config(font) "TkFixedFont"
+set config(botfont) "courier 10"
 set config(sash) ""
 set config(tabwidth) 8
 set COMPORT " "
@@ -343,9 +354,8 @@ proc tagerrors { w } {
 
 set SpinTypes {
     {{FastSpin files}   {.bas .bi .c .h .spin2 .spin .spinh} }
-    {{Spin2 files}   {.spin2 .spin .spinh} }
-    {{BASIC files}   {.bas .bi} }
-    {{C files}   {.c .h} }
+    {{Interpreter files}   {.py .lsp .fth} }
+    {{C files}   {.c .cpp .cxx .cc .h .hh .hpp} }
     {{All files}    *}
 }
 
@@ -446,6 +456,7 @@ proc createNewTab {} {
 #
 proc setupFramedText {w} {
     global config
+    global CTRL_PREFIX
     frame $w
     set yscmd "$w.v set"
     set xscmd "$w.h set"
@@ -462,8 +473,8 @@ proc setupFramedText {w} {
     grid $w.h -sticky nsew
     grid rowconfigure $w $w.txt -weight 1
     grid columnconfigure $w $w.txt -weight 1
-    bind $w.txt <Control-f> $searchcmd
-    bind $w.txt <Control-k> $replacecmd
+    bind $w.txt <$CTRL_PREFIX-f> $searchcmd
+    bind $w.txt <$CTRL_PREFIX-k> $replacecmd
 }
 
 #
@@ -601,13 +612,16 @@ proc saveFilesForCompile {} {
 	set w [lindex $t $i]
     }
 }
-    
-# always save the current file
+
+# save the current file
+# returns the file name
 proc saveCurFile {} {
     set w [.p.nb select]
-    saveFile $w
+    return [saveFile $w]
 }
-		  
+
+# save the file belonging to window w
+# returns the file name or "" if aborted
 proc saveFile {w} {
     global filenames
     global filetimes
@@ -618,16 +632,19 @@ proc saveFile {w} {
     if { [string length $filenames($w)] == 0 } {
 	set filename [tk_getSaveFile -initialfile $filenames($w) -filetypes $SpinTypes -defaultextension $config(spinext) ]
 	if { [string length $filename] == 0 } {
-	    return
+	    return ""
 	}
 	set config(lastdir) [file dirname $filename]
 	set config(spinext) [file extension $filename]
 	set filenames($w) $filename
 	.p.nb tab $w -text [file root $filename]
 	set BINFILE ""
+    } else {
+	set filename $filenames($w)
     }
     
-    saveFileFromWindow $filenames($w) $w.txt
+    saveFileFromWindow $filename $w.txt
+    return $filename
 }
 
 proc saveFileAs {w} {
@@ -652,9 +669,19 @@ proc saveFileAs {w} {
     set BINFILE ""
     set filenames($w) $filename
     .p.nb tab $w -text [file tail $filename]
-    saveFile $w
+    return [saveFile $w]
 }
 
+# get a loadp2 script to send a particular file
+proc scriptSendCurFile {} {
+    set fname [saveCurFile]
+#    if { $fname == "" } {
+#	return ""
+#    }
+    return "-e \"pausems(1500) textfile($fname)\""
+}
+	
+# show the about message
 proc doAbout {} {
     global aboutMsg
     tk_messageBox -icon info -type ok -message "FlexGUI" -detail $aboutMsg
@@ -666,7 +693,7 @@ proc doHelp {} {
     makeReadOnly .p.nb.help.txt
 }
 
-proc doSpecial {name} {
+proc doSpecial {name extraargs} {
     global ROOTDIR
     global BINFILE
     global PROP_VERSION
@@ -681,7 +708,7 @@ proc doSpecial {name} {
 	set BINFILE "$ROOTDIR/$name"
     }
     .p.bot.txt delete 1.0 end
-    doJustRun
+    doJustRun $extraargs
     return 1
 }
 
@@ -789,29 +816,29 @@ menu .mbar.special -tearoff 0
 menu .mbar.help -tearoff 0
 
 .mbar add cascade -menu .mbar.file -label File
-.mbar.file add command -label "New File" -accelerator "^N" -command { createNewTab }
-.mbar.file add command -label "Open File..." -accelerator "^O" -command { doOpenFile }
-.mbar.file add command -label "Save File" -accelerator "^S" -command { saveCurFile }
+.mbar.file add command -label "New File" -accelerator "$CTRL_PREFIX-N" -command { createNewTab }
+.mbar.file add command -label "Open File..." -accelerator "$CTRL_PREFIX-O" -command { doOpenFile }
+.mbar.file add command -label "Save File" -accelerator "$CTRL_PREFIX-S" -command { saveCurFile }
 .mbar.file add command -label "Save File As..." -command { saveFileAs [.p.nb select] }
 .mbar.file add separator
-.mbar.file add command -label "Open listing file" -accelerator "^L" -command { doListing }
+.mbar.file add command -label "Open listing file" -accelerator "$CTRL_PREFIX-L" -command { doListing }
 .mbar.file add separator
 .mbar.file add command -label "Library directories..." -command { getLibrary }
 .mbar.file add separator
-.mbar.file add command -label "Close tab" -accelerator "^W" -command { closeTab }
+.mbar.file add command -label "Close tab" -accelerator "$CTRL_PREFIX-W" -command { closeTab }
 .mbar.file add separator
-.mbar.file add command -label Exit -accelerator "^Q" -command { exitProgram }
+.mbar.file add command -label Exit -accelerator "$CTRL_PREFIX-Q" -command { exitProgram }
 
 .mbar add cascade -menu .mbar.edit -label Edit
-.mbar.edit add command -label "Cut" -accelerator "^X" -command {event generate [focus] <<Cut>>}
-.mbar.edit add command -label "Copy" -accelerator "^C" -command {event generate [focus] <<Copy>>}
-.mbar.edit add command -label "Paste" -accelerator "^V" -command {event generate [focus] <<Paste>>}
+.mbar.edit add command -label "Cut" -accelerator "$CTRL_PREFIX-X" -command {event generate [focus] <<Cut>>}
+.mbar.edit add command -label "Copy" -accelerator "$CTRL_PREFIX-C" -command {event generate [focus] <<Copy>>}
+.mbar.edit add command -label "Paste" -accelerator "$CTRL_PREFIX-V" -command {event generate [focus] <<Paste>>}
 .mbar.edit add separator
-.mbar.edit add command -label "Undo" -accelerator "^Z" -command {event generate [focus] <<Undo>>}
-.mbar.edit add command -label "Redo" -accelerator "^Y" -command {event generate [focus] <<Redo>>}
+.mbar.edit add command -label "Undo" -accelerator "$CTRL_PREFIX-Z" -command {event generate [focus] <<Undo>>}
+.mbar.edit add command -label "Redo" -accelerator "$CTRL_PREFIX-Y" -command {event generate [focus] <<Redo>>}
 .mbar.edit add separator
-.mbar.edit add command -label "Find..." -accelerator "^F" -command {searchrep [focus] 0}
-.mbar.edit add command -label "Replace..." -accelerator "^K" -command {searchrep [focus] 1}
+.mbar.edit add command -label "Find..." -accelerator "$CTRL_PREFIX-F" -command {searchrep [focus] 0}
+.mbar.edit add command -label "Replace..." -accelerator "$CTRL_PREFIX-K" -command {searchrep [focus] 1}
 .mbar.edit add separator
 
 #.mbar.edit add command -label "Select Font..." -command { doSelectFont }
@@ -842,15 +869,23 @@ menu .mbar.help -tearoff 0
 set serlist [serial::listports]
 foreach v $serlist {
     set comname [lrange [split $v "\\"] end end]
-    set portval [string map {\\ \\\\} "-p $v"]
+    set portval [string map {\\ \\\\} "$v"]
     .mbar.comport add radiobutton -label $comname -variable COMPORT -value $portval
 }
 
 .mbar add cascade -menu .mbar.special -label Special
-.mbar.special add command -label "Enter P2 ROM monitor" -command { doSpecial "-xDEBUG" }
-.mbar.special add command -label "Enter P2 ROM TAQOZ" -command { doSpecial "-xTAQOZ" }
-.mbar.special add command -label "Run uPython on P2" -command { doSpecial "samples/upython/upython.binary" }
-.mbar.special add command -label "Terminal only" -command { doSpecial "-n" }
+.mbar.special add separator
+.mbar.special add command -label "Enter P2 ROM TAQOZ" -command { doSpecial "-xTAQOZ" "" }
+.mbar.special add command -label "Load current buffer into TAQOZ" -command { doSpecial "-xTAQOZ" [scriptSendCurFile] }
+.mbar.special add separator
+.mbar.special add command -label "Run uPython on P2" -command { doSpecial "samples/upython/upython.binary" "" }
+.mbar.special add command -label "Load current buffer into uPython on P2" -command { doSpecial "samples/upython/upython.binary" [scriptSendCurFile] }
+.mbar.special add separator
+.mbar.special add command -label "Run proplisp on P2" -command { doSpecial "samples/proplisp/lisp.binary" "" }
+.mbar.special add command -label "Load current buffer into proplisp on P2" -command { doSpecial "samples/proplisp/lisp.binary" [scriptSendCurFile] }
+.mbar.special add separator
+.mbar.special add command -label "Enter P2 ROM monitor" -command { doSpecial "-xDEBUG" "" }
+.mbar.special add command -label "Terminal only" -command { doSpecial "-n" "" }
 
 .mbar add cascade -menu .mbar.help -label Help
 .mbar.help add command -label "Help" -command { doHelp }
@@ -879,7 +914,7 @@ grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun .toolbar.configmsg 
 
 scrollbar .p.bot.v -orient vertical -command {.p.bot.txt yview}
 scrollbar .p.bot.h -orient horizontal -command {.p.bot.txt xview}
-text .p.bot.txt -wrap none -xscroll {.p.bot.h set} -yscroll {.p.bot.v set} -height 10 -font "courier 8"
+text .p.bot.txt -wrap none -xscroll {.p.bot.h set} -yscroll {.p.bot.v set} -height 10 -font $config(botfont)
 label .p.bot.label -background DarkGrey -foreground white -text "Compiler Output" -font TkSmallCaptionFont -relief flat -pady 0 -borderwidth 0
 
 grid .p.bot.label      -sticky nsew
@@ -895,17 +930,17 @@ grid columnconfigure .p.bot .p.bot.txt -weight 1
 
 #bind .p.nb.main.txt <FocusIn> [list fontchooserFocus .p.nb.main.txt]
 
-bind . <Control-n> { createNewTab }
-bind . <Control-o> { doOpenFile }
-bind . <Control-s> { saveCurFile }
-bind . <Control-b> { browseFile }
-bind . <Control-q> { exitProgram }
-bind . <Control-r> { doCompileRun }
-bind . <Control-e> { doCompileFlash }
-bind . <Control-l> { doListing }
-bind . <Control-f> { searchrep [focus] 0 }
-bind . <Control-k> { searchrep [focus] 1 }
-bind . <Control-w> { closeTab }
+bind . <$CTRL_PREFIX-n> { createNewTab }
+bind . <$CTRL_PREFIX-o> { doOpenFile }
+bind . <$CTRL_PREFIX-s> { saveCurFile }
+bind . <$CTRL_PREFIX-b> { browseFile }
+bind . <$CTRL_PREFIX-q> { exitProgram }
+bind . <$CTRL_PREFIX-r> { doCompileRun }
+bind . <$CTRL_PREFIX-e> { doCompileFlash }
+bind . <$CTRL_PREFIX-l> { doListing }
+bind . <$CTRL_PREFIX-f> { searchrep [focus] 0 }
+bind . <$CTRL_PREFIX-k> { searchrep [focus] 1 }
+bind . <$CTRL_PREFIX-w> { closeTab }
 
 # bind to right mouse button on Linux and Windows
 
@@ -943,12 +978,25 @@ proc doSelectFont {} {
     tk fontchooser show
 }
 
+proc doSelectBottomFont {} {
+    global config
+    tk fontchooser configure -parent . -font "$config(botfont)" -command resetBottomFont
+    tk fontchooser show
+}
+
 proc resetFont {w} {
     global config
     set fnt [font actual $w]
     set config(font) $fnt
     setnbfonts $fnt
     .editopts.font.lb configure -font $fnt
+}
+
+proc resetBottomFont {w} {
+    set fnt [font actual $w]
+    set config(botfont) $fnt
+    .p.bot.txt configure -font $fnt
+    .editopts.bot.lb configure -font $fnt
 }
 
 proc doShowLinenumbers {} {
@@ -999,10 +1047,14 @@ proc doAppearance {} {
     checkbutton .editopts.font.linenums -text "Show Linenumbers" -variable config(showlinenumbers) -command doShowLinenumbers
     ttk::button .editopts.end.ok -text " OK " -command doneAppearance
 
+    label .editopts.bot.lb -text "Compiler output font " -font $config(botfont)
+    ttk::button .editopts.bot.change -text " Change... " -command doSelectBottomFont
+    
     grid .editopts.top.l -sticky nsew 
     grid .editopts.font.tab.lab .editopts.font.tab.stops
     grid .editopts.font.tab .editopts.font.lb .editopts.font.change
     grid .editopts.font.linenums
+    grid .editopts.bot.lb .editopts.bot.change
     
     grid .editopts.end.ok -sticky nsew
     grid .editopts.top -sticky nsew
@@ -1037,7 +1089,13 @@ proc mapPercent {str} {
 
 #    set fulloptions "$OPT $COMPRESS"
     set fulloptions "$OPT"
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%O" $fulloptions "%P" $COMPORT ]
+    if { $COMPORT ne " " } {
+	set fullcomport "-p $COMPORT"
+    } else {
+	set fullcomport ""
+    }
+    set bindir [file dirname $BINFILE]
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT ]
     set result [string map $percentmap $str]
     return $result
 }
@@ -1147,9 +1205,12 @@ proc doListing {} {
     }
 }
 
-proc doJustRunCmd {cmdstr} {
+proc doJustRunCmd {cmdstr extraargs} {
+    if { $extraargs ne "" } {
+	set cmdstr [concat $cmdstr " " $extraargs]
+    }
     .p.bot.txt insert end "$cmdstr\n"
-
+    
     set runcmd [list exec -ignorestderr]
     set runcmd [concat $runcmd $cmdstr]
     lappend runcmd "&"
@@ -1160,12 +1221,12 @@ proc doJustRunCmd {cmdstr} {
     }
 }
 
-proc doJustRun {} {
+proc doJustRun {extraargs} {
     global config
     global BINFILE
     
     set cmdstr [mapPercent $config(runcmd)]
-    doJustRunCmd $cmdstr
+    doJustRunCmd $cmdstr $extraargs
 }
 set flashMsg "
 Note that many boards require jumpers or switches
@@ -1184,7 +1245,7 @@ proc doJustFlash {} {
     set answer [tk_messageBox -icon info -type okcancel -message "Flash Binary" -detail $flashMsg]
     if { $answer eq "ok" } {
 	set cmdstr [mapPercent $config(flashcmd)]
-	doJustRunCmd $cmdstr
+	doJustRunCmd $cmdstr ""
     }
 }
 
@@ -1199,7 +1260,7 @@ proc doLoadRun {} {
     }
     set BINFILE $filename
     .p.bot.txt delete 1.0 end
-    doJustRun
+    doJustRun ""
 }
 
 proc doLoadFlash {} {
@@ -1220,7 +1281,7 @@ proc doCompileRun {} {
     set status [doCompile]
     if { $status eq 0 } {
 	.p.bot.txt insert end "\n"
-	doJustRun
+	doJustRun ""
     }
 }
 
@@ -1236,10 +1297,12 @@ set cmddialoghelptext {
   Strings for various commands
   Some special % escapes:
     %B = Replace with current binary file name
+    %b = Replace with directory containing current binary file
     %D = Replace with directory of flexgui executable
     %I = Replace with all library/include directories
     %O = Replace with optimization level
-    %P = Replace with port to use
+    %p = Replace with port to use
+    %P = Replace with port to use prefixed by -p
     %S = Replace with current source file name
     %% = Insert a % character
 }

@@ -1,3 +1,12 @@
+Version 4.0.5
+- Improvements to the Mac GUI
+- On Linux, run alternate terminal (if defined) instead of xterm
+- Added dialog for changing command output window font
+- Added Special menu option for running proplisp
+- Added menu options for downloading current buffer to TAQOZ,
+  proplisp, or micropython
+- For Windows, sign loadp2.exe as well as flexgui.exe and fastspin.exe.
+
 Version 4.0.4
 - Added ability to program SPI flash
 

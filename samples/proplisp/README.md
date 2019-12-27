@@ -66,7 +66,7 @@ The interpreter defines the following functions by default:
 In the sample program provided for the Parallax Propeller,
 there are the following additional functions:
 ```
-(waitms n) -- wait for n milliseconds
+(pausems n) -- wait for n milliseconds
 (pinhi p) -- drive pin p high
 (pinlo p) -- drive pin p low
 (pintoggle p) -- toggle output value of pin p
@@ -232,7 +232,7 @@ that try ^B instead)
 
 ### Toggle a pin forever
 ```
-(while #t (begin (pintoggle 1)(waitms 500)))
+(while #t (begin (pintoggle 1)(pausems 500)))
 ```
 This toggles pin 1 every 500 milliseconds. To break, press control-B or
 control-C on the terminal.

@@ -2,9 +2,9 @@
 # Makefile for flexgui
 #
 # Options:
-# make INSTALL=dir
+# make install INSTALL=dir
 #    Makes for Linux or Mac; requires Tcl/Tk to already be installed
-# make zip
+# make zip SIGN=sign_script
 #    Makes for Windows, linking against prebuild Tcl/Tk libraries in $(TCLROOT)
 #    Final output is in flexgui.zip
 #
@@ -37,13 +37,14 @@ errmessage:
 	@echo
 	@echo "Usage:"
 	@echo "  make install"
-	@echo "  make zip"
+	@echo "  make zip SIGN=signscript"
 	@echo
 	@echo "make install copies flexgui to the INSTALL directory (default is $(HOME)/flexgui)"
 	@echo "for example to install in /opt/flexgui do:"
 	@echo "    make install INSTALL=/opt/flexgui"
 	@echo
 	@echo "make zip creates a flexgui.zip for Windows"
+	@echo "    This requires cross tools and is probably not what you want"
 	@echo
 ifndef OPENSPIN
 	@echo "Note that the P1 version of flexgui depends on openspin being installed; if it is not,"
@@ -66,6 +67,7 @@ install: flexgui_base $(NATIVE_BINARIES)
 	mkdir -p $(INSTALL)
 	mkdir -p flexgui/bin
 	cp -r $(NATIVE_BINARIES) flexgui/bin
+	cp -r mac_scripts/* flexgui/bin
 	cp -r flexgui/* $(INSTALL)
 
 # where the Tcl and Tk source code are checked out (side by side)
@@ -122,8 +124,10 @@ flexgui.exe: src/flexgui.c $(RESOBJ)
 
 #
 # be careful to leave samples/upython/upython.binary during make clean
+# Also samples/proplisp/lisp.binary
 #
-SUBSAMPLES={LED_Matrix, proplisp}
+
+SUBSAMPLES={LED_Matrix}
 
 clean:
 	rm -rf flexgui
@@ -131,9 +135,9 @@ clean:
 	rm -rf bin
 	rm -rf board
 	rm -rf $(BINFILES) $(PDFFILES)
-	rm -rf spin2cpp/build-win32/*
+	rm -rf spin2cpp/build*
 	rm -rf proploader-*-build
-	rm -rf loadp2/build-win32/*
+	rm -rf loadp2/build*
 	rm -rf loadp2/board/*.bin
 	rm -rf samples/*.elf samples/*.binary samples/*~
 	rm -rf samples/*.lst samples/*.pasm samples/*.p2asm
@@ -153,7 +157,7 @@ endif
 	cp -r spin2cpp/doc/* flexgui/doc
 	cp -r spin2cpp/include flexgui/
 	cp -r doc/*.txt flexgui/doc
-	cp -r board/*.bin flexgui/board
+	cp -r board/* flexgui/board
 	cp -r flexgui.tcl flexgui/
 
 .PHONY: flexgui_base
@@ -202,6 +206,8 @@ bin/proploader.exe: proploader-msys-build/bin/proploader.exe
 bin/loadp2.exe: loadp2/build-win32/loadp2.exe
 	mkdir -p bin
 	cp $< $@
+	$(SIGN) bin/loadp2
+	mv bin/loadp2.signed.exe bin/loadp2.exe
 
 spin2cpp/build-win32/fastspin.exe:
 	make -C spin2cpp CROSS=win32
@@ -216,7 +222,7 @@ $(RESOBJ): $(RES_RC)
 	$(WINRC) -o $@ --define STATIC_BUILD --include "$(TCLROOT)/tk/generic" --include "$(TCLROOT)/tcl/generic" --include "$(RESDIR)" "$<"
 
 src/version.tcl: version.inp spin2cpp/version.h
-	cpp -DTCL_SRC < version.inp > $@
+	cpp -xc++ -DTCL_SRC < version.inp > $@
 
 board/P2ES_flashloader.bin: bin/fastspin board/P2ES_flashloader.spin2
 	bin/fastspin -2 -o $@ board/P2ES_flashloader.spin2
