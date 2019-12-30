@@ -30,7 +30,9 @@ PUB demo | r
     die
   repeat
     r := fs.fs_read(@myfd, @buf, BUFSIZ)
+    'ser.printf("fs_read returned %d\n", r)
     if (r > 0)
+      'dumphex(@buf, r)
       printdir(@buf, r)
   until r =< 0
   fs.fs_close(@myfd)
@@ -48,6 +50,7 @@ PUB printdir(buf, buflen) | siz, typ, flen, s, nextbuf
     siz := word[buf]
     if siz == 0
       return
+    siz += 2
     nextbuf := buf + siz
     buf += 2
     buf += 6 ' skip over type and dev
@@ -96,3 +99,13 @@ PUB sendrecv(startbuf, endbuf, maxlen) | len, buf, i, left
     byte[buf++] := ser.rx
     --left
   return len
+
+PUB dumphex(buf, len) | i
+  ser.printf("hex dump:\n")
+  repeat i from 0 to len-1
+    ser.hex(byte[buf], 2)
+    ser.tx(" ")
+    buf++
+  ser.tx(13)
+  ser.tx(10)
+
