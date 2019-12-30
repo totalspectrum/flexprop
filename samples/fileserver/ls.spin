@@ -36,7 +36,7 @@ PUB demo | r
       printdir(@buf, r)
   until r =< 0
   fs.fs_close(@myfd)
-  ser.printf("done")
+  ser.printf("\ndone\n")
   die
 
 PUB die
