@@ -230,3 +230,8 @@ board/P2ES_flashloader.bin: bin/fastspin board/P2ES_flashloader.spin2
 board/P2ES_flashloader.spin2: loadp2/board/P2ES_flashloader.spin2
 	mkdir -p board
 	cp loadp2/board/P2ES_flashloader.spin2 $@
+
+docs: $(PDFFILES)
+
+docker:
+	docker build -t flexguibuilder .
