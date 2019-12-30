@@ -22,6 +22,7 @@ multest.spin2:  Test multiply speed on P2
   multiply.cog.spin: multiply.spin running in its own COG
 rtc.bas:        Simple real-time clock using a COG to keep track of time
 smartpin.spin2: Print to serial port using smart pins
+timer.c:        C program to display 64 bit system timer on P2
 
 fileserver: Samples for the loadp2 9P file server
   ls.spin:  list the current directory
