@@ -9,7 +9,7 @@ original P2 eval boards and the new ("v2") silicon.
 
 
 This version has been compiled with code compression, so it has more room
-available for user programs (approx. 200K). It also automatically runs
+available for user programs (approx. 230K). It also automatically runs
 the file `main.py` from an inserted SD card at boot time, if one is
 found.
 
