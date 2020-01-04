@@ -69,6 +69,7 @@ proc copyShadowToConfig {} {
     set config(compilecmd) $shadow(compilecmd)
     set config(runcmd) $shadow(runcmd)
     set config(flashcmd) $shadow(flashcmd)
+    set config(autoreload) "no"
     checkPropVersion
 }
 
@@ -284,11 +285,10 @@ proc loadFileToWindow { fname win } {
 # save contents of a window to a file
 proc saveFileFromWindow { fname win } {
     global filetimes
-
     # check for other programs changing the file
     if { [file exists $fname] } {
         set disktime [file mtime $fname]
-        if { $disktime > $filetimes($fname) } {
+        if { $disktime > $filetimes($fname) } {	    
 	    set answer [tk_messageBox -icon question -type yesno -message "File $fname has changed on disk; overwrite it?" -default no]
 	    if { $answer eq "no" } {
 	        return
@@ -572,6 +572,7 @@ proc doOpenFile {} {
 proc saveFilesForCompile {} {
     global filenames
     global filetimes
+    global config
     set t [.p.nb tabs]
     set i 0
     set w [lindex $t $i]
@@ -598,7 +599,10 @@ proc saveFilesForCompile {} {
 		saveFileFromWindow $s $w.txt
 	    }
 	    if { $needRead eq "yes" } {
-		set answer [tk_messageBox -icon question -type yesno -message "File $s has changed on disk. Reload it?" -default yes]
+		set answer $config(autoreload)
+		if { $answer ne yes } {
+		    set answer [tk_messageBox -icon question -type yesno -message "File $s has changed on disk. Reload it?" -default yes]
+		}
 		if { $answer eq yes } {
 		    loadFileToWindow $s $w.txt
 		    set needRead "no"
@@ -842,7 +846,7 @@ menu .mbar.help -tearoff 0
 .mbar.edit add separator
 
 #.mbar.edit add command -label "Select Font..." -command { doSelectFont }
-.mbar.edit add command -label "Editor Appearance..." -command { doAppearance }
+.mbar.edit add command -label "Editor Options..." -command { doEditorOptions }
 
 .mbar add cascade -menu .mbar.options -label Options
 .mbar.options add radiobutton -label "No Optimization" -variable OPT -value "-O0"
@@ -1019,7 +1023,7 @@ proc doneAppearance {} {
 #
 # editor appearance window
 #
-proc doAppearance {} {
+proc doEditorOptions {} {
     global config
 
     if {[winfo exists .editopts]} {
@@ -1032,7 +1036,7 @@ proc doAppearance {} {
     toplevel .editopts
     frame .editopts.top
     ttk::labelframe .editopts.font -text "Source code"
-    ttk::labelframe .editopts.bot -text "Compiler output"
+    ttk::labelframe .editopts.bot -text "\n Compiler output \n"
     frame .editopts.end
 
     label .editopts.top.l -text "\n  Editor Options  \n"
@@ -1045,6 +1049,7 @@ proc doAppearance {} {
     label .editopts.font.lb -text " Text font " -font $config(font)
     ttk::button .editopts.font.change -text " Change... " -command doSelectFont
     checkbutton .editopts.font.linenums -text "Show Linenumbers" -variable config(showlinenumbers) -command doShowLinenumbers
+    checkbutton .editopts.font.autoreload -text "Automatically Reload Files if changed externally" -variable config(autoreload)
     ttk::button .editopts.end.ok -text " OK " -command doneAppearance
 
     label .editopts.bot.lb -text "Compiler output font " -font $config(botfont)
@@ -1052,8 +1057,10 @@ proc doAppearance {} {
     
     grid .editopts.top.l -sticky nsew 
     grid .editopts.font.tab.lab .editopts.font.tab.stops
+    grid .editopts.font.tab
     grid .editopts.font.tab .editopts.font.lb .editopts.font.change
     grid .editopts.font.linenums
+    grid .editopts.font.autoreload
     grid .editopts.bot.lb .editopts.bot.change
     
     grid .editopts.end.ok -sticky nsew
@@ -1062,7 +1069,7 @@ proc doAppearance {} {
     grid .editopts.bot -sticky nsew
     grid .editopts.end -sticky nsew
 
-    wm title .editopts "Editor Appearance"
+    wm title .editopts "Editor Options"
 }
 
 proc get_includepath {} {
