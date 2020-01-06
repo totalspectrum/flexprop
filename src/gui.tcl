@@ -1054,7 +1054,15 @@ proc doEditorOptions {} {
 
     label .editopts.bot.lb -text "Compiler output font " -font $config(botfont)
     ttk::button .editopts.bot.change -text " Change... " -command doSelectBottomFont
+
+    grid columnconfigure .editopts 0 -weight 1
+    grid rowconfigure .editopts 0 -weight 1
     
+    grid .editopts.top -sticky nsew
+    grid .editopts.font -sticky nsew
+    grid .editopts.bot -sticky nsew
+    grid .editopts.end -sticky nsew
+
     grid .editopts.top.l -sticky nsew 
     grid .editopts.font.tab.lab .editopts.font.tab.stops
     grid .editopts.font.tab
@@ -1064,10 +1072,6 @@ proc doEditorOptions {} {
     grid .editopts.bot.lb .editopts.bot.change
     
     grid .editopts.end.ok -sticky nsew
-    grid .editopts.top -sticky nsew
-    grid .editopts.font -sticky nsew
-    grid .editopts.bot -sticky nsew
-    grid .editopts.end -sticky nsew
 
     wm title .editopts "Editor Options"
 }
