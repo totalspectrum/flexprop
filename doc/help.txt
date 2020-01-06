@@ -29,9 +29,12 @@ The Edit menu is again pretty self-explanatory. The Undo/Redo
 functionality is quite limited; only one level of Redo is reliable,
 and trying to Redo again will produce unpredictable results.
 
-The "Editor Appearance..." dialog allows you to change the way the source
+The "Editor Options..." dialog allows you to change the way the source
 code editor looks, e.g. changing the font used for the text, or the
-tab settings.
+tab settings. It also lets you change the font used for the compiler
+output window, and has an option to automatically load files changed
+by external programs (normally flexgui will prompt you to reload if
+it notices a change).
 
 ### Options
 

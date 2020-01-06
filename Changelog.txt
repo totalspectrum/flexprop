@@ -1,3 +1,6 @@
+Version 4.1.0
+- Added option to automatically reload files changed outside the editor
+
 Version 4.0.5
 - Improvements to the Mac GUI
 - On Linux, run alternate terminal (if defined) instead of xterm
