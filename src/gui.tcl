@@ -573,6 +573,7 @@ proc doOpenFile {} {
 proc pickFlashProgram {} {
     global config
     global BinTypes
+    global ROOTDIR
     
     set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $ROOTDIR/board -title "Select Flash Program"]
     if { [string length $filename] == 0 } {
