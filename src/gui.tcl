@@ -1349,6 +1349,9 @@ proc doRunOptions {} {
     ttk::labelframe .runopts.b -text "Run command"
     entry .runopts.b.runtext -width 40 -textvariable shadow(runcmd)
 
+    ttk::labelframe .runopts.c -text "Flash command"
+    entry .runopts.c.flashtext -width 40 -textvariable shadow(flashcmd)
+
     frame .runopts.change
     frame .runopts.end
 
@@ -1359,21 +1362,24 @@ proc doRunOptions {} {
     ttk::button .runopts.end.ok -text " OK " -command {copyShadowClose .runopts}
     ttk::button .runopts.end.cancel -text " Cancel " -command {destroy .runopts}
 
+    grid .runopts.toplabel -sticky nsew
+    grid .runopts.a -sticky nsew
+    grid .runopts.b -sticky nsew
+    grid .runopts.c -sticky nsew
+    grid .runopts.change -sticky nsew
+    grid .runopts.end -sticky nsew
+
     grid .runopts.a.compiletext -sticky nsew
     grid .runopts.b.runtext -sticky nsew
+    grid .runopts.c.flashtext -sticky nsew
 
     grid .runopts.change.p2a .runopts.change.p1 -sticky nsew
     grid .runopts.change.p2b -sticky nsew
     grid .runopts.end.ok .runopts.end.cancel -sticky nsew
     
-    grid .runopts.toplabel -sticky nsew
-    grid .runopts.a -sticky nsew
-    grid .runopts.b -sticky nsew
-    grid .runopts.change -sticky nsew
-    grid .runopts.end -sticky nsew
-
     grid columnconfigure .runopts.a 0 -weight 1
     grid columnconfigure .runopts.b 0 -weight 1
+    grid columnconfigure .runopts.c 0 -weight 1
     grid rowconfigure .runopts 0 -weight 1
     grid columnconfigure .runopts 0 -weight 1
     
