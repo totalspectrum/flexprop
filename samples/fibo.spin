@@ -1,8 +1,7 @@
 '' simple fibonacci program
 CON
 #ifdef __P2__
-  _clkmode = $010007f8
-  _clkfreq = 160_000_000
+  _clkfreq = 200_000_000
   baud = 230_400
 #else
   _clkmode = xtal1 + pll16x
@@ -18,9 +17,6 @@ OBJ
 #endif
 
 PUB demo | i, n, t
-#ifdef __P2__
-  clkset(_clkmode, _clkfreq)
-#endif  
   ser.start_default(baud)
   repeat i from 1 to 10 step 1
     t := CNT

@@ -1,5 +1,4 @@
-const mode=0x010007f8
-const freq=160_000_000
+const _clkfreq=160_000_000
 const baud=230_400
 
 dim f as class using "fs9p.cc"
@@ -8,7 +7,6 @@ dim r as integer
 dim handle as any
 dim crlf as ubyte(2)
 
-clkset(mode, freq)
 ser.start(63, 62, 0, baud)
 
 r = f.fs_init(@sendrecv)

@@ -12,7 +12,6 @@
 
 CON
 #ifdef __P2__
-  _clkmode = $010007f8
   _clkfreq = 160_000_000
 #else  
   _clkmode = xtal1 + pll16x
@@ -24,9 +23,6 @@ stack
     long 0[64]
 
 PUB demo | cognum, delay
-#ifdef __P2__
-  clkset(_clkmode, _clkfreq)
-#endif  
   delay := clkfreq
   repeat cognum from 7 to 1
     delay -= clkfreq / 10

@@ -3,7 +3,6 @@
 ''
 CON
   _clkfreq = 160_000_000
-  _clkmode = $010007f8
   
 OBJ
   ser: "spin/SmartSerial"
@@ -14,7 +13,6 @@ OBJ
 #endif
 
 PUB main | a,b
-  clkset(_clkmode, _clkfreq)
   ser.start(63, 62, 0, 230_400)
 #ifdef USE_COG
   m.__cognew
