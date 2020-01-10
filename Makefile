@@ -156,6 +156,7 @@ ifdef PANDOC_EXISTS
 endif
 	cp -r spin2cpp/doc/* flexgui/doc
 	cp -r loadp2/README.md flexgui/doc/loadp2.md
+	cp -r loadp2/LICENSE flexgui/doc/loadp2.LICENSE.txt
 	cp -r spin2cpp/include flexgui/
 	cp -r doc/*.txt flexgui/doc
 	cp -r board/* flexgui/board
