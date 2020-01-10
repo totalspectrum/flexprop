@@ -100,7 +100,7 @@ endif
 #
 # board support files (e.g. for flash programming)
 #
-BOARDFILES=board/P2ES_flashloader.bin board/P2ES_flashloader.spin2
+BOARDFILES=board/P2ES_flashloader.bin board/P2ES_flashloader.spin2 board/P2ES_sdcard.bin
 
 # the script used for signing executables:
 #    $(SIGN) bin/foo
@@ -226,14 +226,25 @@ $(RESOBJ): $(RES_RC)
 src/version.tcl: version.inp spin2cpp/version.h
 	cpp -xc++ -DTCL_SRC < version.inp > $@
 
+docs: $(PDFFILES)
+
+docker:
+	docker build -t flexguibuilder .
+
 board/P2ES_flashloader.bin: bin/fastspin board/P2ES_flashloader.spin2
 	bin/fastspin -2 -o $@ board/P2ES_flashloader.spin2
+
+board/P2ES_sdcard.bin: board/sdcard/sdboot.binary
+	mv board/sdcard/sdboot.binary board/P2ES_sdcard.bin
+
+board/sdcard/sdboot.binary: bin/fastspin board/sdcard
+	(make -C board/sdcard CC="`pwd`/bin/fastspin -2 -I`pwd`/spin2cpp/include")
+	rm -f board/sdcard/*.p2asm
 
 board/P2ES_flashloader.spin2: loadp2/board/P2ES_flashloader.spin2
 	mkdir -p board
 	cp loadp2/board/P2ES_flashloader.spin2 $@
 
-docs: $(PDFFILES)
-
-docker:
-	docker build -t flexguibuilder .
+board/sdcard: loadp2/board/sdcard
+	mkdir -p board
+	cp -r loadp2/board/sdcard board
