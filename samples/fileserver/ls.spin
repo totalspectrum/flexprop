@@ -3,8 +3,7 @@
 '' the host file system
 ''
 CON
-  mode = $010007f8
-  freq = 160_000_000
+  _clkfreq = 180_000_000
   BUFSIZ = 128
   
 OBJ
@@ -16,7 +15,6 @@ VAR
   byte buf[BUFSIZ]
   
 PUB demo | r
-  clkset(mode, freq)
   ser.start(63, 62, 0, 230_400)
   ser.printf("file system demo in Spin\n")
   r := fs.fs_init(@sendrecv)
