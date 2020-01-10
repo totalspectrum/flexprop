@@ -348,5 +348,5 @@ def perfTest():
   print("Count: ", count)
 ```
 
-We're getting about 375K on this test.
+We're getting about 395K on this test.
 
