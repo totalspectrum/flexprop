@@ -1,6 +1,7 @@
 Version 4.1.0
 - Added option to automatically reload files changed outside the editor
 - Added fallback font chooser for old versions of Tcl/Tk (e.g. MacOS)
+- Added menu option for selecting program to use for flashing P2 (e.g. use SD card instead of flash)
 
 Version 4.0.5
 - Improvements to the Mac GUI
