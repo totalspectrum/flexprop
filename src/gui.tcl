@@ -72,7 +72,7 @@ proc copyShadowToConfig {} {
     set config(compilecmd) $shadow(compilecmd)
     set config(runcmd) $shadow(runcmd)
     set config(flashcmd) $shadow(flashcmd)
-    set config(autoreload) "no"
+    set config(autoreload) 0
     checkPropVersion
 }
 
@@ -288,12 +288,17 @@ proc loadFileToWindow { fname win } {
 # save contents of a window to a file
 proc saveFileFromWindow { fname win } {
     global filetimes
+    global config
+    
     # check for other programs changing the file
     if { [file exists $fname] } {
         set disktime [file mtime $fname]
-        if { $disktime > $filetimes($fname) } {	    
-	    set answer [tk_messageBox -icon question -type yesno -message "File $fname has changed on disk; overwrite it?" -default no]
-	    if { $answer eq "no" } {
+        if { $disktime > $filetimes($fname) } {
+	    set answer $config(autoreload)
+	    if { ! $answer } {
+		set answer [tk_messageBox -icon question -type yesno -message "File $fname has changed on disk; overwrite it?" -default no]
+	    }
+	    if { ! $answer } {
 	        return
 	    }
 	}
@@ -615,10 +620,10 @@ proc saveFilesForCompile {} {
 	    }
 	    if { $needRead eq "yes" } {
 		set answer $config(autoreload)
-		if { $answer ne yes } {
+		if { ! $answer  } {
 		    set answer [tk_messageBox -icon question -type yesno -message "File $s has changed on disk. Reload it?" -default yes]
 		}
-		if { $answer eq yes } {
+		if { $answer } {
 		    loadFileToWindow $s $w.txt
 		    set needRead "no"
 		    set needWrite "no"
