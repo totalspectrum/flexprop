@@ -1,5 +1,6 @@
 Version 4.1.0
 - Added option to automatically reload files changed outside the editor
+- Added fallback font chooser for old versions of Tcl/Tk (e.g. MacOS)
 
 Version 4.0.5
 - Improvements to the Mac GUI

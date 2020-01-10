@@ -45,6 +45,7 @@ proc setShadowP1Defaults {} {
     
     set shadow(compilecmd) "\"%D/bin/fastspin\" -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader\" -Dbaudrate=115200 %P \"%B\" -r -t -k"
+    set shadow(flashprogram) ""
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader\" -Dbaudrate=115200 %P \"%B\" -e -k"
 }
 proc setShadowP2aDefaults {} {
@@ -53,7 +54,8 @@ proc setShadowP2aDefaults {} {
     
     set shadow(compilecmd) "\"%D/bin/fastspin\" -2a -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" \"-9%b\" -q -k"
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"@0=%D/board/P2ES_flashloader.bin,@1000+%B\" -t -k"
+    set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"@0=%F,@8000+%B\" -t -k"
 }
 proc setShadowP2bDefaults {} {
     global shadow
@@ -61,7 +63,7 @@ proc setShadowP2bDefaults {} {
     
     set shadow(compilecmd) "\"%D/bin/fastspin\" -2 -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" \"-9%b\" -q -k"
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"@0=%D/board/P2ES_flashloader.bin,@1000+%B\" -t -k"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"@0=%F,@8000+%B\" -t -k"
 }
 proc copyShadowToConfig {} {
     global config
@@ -978,14 +980,33 @@ config_open
 proc doSelectFont {} {
     global config
     set curfont $config(font)
-    tk fontchooser configure -parent . -font "$curfont" -command resetFont
-    tk fontchooser show
+    set version [info tclversion]
+    
+    if { $version > 8.5 } {
+	tk fontchooser configure -parent . -font "$curfont" -command resetFont
+	tk fontchooser show
+    } else {
+	set fnt [choosefont $curfont "Editor font"]
+	if { "$fnt" ne "" } {
+	    set config(font) $fnt
+	    setnbfonts $fnt
+	    .editopts.font.lb configure -font $fnt
+	}
+    }
 }
 
 proc doSelectBottomFont {} {
     global config
-    tk fontchooser configure -parent . -font "$config(botfont)" -command resetBottomFont
-    tk fontchooser show
+    set version [info tclversion]
+    
+    if { $version > 8.5 } {
+	tk fontchooser configure -parent . -font "$config(botfont)" -command resetBottomFont
+	tk fontchooser show
+    } else {
+	set config(botfont) $fnt
+	.p.bot.txt configure -font $fnt
+	.editopts.bot.lb configure -font $font
+    }
 }
 
 proc resetFont {w} {
@@ -1106,7 +1127,7 @@ proc mapPercent {str} {
 	set fullcomport ""
     }
     set bindir [file dirname $BINFILE]
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT ]
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT "%F" $config(flashprogram) ]
     set result [string map $percentmap $str]
     return $result
 }
@@ -1310,6 +1331,7 @@ set cmddialoghelptext {
     %B = Replace with current binary file name
     %b = Replace with directory containing current binary file
     %D = Replace with directory of flexgui executable
+    %F = Replace with currently selected flash program (sd/flash)
     %I = Replace with all library/include directories
     %O = Replace with optimization level
     %p = Replace with port to use
