@@ -51,6 +51,7 @@ proc setShadowP1Defaults {} {
 proc setShadowP2aDefaults {} {
     global shadow
     global WINPREFIX
+    global ROOTDIR
     
     set shadow(compilecmd) "\"%D/bin/fastspin\" -2a -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" \"-9%b\" -q -k"
@@ -558,7 +559,7 @@ proc doOpenFile {} {
     global SpinTypes
     global BINFILE
 
-    set filename [tk_getOpenFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $config(lastdir) ]
+    set filename [tk_getOpenFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $config(lastdir) -title "Open File" ]
     if { [string length $filename] == 0 } {
 	return ""
     }
@@ -573,7 +574,7 @@ proc pickFlashProgram {} {
     global config
     global BinTypes
     
-    set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $config(lastdir)]
+    set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $ROOTDIR/board -title "Select Flash Program"]
     if { [string length $filename] == 0 } {
 	return
     }
@@ -647,7 +648,7 @@ proc saveFile {w} {
     global config
     
     if { [string length $filenames($w)] == 0 } {
-	set filename [tk_getSaveFile -initialfile $filenames($w) -filetypes $SpinTypes -defaultextension $config(spinext) ]
+	set filename [tk_getSaveFile -initialfile $filenames($w) -filetypes $SpinTypes -defaultextension $config(spinext) -title "Save File" ]
 	if { [string length $filename] == 0 } {
 	    return ""
 	}
@@ -677,7 +678,7 @@ proc saveFileAs {w} {
 	set initdir [file dirname $filenames($w)]
 	set initfilename [file tail $filenames($w)]
     }
-    set filename [tk_getSaveFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $initdir -initialfile $initfilename ]
+    set filename [tk_getSaveFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $initdir -initialfile $initfilename -title "Save As" ]
     if { [string length $filename] == 0 } {
 	return
     }
@@ -1298,7 +1299,7 @@ proc doLoadRun {} {
     global BINFILE
     global BinTypes
     
-    set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $config(lastdir)]
+    set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $config(lastdir) -title "Run Binary" ]
     if { [string length $filename] == 0 } {
 	return
     }
@@ -1312,7 +1313,7 @@ proc doLoadFlash {} {
     global BINFILE
     global BinTypes
     
-    set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $config(lastdir)]
+    set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $config(lastdir) -title "Select binary to flash"]
     if { [string length $filename] == 0 } {
 	return
     }
