@@ -569,6 +569,17 @@ proc doOpenFile {} {
     return [loadSourceFile $filename]
 }
 
+proc pickFlashProgram {} {
+    global config
+    global BinTypes
+    
+    set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $config(lastdir)]
+    if { [string length $filename] == 0 } {
+	return
+    }
+    set config(flashprogram) $filename
+}
+
 # maybe save the current file; used for compilation
 # if no changes, then do not save
 proc saveFilesForCompile {} {
@@ -867,6 +878,7 @@ menu .mbar.help -tearoff 0
 .mbar.run add command -label "Flash binary file..." -command { doLoadFlash }
 .mbar.run add separator
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
+.mbar.run add command -label "Choose P2 flash program..." -command { pickFlashProgram }
 
 .mbar add cascade -menu .mbar.comport -label Port
 .mbar.comport add radiobutton -label "Default (try to find port)" -variable COMPORT -value " "
