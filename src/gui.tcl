@@ -28,6 +28,10 @@ if { [tk windowingsystem] == "aqua" } {
     set CTRL_PREFIX "Control"
 }
 
+set EXE=""
+if { $tcl_platform(platform) == "Darwin" } {
+    set EXE=".mac"
+}
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start \"Propeller Output %p\""
 } elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
@@ -42,30 +46,32 @@ if { $tcl_platform(platform) == "windows" } {
 proc setShadowP1Defaults {} {
     global shadow
     global WINPREFIX
+    global ROOTDIR
+    global EXE
     
-    set shadow(compilecmd) "\"%D/bin/fastspin\" -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader\" -Dbaudrate=115200 %P \"%B\" -r -t -k"
+    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -l %O %I \"%S\""
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=115200 %P \"%B\" -r -t -k"
     set shadow(flashprogram) ""
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader\" -Dbaudrate=115200 %P \"%B\" -e -k"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=115200 %P \"%B\" -e -k"
 }
 proc setShadowP2aDefaults {} {
     global shadow
     global WINPREFIX
     global ROOTDIR
     
-    set shadow(compilecmd) "\"%D/bin/fastspin\" -2a -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" \"-9%b\" -q -k"
+    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2a -l %O %I \"%S\""
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b230400 \"%B\" \"-9%b\" -q -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"@0=%F,@8000+%B\" -t -k"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b230400 \"@0=%F,@8000+%B\" -t -k"
 }
 proc setShadowP2bDefaults {} {
     global shadow
     global WINPREFIX
     
-    set shadow(compilecmd) "\"%D/bin/fastspin\" -2 -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" \"-9%b\" -q -k"
+    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2 -l %O %I \"%S\""
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b230400 \"%B\" \"-9%b\" -q -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"@0=%F,@8000+%B\" -t -k"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b230400 \"@0=%F,@8000+%B\" -t -k"
 }
 proc copyShadowToConfig {} {
     global config

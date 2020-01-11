@@ -55,11 +55,13 @@ endif
 # binaries to make
 #
 
+EXEFILES=flexgui.exe bin/fastspin.exe bin/loadp2.exe bin/fastspin.mac bin/loadp2.mac
+
 ifdef OPENSPIN
-WIN_BINARIES=flexgui.exe bin/fastspin.exe bin/loadp2.exe bin/proploader.exe
+WIN_BINARIES=$(EXEFILES) bin/proploader.exe
 NATIVE_BINARIES=bin/fastspin bin/loadp2 bin/proploader
 else
-WIN_BINARIES=flexgui.exe bin/fastspin.exe bin/loadp2.exe
+WIN_BINARIES=$(EXEFILES)
 NATIVE_BINARIES=bin/fastspin bin/loadp2
 endif
 
@@ -114,6 +116,7 @@ SIGN ?= ./spin2cpp/sign.dummy.sh
 flexgui.zip: flexgui_base $(WIN_BINARIES)
 	cp -r flexgui.exe flexgui/
 	cp -r bin/*.exe flexgui/bin
+	cp -r bin/*.mac flexgui/bin
 	rm -f flexgui.zip
 	zip -r flexgui.zip flexgui
 
@@ -180,7 +183,7 @@ bin/proploader: proploader-$(OS)-build/bin/proploader
 	mkdir -p bin
 	cp $< $@
 
-bin/loadp2: loadp2/build/loadp2
+bin/loadp2: bin/fastspin loadp2/build/loadp2
 	mkdir -p bin
 	cp $< $@
 
@@ -190,8 +193,8 @@ spin2cpp/build/fastspin:
 proploader-$(OS)-build/bin/proploader: bin/fastspin
 	make -C PropLoader OS=$(OS) SPINCMP=$(OPENSPIN)
 
-loadp2/build/loadp2:
-	make -C loadp2
+loadp2/build/loadp2: bin/fastspin
+	make -C loadp2 P2ASM="`pwd`/bin/fastspin -2 -I`pwd`/spin2cpp/include"
 
 # rules for Win32 binaries
 
@@ -222,6 +225,24 @@ loadp2/build-win32/loadp2.exe:
 
 $(RESOBJ): $(RES_RC)
 	$(WINRC) -o $@ --define STATIC_BUILD --include "$(TCLROOT)/tk/generic" --include "$(TCLROOT)/tcl/generic" --include "$(RESDIR)" "$<"
+
+
+## Rules for Mac binaries
+bin/loadp2.mac: loadp2/build-macosx/loadp2
+	mkdir -p bin
+	cp $< $@
+
+bin/fastspin.mac: spin2cpp/build-macosx/fastspin
+	mkdir -p bin
+	cp $< $@
+
+spin2cpp/build-macosx/fastspin:
+	make -C spin2cpp CROSS=macosx
+
+loadp2/build-macosx/loadp2:
+	make -C loadp2 CROSS=macosx
+
+## Other rules
 
 src/version.tcl: version.inp spin2cpp/version.h
 	cpp -xc++ -DTCL_SRC < version.inp > $@
