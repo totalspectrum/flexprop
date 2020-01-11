@@ -1032,9 +1032,12 @@ proc doSelectBottomFont {} {
 	tk fontchooser configure -parent . -font "$config(botfont)" -command resetBottomFont
 	tk fontchooser show
     } else {
-	set config(botfont) $fnt
-	.p.bot.txt configure -font $fnt
-	.editopts.bot.lb configure -font $font
+	set fnt [choosefont $curfont "Command output font"]
+	if { "$fnt" ne "" } {
+	    set config(botfont) $fnt
+	    .p.bot.txt configure -font $fnt
+	    .editopts.bot.lb configure -font $font
+	}
     }
 }
 
