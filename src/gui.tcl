@@ -58,6 +58,7 @@ proc setShadowP2aDefaults {} {
     global shadow
     global WINPREFIX
     global ROOTDIR
+    global EXE
     
     set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2a -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b230400 \"%B\" \"-9%b\" -q -k"
@@ -67,6 +68,8 @@ proc setShadowP2aDefaults {} {
 proc setShadowP2bDefaults {} {
     global shadow
     global WINPREFIX
+    global ROOTDIR
+    global EXE
     
     set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2 -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b230400 \"%B\" \"-9%b\" -q -k"
