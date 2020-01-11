@@ -259,7 +259,7 @@ board/P2ES_sdcard.bin: board/sdcard/sdboot.binary
 	mv board/sdcard/sdboot.binary board/P2ES_sdcard.bin
 
 board/sdcard/sdboot.binary: bin/fastspin board/sdcard
-	(make -C board/sdcard CC="`pwd`/bin/fastspin -2 -I`pwd`/spin2cpp/include")
+	(make -C board/sdcard P2CC="`pwd`/bin/fastspin -2 -I`pwd`/spin2cpp/include")
 	rm -f board/sdcard/*.p2asm
 
 board/P2ES_flashloader.spin2: loadp2/board/P2ES_flashloader.spin2
