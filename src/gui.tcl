@@ -28,9 +28,9 @@ if { [tk windowingsystem] == "aqua" } {
     set CTRL_PREFIX "Control"
 }
 
-set EXE=""
+set EXE ""
 if { $tcl_platform(platform) == "Darwin" } {
-    set EXE=".mac"
+    #    set EXE=".mac"
 }
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start \"Propeller Output %p\""
