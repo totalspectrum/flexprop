@@ -64,6 +64,7 @@ proc setShadowP2bDefaults {} {
     
     set shadow(compilecmd) "\"%D/bin/fastspin\" -2 -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" \"-9%b\" -q -k"
+    set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"@0=%F,@8000+%B\" -t -k"
 }
 proc copyShadowToConfig {} {
