@@ -82,6 +82,7 @@ proc copyShadowToConfig {} {
     set config(compilecmd) $shadow(compilecmd)
     set config(runcmd) $shadow(runcmd)
     set config(flashcmd) $shadow(flashcmd)
+    set config(flashprogram) $shadow(flashprogram)
     set config(autoreload) 0
     checkPropVersion
 }
