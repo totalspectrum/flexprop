@@ -183,7 +183,7 @@ bin/proploader: proploader-$(OS)-build/bin/proploader
 	mkdir -p bin
 	cp $< $@
 
-bin/loadp2: bin/fastspin loadp2/build/loadp2
+bin/loadp2: loadp2/build/loadp2
 	mkdir -p bin
 	cp $< $@
 

@@ -1027,6 +1027,7 @@ proc doSelectFont {} {
 
 proc doSelectBottomFont {} {
     global config
+    set curfont $config(font)
     set version [info tclversion]
     
     if { $version > 8.5 } {
@@ -1037,7 +1038,7 @@ proc doSelectBottomFont {} {
 	if { "$fnt" ne "" } {
 	    set config(botfont) $fnt
 	    .p.bot.txt configure -font $fnt
-	    .editopts.bot.lb configure -font $font
+	    .editopts.bot.lb configure -font $fnt
 	}
     }
 }
