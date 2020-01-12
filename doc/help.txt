@@ -29,18 +29,11 @@ The Edit menu is again pretty self-explanatory. The Undo/Redo
 functionality is quite limited; only one level of Redo is reliable,
 and trying to Redo again will produce unpredictable results.
 
-The "Editor Options..." dialog allows you to change the way the source
-code editor looks, e.g. changing the font used for the text, or the
-tab settings. It also lets you change the font used for the compiler
-output window, and has an option to automatically load files changed
-by external programs (normally flexgui will prompt you to reload if
-it notices a change).
-
 ### Options
 
-The Options menu lets you change compiler options. For now just the
-optimization level can be changed. The default optimization level is
-probably suitable for most purposes.
+The Options menu lets you change compiler and editor options. For now
+just the optimization level can be changed. The default optimization
+level is probably suitable for most purposes.
 
 "No Optimization" is only recommended for checking for compiler
 bugs (if the program works with no optimization but fails with
@@ -49,6 +42,13 @@ bug).
 
 "Full Optimization" may produce faster code, but it will typically
 consume more resources (including COG memory).
+
+The "Editor Options..." dialog allows you to change the way the source
+code editor looks, e.g. changing the font used for the text, or the
+tab settings. It also lets you change the font used for the compiler
+output window, and has an option to automatically load files changed
+by external programs (normally flexgui will prompt you to reload if
+it notices a change).
 
 ### Commands
 
@@ -60,14 +60,15 @@ will be saved automatically before any compilation.
 Run Binary allows you to choose a binary that you compiled off-line
 (or that was compiled earlier) and run it on the device.
 
-### Port
+### Serial
 
-Presents a menu of ports that may be selected. The default is to tell
-the loader program (loadp2 or proploader) to scan for a port to
-use. But you may override this by selecting a specific serial port.
+Presents a menu of serial port speeds and ports that may be selected.
+The default is to tell the loader program (loadp2 or proploader) to
+scan for a port to use. But you may override this by selecting a
+specific serial port.
 
-If for some reason the port you wish to use is not listed (this will
-be quite common on Mac OS X, for example) then you can still override
+If for some reason the port you wish to use is not listed (this may
+happen on Mac OS X, for example) then you can still override
 the port by configuring the command manually (using the Commands >
 Configure Commands... menu). In the "Run command" replace `%P` with
 `-p COM20` or `-p /dev/tty.usbmodem123` (or whatever the port you wish

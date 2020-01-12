@@ -97,6 +97,7 @@ VPATH=.:spin2cpp/doc
 
 ifdef PANDOC_EXISTS
 PDFFILES=spin2cpp/Fastspin.pdf spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
+HTMLFILES=spin2cpp/Fastspin.html spin2cpp/doc/basic.html spin2cpp/doc/c.html spin2cpp/doc/spin.html
 endif
 
 #
@@ -137,7 +138,7 @@ clean:
 	rm -rf *.exe *.zip
 	rm -rf bin
 	rm -rf board
-	rm -rf $(BINFILES) $(PDFFILES)
+	rm -rf $(BINFILES) $(PDFFILES) $(HTMLFILES)
 	rm -rf spin2cpp/build*
 	rm -rf proploader-*-build
 	rm -rf loadp2/build*
@@ -149,13 +150,14 @@ clean:
 	rm -rf $(RESOBJ)
 	rm -rf pandoc.yml
 
-flexgui_base: src/version.tcl src/makepandoc.tcl $(BOARDFILES) $(PDFFILES)
+flexgui_base: src/version.tcl src/makepandoc.tcl $(BOARDFILES) $(PDFFILES) $(HTMLFILES)
 	mkdir -p flexgui/bin
 	mkdir -p flexgui/doc
 	mkdir -p flexgui/board
 	cp -r README.md License.txt samples src flexgui
 ifdef PANDOC_EXISTS
 	cp -r $(PDFFILES) flexgui/doc
+	cp -r $(HTMLFILES) flexgui/doc
 endif
 	cp -r spin2cpp/doc/* flexgui/doc
 	cp -r loadp2/README.md flexgui/doc/loadp2.md
@@ -172,6 +174,12 @@ endif
 %.pdf: %.md
 	tclsh src/makepandoc.tcl $< > pandoc.yml
 	$(PANDOC) --metadata-file=pandoc.yml -s --toc -f gfm -t latex -o $@ $<
+
+# rules for building PDF files
+
+%.html: %.md
+	tclsh src/makepandoc.tcl $< > pandoc.yml
+	$(PANDOC) --metadata-file=pandoc.yml -s --toc -f gfm -o $@ $<
 
 # rules for native binaries
 
@@ -247,7 +255,7 @@ loadp2/build-macosx/loadp2:
 src/version.tcl: version.inp spin2cpp/version.h
 	cpp -xc++ -DTCL_SRC < version.inp > $@
 
-docs: $(PDFFILES)
+docs: $(PDFFILES) $(HTMLFILES)
 
 docker:
 	docker build -t flexguibuilder .

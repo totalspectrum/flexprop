@@ -29,8 +29,8 @@ if { [tk windowingsystem] == "aqua" } {
 }
 
 set EXE ""
-if { $tcl_platform(platform) == "Darwin" } {
-    #    set EXE=".mac"
+if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/fastspin.mac"] && [file exists "$ROOTDIR/bin/loadp2.mac"] } {
+    set EXE ".mac"
 }
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start \"Propeller Output %p\""
@@ -50,9 +50,10 @@ proc setShadowP1Defaults {} {
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=115200 %P \"%B\" -r -t -k"
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%b %P \"%B\" -r -t -k"
     set shadow(flashprogram) ""
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=115200 %P \"%B\" -e -k"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%b %P \"%B\" -e -k"
+    set shadow(baud) 115200
 }
 proc setShadowP2aDefaults {} {
     global shadow
@@ -61,9 +62,10 @@ proc setShadowP2aDefaults {} {
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2a -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b230400 \"%B\" \"-9%b\" -q -k"
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -q -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b230400 \"@0=%F,@8000+%B\" -t -k"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
+    set shadow(baud) 230400
 }
 proc setShadowP2bDefaults {} {
     global shadow
@@ -72,9 +74,10 @@ proc setShadowP2bDefaults {} {
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2 -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b230400 \"%B\" \"-9%b\" -q -k"
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -q -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b230400 \"@0=%F,@8000+%B\" -t -k"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
+    set shadow(baud) 230400
 }
 proc copyShadowToConfig {} {
     global config
@@ -83,7 +86,7 @@ proc copyShadowToConfig {} {
     set config(runcmd) $shadow(runcmd)
     set config(flashcmd) $shadow(flashcmd)
     set config(flashprogram) $shadow(flashprogram)
-    set config(autoreload) 0
+    set config(baud) $shadow(baud)
     checkPropVersion
 }
 
@@ -95,6 +98,7 @@ set config(font) "TkFixedFont"
 set config(botfont) "courier 10"
 set config(sash) ""
 set config(tabwidth) 8
+set config(autoreload) 0
 set COMPORT " "
 set OPT "-O1"
 set COMPRESS "-z0"
@@ -722,9 +726,11 @@ proc doAbout {} {
     tk_messageBox -icon info -type ok -message "FlexGUI" -detail $aboutMsg
 }
 
-proc doHelp {} {
+proc doHelp { file title } {
     global ROOTDIR
-    loadFileToTab .p.nb.help "$ROOTDIR/doc/help.txt" "Help"
+    
+    #loadFileToTab .p.nb.help "$ROOTDIR/doc/help.txt" "Help"
+    loadFileToTab .p.nb.help $file $title
     makeReadOnly .p.nb.help.txt
 }
 
@@ -874,10 +880,6 @@ menu .mbar.help -tearoff 0
 .mbar.edit add separator
 .mbar.edit add command -label "Find..." -accelerator "$CTRL_PREFIX-F" -command {searchrep [focus] 0}
 .mbar.edit add command -label "Replace..." -accelerator "$CTRL_PREFIX-K" -command {searchrep [focus] 1}
-.mbar.edit add separator
-
-#.mbar.edit add command -label "Select Font..." -command { doSelectFont }
-.mbar.edit add command -label "Editor Options..." -command { doEditorOptions }
 
 .mbar add cascade -menu .mbar.options -label Options
 .mbar.options add radiobutton -label "No Optimization" -variable OPT -value "-O0"
@@ -886,20 +888,28 @@ menu .mbar.help -tearoff 0
 #.mbar.options add separator
 #.mbar.options add radiobutton -label "No Compression" -variable COMPRESS -value "-z0"
 #.mbar.options add radiobutton -label "Compress Code" -variable COMPRESS -value "-z1"
+.mbar.options add separator
+.mbar.options add command -label "Editor Options..." -command { doEditorOptions }
+
 
 .mbar add cascade -menu .mbar.run -label Commands
 .mbar.run add command -label "Compile" -command { doCompile }
 .mbar.run add command -label "Run binary on device..." -command { doLoadRun }
-.mbar.run add command -label "Compile and run" -accelerator "^R" -command { doCompileRun }
+.mbar.run add command -label "Compile and run" -accelerator "$CTRL_PREFIX-R" -command { doCompileRun }
 .mbar.run add separator
-.mbar.run add command -label "Compile and flash" -accelerator "^E" -command { doCompileFlash }
+.mbar.run add command -label "Compile and flash" -accelerator "$CTRL_PREFIX-E" -command { doCompileFlash }
 .mbar.run add command -label "Flash binary file..." -command { doLoadFlash }
 .mbar.run add separator
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
 .mbar.run add command -label "Choose P2 flash program..." -command { pickFlashProgram }
 
-.mbar add cascade -menu .mbar.comport -label Port
-.mbar.comport add radiobutton -label "Default (try to find port)" -variable COMPORT -value " "
+.mbar add cascade -menu .mbar.comport -label Serial
+.mbar.comport add radiobutton -label "115200 baud" -variable config(baud) -value 115200
+.mbar.comport add radiobutton -label "230400 baud" -variable config(baud) -value 230400
+.mbar.comport add radiobutton -label "921600 baud" -variable config(baud) -value 921600
+.mbar.comport add radiobutton -label "2000000 baud" -variable config(baud) -value 2000000
+.mbar.comport add separator
+.mbar.comport add radiobutton -label "Find port automatically" -variable COMPORT -value " "
 
 # search for serial ports using serial::listports (src/checkserial.tcl)
 set serlist [serial::listports]
@@ -924,7 +934,10 @@ foreach v $serlist {
 .mbar.special add command -label "Terminal only" -command { doSpecial "-n" "" }
 
 .mbar add cascade -menu .mbar.help -label Help
-.mbar.help add command -label "Help" -command { doHelp }
+.mbar.help add command -label "GUI" -command { doHelp "$ROOTDIR/doc/help.txt" "Help" }
+.mbar.help add command -label "BASIC Language" -command { launchBrowser "file://$ROOTDIR/doc/basic.html" }
+.mbar.help add command -label "C Language" -command { launchBrowser "file://$ROOTDIR/doc/c.html" }
+.mbar.help add command -label "Spin Language" -command { launchBrowser "file://$ROOTDIR/doc/spin.html" "Spin Language" }
 .mbar.help add separator
 .mbar.help add command -label "About..." -command { doAbout }
 
@@ -1161,7 +1174,7 @@ proc mapPercent {str} {
 	set fullcomport ""
     }
     set bindir [file dirname $BINFILE]
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT "%F" $config(flashprogram) ]
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT "%F" $config(flashprogram) "%r" $config(baud)]
     set result [string map $percentmap $str]
     return $result
 }
@@ -1370,6 +1383,7 @@ set cmddialoghelptext {
     %O = Replace with optimization level
     %p = Replace with port to use
     %P = Replace with port to use prefixed by -p
+    %r = Replace with current baud rate
     %S = Replace with current source file name
     %% = Insert a % character
 }
