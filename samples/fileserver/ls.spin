@@ -2,6 +2,13 @@
 '' simple program to display a directory listing from
 '' the host file system
 ''
+#ifndef __P2__
+#error this demo only works on the P2
+#endif
+#ifndef _BAUD
+#define _BAUD 230_400
+#endif
+
 CON
   _clkfreq = 180_000_000
   BUFSIZ = 128
@@ -15,7 +22,7 @@ VAR
   byte buf[BUFSIZ]
   
 PUB demo | r
-  ser.start(63, 62, 0, 230_400)
+  ser.start(63, 62, 0, _BAUD)
   ser.printf("file system demo in Spin\n")
   r := fs.fs_init(@sendrecv)
   if r < 0
@@ -106,4 +113,3 @@ PUB dumphex(buf, len) | i
     buf++
   ser.tx(13)
   ser.tx(10)
-

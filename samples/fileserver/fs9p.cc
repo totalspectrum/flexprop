@@ -318,7 +318,7 @@ int fs_read(fs_file *f, uint8_t *buf, int count)
     return totalread;
 }
 
-int fs_write(fs_file *f, uint8_t *buf, int count)
+int fs_write(fs_file *f, const uint8_t *buf, int count)
 {
     uint8_t *ptr;
     int totalread = 0;

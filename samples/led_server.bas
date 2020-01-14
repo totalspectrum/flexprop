@@ -9,6 +9,10 @@
 '' specifies which pin it should blink, and how long to wait between
 '' blinks. This can be changed "on the fly".
 ''
+#ifndef __P2__
+#error this demo is for P2 only
+#endif
+
 const _clkfreq = 160_000_000
 
 ''
@@ -75,7 +79,9 @@ sub update_mbox(box as mailbox, pin as integer, delay as uinteger)
 end sub
 
 '' main program
-
+#ifdef _BAUD
+    _setbaud(_BAUD)
+#endif    
     print "LED test server..."
     
     '' start up our COGS

@@ -3,6 +3,13 @@
 // reads the "fs9p.h" file from this directory
 //
 
+#ifndef __P2__
+#error this demo is for P2 only
+#endif
+#ifndef _BAUD
+#define _BAUD 230400
+#endif
+
 #include <string.h>
 #include <stdint.h>
 #include "fs9p.h"
@@ -82,7 +89,7 @@ int main()
     int r;
     char buf[80];
     _clkset(0x010007f8, 160000000);
-    ser.start(63, 62, 0, 230400);
+    ser.start(63, 62, 0, _BAUD);
     ser.printf("9p test program...\r\n");
     ser.printf("Initializing...\r\n");
     r = fs_init(serSendRecv);

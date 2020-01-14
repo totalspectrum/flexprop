@@ -49,10 +49,10 @@ proc setShadowP1Defaults {} {
     global ROOTDIR
     global EXE
     
-    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%b %P \"%B\" -r -t -k"
+    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -D_BAUD=%r -l %O %I \"%S\""
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -r -t -k"
     set shadow(flashprogram) ""
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%b %P \"%B\" -e -k"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
     set shadow(baud) 115200
 }
 proc setShadowP2aDefaults {} {
@@ -61,7 +61,7 @@ proc setShadowP2aDefaults {} {
     global ROOTDIR
     global EXE
     
-    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2a -l %O %I \"%S\""
+    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2a -l -D_BAUD=%r %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -q -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
@@ -73,7 +73,7 @@ proc setShadowP2bDefaults {} {
     global ROOTDIR
     global EXE
     
-    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2 -l %O %I \"%S\""
+    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2 -l -D_BAUD=%r %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -q -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
@@ -376,9 +376,9 @@ proc tagerrors { w } {
 }
 
 set SpinTypes {
-    {{FastSpin files}   {.bas .bi .c .h .spin2 .spin .spinh} }
+    {{FastSpin files}   {.bas .bi .c .cc .cpp .h .spin2 .spin .spinh} }
     {{Interpreter files}   {.py .lsp .fth} }
-    {{C files}   {.c .cpp .cxx .cc .h .hh .hpp} }
+    {{C/C++ files}   {.c .cpp .cxx .cc .h .hh .hpp} }
     {{All files}    *}
 }
 
@@ -1443,8 +1443,7 @@ proc doRunOptions {} {
     grid .runopts.b.runtext -sticky nsew
     grid .runopts.c.flashtext -sticky nsew
 
-    grid .runopts.change.p2a .runopts.change.p1 -sticky nsew
-    grid .runopts.change.p2b -sticky nsew
+    grid .runopts.change.p2b .runopts.change.p2a .runopts.change.p1 -sticky nsew
     grid .runopts.end.ok .runopts.end.cancel -sticky nsew
     
     grid columnconfigure .runopts.a 0 -weight 1

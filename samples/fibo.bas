@@ -42,6 +42,10 @@ end function
 
 dim as uinteger cycles, i
 
+#ifdef _BAUD
+_setbaud(_BAUD)
+#endif
+
 pause
 print "BASIC fibo demo"
 

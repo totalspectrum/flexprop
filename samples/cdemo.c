@@ -16,7 +16,10 @@
 // p2es_clock.h is just a convenience header
 #define P2_TARGET_MHZ 160
 #include "sys/p2es_clock.h"
-#define BAUD 230400
+
+#ifndef _BAUD
+#define _BAUD 230400
+#endif
 
 #define PIN 56
 
@@ -26,7 +29,7 @@ void main()
     unsigned i = 0;
 
     clkset(_SETFREQ, _CLOCKFREQ);
-    _setbaud(BAUD);
+    _setbaud(_BAUD);
     printf("fastspin C demo: clockmode is $%x, clock frequency %u Hz\n", _SETFREQ, _CLOCKFREQ);
     DIRB |= pinmask; // set pins as output
     for(;;) {

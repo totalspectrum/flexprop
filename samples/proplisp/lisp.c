@@ -12,6 +12,9 @@
 #define P2_TARGET_MHZ 160
 #include "sys/p2es_clock.h"
 #define ARENA_SIZE 32768
+#ifndef _BAUD
+#define _BAUD 230400
+#endif
 #else
 #define ARENA_SIZE 4096
 #endif
@@ -393,7 +396,7 @@ main(int argc, char **argv)
 #ifdef __P2__
     clkset(_SETFREQ, _CLOCKFREQ);
     //clkset(0x10c3f04, 160000000);
-    FDS_START(63, 62, 0, 230400);
+    FDS_START(63, 62, 0, _BAUD);
     pausems(200);
 #else
     FDS_START(31, 30, 0, 115200);
