@@ -2,22 +2,26 @@
 ' simple smart pin serial demo for P2 Eval board
 ' The "smart pin" code is in include/spin/SmartSerial.spin
 '
+#ifndef _BAUD
+#define _BAUD 230_400
+#endif
+
 CON
   _clkfreq = 160_000_000
-  baud = 230_400
+  baud = _BAUD
 
 OBJ
   ser: "spin/SmartSerial"
 
 VAR
-BYTE name[128]
+  BYTE name[128]
 
 PUB demo
   ser.start(63, 62, 0, baud)
   ser.printf("Hello, there! What is your name? ")
   getname
   ser.printf("Nice to meet you %s\n", @name)
-  pausems(1000)
+  waitms(1000)
 
 PUB getname | c, i
   i := 0

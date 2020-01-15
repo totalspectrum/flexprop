@@ -8,9 +8,16 @@
 #define P2_TARGET_MHZ 160
 #include "sys/p2es_clock.h"
 #define ARENA_SIZE 32768
+#ifndef _BAUD
+#define _BAUD 230400
+#endif
 #else
+#ifndef _BAUD
+#define _BAUD 115200
+#endif
 #define ARENA_SIZE 12000
 #endif
+
 
 int inchar() {
     return -1;
@@ -33,8 +40,8 @@ static intptr_t getcnt_fn()
 // wait for ms millisconds
 static intptr_t waitms_fn(intptr_t ms)
 {
-#ifdef __FLEXC__
-    pausems(ms);
+#ifdef __propeller2__
+    _waitms(ms);
 #else    
     usleep(ms * 1000);
 #endif    
@@ -76,8 +83,8 @@ main(int argc, char **argv)
 
 #ifdef __P2__
     clkset(_SETFREQ, _CLOCKFREQ);
-    _setbaud(230400);
-    pausems(100);
+    _setbaud(_BAUD);
+    _waitms(100);
 #endif
     outstr("proplisp recursive fibo test\n");
     err = Lisp_Init(arena, sizeof(arena));

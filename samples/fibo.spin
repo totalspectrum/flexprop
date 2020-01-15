@@ -22,7 +22,7 @@ OBJ
 
 PUB demo | i, n, t
   ser.start_default(baud)
-  pausems(100)
+  _waitms(100)
   repeat i from 1 to 10 step 1
     t := CNT
     n := fiborec(i)

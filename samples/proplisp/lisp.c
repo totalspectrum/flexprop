@@ -158,7 +158,7 @@ static intptr_t getcnt_fn()
 static intptr_t waitms_fn(intptr_t ms)
 {
 #ifdef __FLEXC__
-    pausems(ms);
+    _waitms(ms);
 #else    
     usleep(ms * 1000);
 #endif    
@@ -397,7 +397,7 @@ main(int argc, char **argv)
     clkset(_SETFREQ, _CLOCKFREQ);
     //clkset(0x10c3f04, 160000000);
     FDS_START(63, 62, 0, _BAUD);
-    pausems(200);
+    _waitms(200);
 #else
     FDS_START(31, 30, 0, 115200);
 #endif

@@ -12,6 +12,7 @@
 
 #include <string.h>
 #include <stdint.h>
+#include <propeller2.h>
 #include "fs9p.h"
 
 struct __using("spin/SmartSerial") ser;
@@ -94,10 +95,10 @@ int main()
     ser.printf("Initializing...\r\n");
     r = fs_init(serSendRecv);
 //    ser.printf("Init returned %d\n", r);
-//    pausems(1000);
+//    _waitms(1000);
     if (r == 0) {
         r = fs_open(&testfile, (char *)"fs9p.h", 0);
-        pausems(10);
+        _waitms(10);
         ser.printf("fs_open returned %d\r\n", r);
     }
     if (r == 0) {
@@ -105,7 +106,7 @@ int main()
         int c;
         // read the file and show it
         ser.printf("FILE CONTENTS:\r\n");
-        pausems(100);
+        _waitms(100);
         do {
             r = fs_read(&testfile, buf, sizeof(buf));
             for (i = 0; i < r; i++) {
@@ -116,7 +117,7 @@ int main()
                     ser.tx(c);
             }
         } while (r > 0);
-        pausems(10);
+        _waitms(10);
         ser.printf("EOF\r\n");
         fs_close(&testfile);
     }
