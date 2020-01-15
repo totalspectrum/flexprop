@@ -14,24 +14,38 @@ Copyright 2018-2020 Total Spectrum Software Inc.
 There is no warranty and no guarantee that
 output will be correct.   
 "
+
+# some Tcl/Tk config
+# make sure tcl_wordchars is set
+catch {tcl_endOfWord}
+# change it
+set tcl_wordchars {[[:alnum:]_]}
+set tcl_nonwordchars {[^[:alnum:]_]}
 #
 # global variables
-# filenames($w) gives the file name in window $w, for all of the various tabs
-# filetimes($w) gives the last modified time for that file
+# ROOTDIR was set by our caller to be the directory from which all other
+# files are relative (usually the location of the program)
 #
 
+# config file name
 set CONFIG_FILE "$ROOTDIR/.flexgui.config"
 
+# prefix for shortcut keys (Command on Mac, Control elsewhere)
 if { [tk windowingsystem] == "aqua" } {
     set CTRL_PREFIX "Command"
 } else {
     set CTRL_PREFIX "Control"
 }
 
+# executable prefix; on Windows .exe is automatically appended, so we don't
+# have to explicitly specify it
+
 set EXE ""
 if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/fastspin.mac"] && [file exists "$ROOTDIR/bin/loadp2.mac"] } {
     set EXE ".mac"
 }
+
+# prefix for starting a command in a window
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start \"Propeller Output %p\""
 } elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
@@ -41,6 +55,30 @@ if { $tcl_platform(platform) == "windows" } {
 } else {
     set WINPREFIX "xterm -fs 14 -T \"Propeller Output %p\" -e"
 }
+
+# default configuration variables
+# the config() array is written to the config file and read
+# back at run time
+
+set config(library) "$ROOTDIR/include"
+set config(liblist) [list $config(library)]
+set config(spinext) ".spin"
+set config(lastdir) [pwd]
+set config(font) "TkFixedFont"
+set config(botfont) "courier 10"
+set config(sash) ""
+set config(tabwidth) 8
+set config(autoreload) 0
+set COMPORT " "
+set OPT "-O1"
+set COMPRESS "-z0"
+set PROP_VERSION ""
+set config(showlinenumbers) 1
+
+#
+# filenames($w) gives the file name in window $w, for all of the various tabs
+# filetimes($w) gives the last modified time for that file
+#
 
 # provide some default settings
 proc setShadowP1Defaults {} {
@@ -89,21 +127,6 @@ proc copyShadowToConfig {} {
     set config(baud) $shadow(baud)
     checkPropVersion
 }
-
-set config(library) "$ROOTDIR/include"
-set config(liblist) [list $config(library)]
-set config(spinext) ".spin"
-set config(lastdir) [pwd]
-set config(font) "TkFixedFont"
-set config(botfont) "courier 10"
-set config(sash) ""
-set config(tabwidth) 8
-set config(autoreload) 0
-set COMPORT " "
-set OPT "-O1"
-set COMPRESS "-z0"
-set PROP_VERSION ""
-set config(showlinenumbers) 1
 
 proc checkPropVersion {} {
     global config
@@ -296,6 +319,7 @@ proc loadFileToWindow { fname win } {
     $win delete 1.0 end
     $win insert end $file_data
     $win edit modified false
+    $win mark set insert 1.0
     set filetimes($fname) [file mtime $fname]
     focus $win
 }
@@ -502,7 +526,7 @@ proc setupFramedText {w} {
     # for some reason on my linux system the selection doesn't show
     # up correctly
     if { [tk windowingsystem] == "x11" } {
-	$w.txt configure -selectbackground lightblue
+	$w.txt configure -selectbackground blue -selectforeground white
     }
 }
 
