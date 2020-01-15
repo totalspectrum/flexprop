@@ -498,6 +498,12 @@ proc setupFramedText {w} {
     grid columnconfigure $w $w.txt -weight 1
     bind $w.txt <$CTRL_PREFIX-f> $searchcmd
     bind $w.txt <$CTRL_PREFIX-k> $replacecmd
+
+    # for some reason on my linux system the selection doesn't show
+    # up correctly
+    if { [tk windowingsystem] == "x11" } {
+	$w.txt configure -selectbackground lightblue
+    }
 }
 
 #
