@@ -490,7 +490,7 @@ proc createNewTab {} {
     #.p.bot.txt delete 1.0 end
     set filenames($w) ""
     setupFramedText $w
-    #setHighlightingSpin $w.txt
+    setHighlightingForFile $w.txt ""
     setfont $w.txt $config(font)
     .p.nb add $w
     .p.nb tab $w -text "New File"
@@ -570,7 +570,7 @@ proc loadFileToTab {w filename title} {
     } else {
 	setupFramedText $w
 	.p.nb add $w -text "$title"
-	#setHighlightingSpin $w.txt
+	setHighlightingForFile $w.txt $filename
     }
 
     
@@ -820,6 +820,28 @@ proc doClickOnError {coord} {
 
 #
 # set up syntax highlighting for a given ctext widget
+#
+
+proc setHighlightingForFile {w fname} {
+#    setHighlightingIncludes $w
+}
+
+#
+# version that just highlights includes
+#
+proc setHighlightingIncludes {w} {
+    set color(links) blue
+#    set includeRE {(?:#include\ [^<]*<)([^>]+)}
+    set includeRE {(?:#include\ [^\"]*\")([^\"]+)}
+#    set usingRE {(?:using\([^\"]*\")([^\"]+)}
+#    set implRE {(?:_IMPL\([^\"]*\")([^\"]+)}
+    ctext::addHighlightClassForRegexp $w links $color(links) $includeRE
+    $w tag configure links -underline true
+}
+
+#
+# Spin language version
+#
 proc setHighlightingSpin {w} {
     set color(comments) grey
     set color(keywords) DarkBlue

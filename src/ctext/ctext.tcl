@@ -935,7 +935,6 @@ proc ctext::highlight {win start end {afterTriggered 0}} {
     foreach {ichar tagInfo} [array get highlightSpecialCharsAr] {
 	set si $start
 	foreach {tagClass color} $tagInfo break
-
 	while 1 {
 	    set res [$twin search -- $ichar $si $end]
 	    if {"" == $res} {
@@ -958,12 +957,35 @@ proc ctext::highlight {win start end {afterTriggered 0}} {
     foreach {tagClass tagInfo} [array get highlightRegexpAr] {
 	set si $start
 	foreach {re color} $tagInfo break
+	set subre [string range $re 0 2]
+	if { $subre == {(?:} } {
+	    set subre [string range $re 3 end]
+	    set subreend [string first ")" $subre ]
+	    if { $subreend > 0 } {
+		set subre [string range $subre 0 [expr $subreend - 1]]
+		set afterre [string range $re [expr $subreend + 4] end]
+	    } else {
+		set subre ""
+		set afterre ""
+	    }
+	} else {
+	    set subre ""
+	}
 	while 1 {
 	    set res [$twin search -count length -regexp -- $re $si $end]
 	    if {"" == $res} {
 		break
 	    }
-
+	    if {"" != $afterre} {
+#		puts "subre=$subre afterre==$afterre"
+		set res [$twin search -count len2 -regexp -- $subre $res $end]
+		if {"" == $res} {
+		    break
+		}
+#		puts "len2=$len2"
+		set length [expr $length - $len2]
+		set res [$twin index "$res + $len2 chars"]
+	    }
 	    set wordEnd [$twin index "$res + $length chars"]
 	    $twin tag add $tagClass $res $wordEnd
 	    $twin tag configure $tagClass -foreground $color
