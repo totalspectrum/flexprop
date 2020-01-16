@@ -100,7 +100,7 @@ proc setShadowP2aDefaults {} {
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2a -l -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -q -k"
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
     set shadow(baud) 230400
@@ -112,7 +112,7 @@ proc setShadowP2bDefaults {} {
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2 -l -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -q -k"
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
     set shadow(baud) 230400
@@ -747,7 +747,7 @@ proc scriptSendCurFile {} {
 #    if { $fname == "" } {
 #	return ""
 #    }
-    return "-e \"pausems(1500) textfile($fname)\""
+    return "-e \'pausems(1500) textfile($fname)\'"
 }
 	
 # show the about message
