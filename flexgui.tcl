@@ -1,4 +1,4 @@
-#!/usr/bin/wish
+#!/usr/bin/env wish
 #
 # Simple GUI for Spin
 # Copyright 2018-2019 Total Spectrum Software

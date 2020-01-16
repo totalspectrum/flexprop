@@ -55,7 +55,7 @@ endif
 # binaries to make
 #
 
-EXEFILES=flexgui.exe bin/fastspin.exe bin/loadp2.exe bin/fastspin.mac bin/loadp2.mac
+EXEFILES=flexgui.exe bin/fastspin.exe bin/loadp2.exe bin/fastspin.mac bin/loadp2.mac bin/mac_terminal.sh
 
 ifdef OPENSPIN
 WIN_BINARIES=$(EXEFILES) bin/proploader.exe
@@ -236,6 +236,9 @@ $(RESOBJ): $(RES_RC)
 
 
 ## Rules for Mac binaries
+bin/mac_terminal.sh: mac_scripts/mac_terminal.sh
+	cp $< $@
+
 bin/loadp2.mac: loadp2/build-macosx/loadp2
 	mkdir -p bin
 	cp $< $@
