@@ -3,7 +3,7 @@
 # from https://wiki.tcl-lang.org/page/Invoking+browsers
 # written by Cameron Laird
 #
-package require Tcl 8.5
+#package require Tcl 8.5
 proc launchBrowser url {
     global tcl_platform
 
