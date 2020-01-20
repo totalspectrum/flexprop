@@ -41,3 +41,5 @@ upython: MicroPython interpreter for P2
   menu or the `Run Binary` button. See the README for some information
   on micropython features.
   
+vga: Simple VGA text
+  This is a demo of ANSI compatible VGA text output.
