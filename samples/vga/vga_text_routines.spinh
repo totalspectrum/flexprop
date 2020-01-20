@@ -410,13 +410,6 @@ PRI set_graphic_rendition(i) | code
     return
   code := fetcharg(i++)
 
-{{  
-  a := hexdig(code & $F)
-  b := hexdig((code >> 4) & $F)
-  glyphat(41, 10, b, $ffffff00, $00202000)
-  glyphat(42, 10, a, $ffffff00, $00202000)
-  pausems(1000)
-}}
   case code
     0:
       reset_graphics_state
