@@ -989,7 +989,7 @@ foreach v $serlist {
 .mbar.help add command -label "GUI" -command { doHelp "$ROOTDIR/doc/help.txt" "Help" }
 .mbar.help add command -label "BASIC Language" -command { launchBrowser "file://$ROOTDIR/doc/basic.html" }
 .mbar.help add command -label "C Language" -command { launchBrowser "file://$ROOTDIR/doc/c.html" }
-.mbar.help add command -label "Spin Language" -command { launchBrowser "file://$ROOTDIR/doc/spin.html" "Spin Language" }
+.mbar.help add command -label "Spin Language" -command { launchBrowser "file://$ROOTDIR/doc/spin.html" }
 .mbar.help add separator
 .mbar.help add command -label "About..." -command { doAbout }
 
