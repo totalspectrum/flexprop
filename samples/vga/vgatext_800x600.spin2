@@ -21,7 +21,7 @@ DAT
 '
 	long
 fontdata
-	file "unscii-16.bin"
+	file "unscii-16.fnt"
 
 VAR
     long params[40]
