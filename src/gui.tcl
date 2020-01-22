@@ -747,7 +747,7 @@ proc scriptSendCurFile {} {
 #    if { $fname == "" } {
 #	return ""
 #    }
-    return "-e \'pausems(1500) textfile($fname)\'"
+    return "-epausems(1500)textfile($fname)"
 }
 	
 # show the about message
@@ -779,7 +779,7 @@ proc doSpecial {name extraargs} {
 	set BINFILE "$ROOTDIR/$name"
     }
     .p.bot.txt delete 1.0 end
-    doJustRun $extraargs
+    doJustRun "$extraargs"
     return 1
 }
 
@@ -1338,7 +1338,7 @@ proc doListing {} {
 
 proc doJustRunCmd {cmdstr extraargs} {
     if { $extraargs ne "" } {
-	set cmdstr [concat $cmdstr " " $extraargs]
+	set cmdstr [concat "$cmdstr" " " "$extraargs"]
     }
     .p.bot.txt insert end "$cmdstr\n"
     
