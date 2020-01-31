@@ -957,38 +957,27 @@ proc ctext::highlight {win start end {afterTriggered 0}} {
     foreach {tagClass tagInfo} [array get highlightRegexpAr] {
 	set si $start
 	foreach {re color} $tagInfo break
-	set subre [string range $re 0 2]
-	if { $subre == {(?:} } {
-	    set subre [string range $re 3 end]
-	    set subreend [string first ")" $subre ]
-	    if { $subreend > 0 } {
-		set subre [string range $subre 0 [expr $subreend - 1]]
-		set afterre [string range $re [expr $subreend + 4] end]
-	    } else {
-		set subre ""
-		set afterre ""
-	    }
-	} else {
-	    set subre ""
-	}
 	while 1 {
 	    set res [$twin search -count length -regexp -- $re $si $end]
 	    if {"" == $res} {
 		break
 	    }
-	    if {"" != $afterre} {
-#		puts "subre=$subre afterre==$afterre"
-		set res [$twin search -count len2 -regexp -- $subre $res $end]
-		if {"" == $res} {
-		    break
-		}
-#		puts "len2=$len2"
-		set length [expr $length - $len2]
-		set res [$twin index "$res + $len2 chars"]
-	    }
+	    set endres "$res + $length chars"
+	    set thisMatch [$twin get $res $endres]
+	    ##puts "thisMatch=$thisMatch"
+	    # get more info about what matched
+	    set matchList [regexp -inline $re $thisMatch]
+	    set matchList [lreplace $matchList 0 0]
+	    ##puts "matchList=$matchList"
+	    set m [concat {*}$matchList]
+	    ##puts "m=$m"
+	    set mi [string first $m $thisMatch]
 	    set wordEnd [$twin index "$res + $length chars"]
-	    $twin tag add $tagClass $res $wordEnd
-	    $twin tag configure $tagClass -foreground $color
+	    if { $mi != -1 } {
+		set wordStart [$twin index "$res + $mi chars"]
+		$twin tag add $tagClass $wordStart $wordEnd
+		$twin tag configure $tagClass -foreground $color
+	    }
 	    set si $wordEnd
 
 	    incr numTimesLooped

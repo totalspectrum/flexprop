@@ -80,6 +80,20 @@ set config(showlinenumbers) 1
 # filetimes($w) gives the last modified time for that file
 #
 
+proc getWindowFile { w } {
+    global filenames
+    while { "$w" != "" } {
+	if { [info exists filenames($w)] } {
+	    #puts "return $filenames($w)"
+	    return $filenames($w)
+	}
+	set w [winfo parent $w]
+    }
+    #puts "getWindowFile: $w: no answer"
+    #puts [parray filenames]
+    return ""
+}
+
 # provide some default settings
 proc setShadowP1Defaults {} {
     global shadow
@@ -369,11 +383,11 @@ proc saveFileFromWindow { fname win } {
 proc tagerrors { w } {
     $w tag remove errtxt 0.0 end
     $w tag remove warntxt 0.0 end
-    $w tag remove errlink 0.0 end
+    $w tag remove hyperlink 0.0 end
     
     $w tag configure errtxt -foreground red
     $w tag configure warntxt -foreground orange
-    $w tag configure errlink -foreground blue -underline true
+    $w tag configure hyperlink -foreground blue -underline true
 
     # set current position at beginning of file
     set cur 1.0
@@ -382,7 +396,7 @@ proc tagerrors { w } {
 	set cur [$w search -count length "error:" $cur end]
 	if {$cur eq ""} {break}
 	$w tag add errtxt $cur "$cur lineend"
-	$w tag add errlink "$cur linestart" "$cur - 2 chars"
+	$w tag add hyperlink "$cur linestart" "$cur - 2 chars"
 	set cur [$w index "$cur + $length char"]
     }
 
@@ -393,7 +407,7 @@ proc tagerrors { w } {
 	set cur [$w search -count length "warning:" $cur end]
 	if {$cur eq ""} {break}
 	$w tag add warntxt $cur "$cur lineend"
-	$w tag add errlink "$cur linestart" "$cur - 2 chars"
+	$w tag add hyperlink "$cur linestart" "$cur - 2 chars"
 	set cur [$w index "$cur + $length char"]
     }
     
@@ -585,9 +599,31 @@ proc loadFileToTab {w filename title} {
     set filetimes($filename) [file mtime $filename]
 }
 
+proc findFileOnPath { filename startdir } {
+    global config
+    # normalize file name
+    if { [file pathtype $filename] != "absolute" } {
+	# first check startdir
+	set s [file join $startdir $filename]
+	if { [file exists $s] } {
+	    return [file normalize $s]
+	}
+	# look for the file name down the include path
+	foreach d $config(liblist) {
+	    set s [file join $d $filename]
+	    if { [file exists $s] } {
+		set filename [file normalize $s]
+		break
+	    }
+	}
+    }
+    return $filename
+}
+
 proc loadSourceFile { filename } {
     global filenames
-
+    
+    # fetch
     set w [getTabFor $filename]
     if { $w ne "" } {
 	.p.nb select $w
@@ -786,25 +822,38 @@ proc doSpecial {name extraargs} {
 #
 # parameter is text coordinates like 2.72
 #
-proc doClickOnError {coord} {
-    set w .p.bot.txt
+proc doClickOnError { w coord } {
+    global filenames
+    
     set first "$coord linestart"
     set last "$coord lineend"
-    set linkptr [$w tag prevrange errlink $coord]
+    set linkptr [$w tag prevrange hyperlink $coord]
     set link1 [lindex $linkptr 0]
     set link2 [lindex $linkptr 1]
-    set linedata [.p.bot.txt get $link1 $link2]
+    set linedata [$w get $link1 $link2]
     set colonptr [string last ":" $linedata]
 
-    if { $colonptr eq "" } {
-	set fname ""
+    #puts "doClickOnError $w $coord"
+    #puts "first=|$first|"
+    #puts "linkptr=|$linkptr|"
+    #puts "linedata=|$linedata|"
+    #puts "colonptr=|$colonptr|"
+
+    if { $colonptr == -1 } {
+	set fname "$linedata"
 	set line ""
     } else {
 	set fname [string range $linedata 0 [expr $colonptr - 1]]
 	set line [string range $linedata [expr $colonptr + 1] end]
     }
-    #tk_messageBox -message "data: <$linedata> fname: <$fname> line: <$line>" -type ok
     if { $fname != "" } {
+	set startdir [getWindowFile $w]
+	if { $startdir != "" } {
+	    set startdir [file dirname $startdir]
+	} else {
+	    set startdir [file normalize "."]
+	}
+	set fname [findFileOnPath $fname $startdir]
 	set w [loadSourceFile $fname ]
 	set t $w.txt
 	$t tag config hilite -background yellow
@@ -813,8 +862,10 @@ proc doClickOnError {coord} {
 	    $t tag remove hilite $from $to
 	}
 	$t tag config hilite -background yellow
-	$t see $line.0
-	$t tag add hilite $line.0 $line.end
+	if { $line != "" } {
+	    $t see $line.0
+	    $t tag add hilite $line.0 $line.end
+	}
     }
 }
 
@@ -823,20 +874,24 @@ proc doClickOnError {coord} {
 #
 
 proc setHighlightingForFile {w fname} {
-#    setHighlightingIncludes $w
+    setHyperLinkResponse $w
+    setHighlightingIncludes $w
 }
 
 #
 # version that just highlights includes
 #
 proc setHighlightingIncludes {w} {
-    set color(links) blue
-#    set includeRE {(?:#include\ [^<]*<)([^>]+)}
-    set includeRE {(?:#include\ [^\"]*\")([^\"]+)}
-#    set usingRE {(?:using\([^\"]*\")([^\"]+)}
-#    set implRE {(?:_IMPL\([^\"]*\")([^\"]+)}
-    ctext::addHighlightClassForRegexp $w links $color(links) $includeRE
-    $w tag configure links -underline true
+    set color(hyperlink) blue
+    set include1RE {(?:#include\ [^<]*<)([^>]+)}
+    set include2RE {(?:#include\ [^\"]*\")([^\"]+)}
+    set using1RE {(?:__using\([^\"]*\")([^\"]+)}
+    set using2RE {(?:class using[^\"]*\")([^\"]+)}
+    set implRE {(?:_IMPL\([^\"]*\")([^\"]+)}
+
+    set fullRE "$include1RE|$include2RE|$implRE|$using1RE|$using2RE"
+    ctext::addHighlightClassForRegexp $w hyperlink $color(hyperlink) $fullRE
+    $w tag configure hyperlink -underline true
 }
 
 #
@@ -1052,12 +1107,16 @@ if {[tk windowingsystem]=="aqua"} {
     bind . <3> "tk_popup .popup1 %X %Y"
 }
 
-#bind .p.bot.txt <Double-1> { doClickOnError "[%W index @%x,%y]" }
-set pbotcursor [.p.bot.txt cget -cursor]
+proc setHyperLinkResponse { w } {
 
-.p.bot.txt tag bind errlink <Enter> { .p.bot.txt configure -cursor fleur }
-.p.bot.txt tag bind errlink <Leave> { .p.bot.txt configure -cursor $pbotcursor }
-.p.bot.txt tag bind errlink <ButtonPress> { doClickOnError "[%W index @%x,%y]" }
+    set textcurs [::ttk::cursor text]
+    set linkcurs [::ttk::cursor link]
+    $w tag bind hyperlink <Enter> "$w configure -cursor $linkcurs"
+    $w tag bind hyperlink <Leave> "$w configure -cursor $textcurs"
+    $w tag bind hyperlink <ButtonPress> { doClickOnError %W "[%W index @%x,%y]" }
+}
+
+setHyperLinkResponse .p.bot.txt
 
 wm protocol . WM_DELETE_WINDOW {
     exitProgram

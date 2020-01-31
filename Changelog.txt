@@ -1,3 +1,10 @@
+Version 4.1.2
+- Added links for loading include files
+
+Version 4.1.1
+- Fixed loading Spin help
+- Fixed some missing files in the packaging
+
 Version 4.1.0
 - Added option to automatically reload files changed outside the editor
 - Added fallback font chooser for old versions of Tcl/Tk (e.g. MacOS)
