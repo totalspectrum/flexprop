@@ -6,17 +6,14 @@
 '    fastspin -2 bdemo.bas
 '
 
-#ifndef __P2__
+#ifdef __P2__
+const _clkfreq = 200_000_000
+#else
 #error this demo only works on P2
 #endif
 
 ' import the Spin2 charlieplex driver
 dim c as class using "charlieplex_text.spin2"
-
-' set up clock and baud rate
-' (as it happens we don't need baud rate in this demo)
-clkset(0x010007f8, 160_000_000)
-_setbaud(230_400)
 
 ' start up the charlieplex driver
 if c.start() == 0 then

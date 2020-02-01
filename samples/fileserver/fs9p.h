@@ -68,6 +68,6 @@ int fs_close(fs_file *f);
 
 // read/write data
 int fs_read(fs_file *f, uint8_t *buf, int count);
-int fs_write(fs_file *f, uint8_t *buf, int count);
+int fs_write(fs_file *f, const uint8_t *buf, int count);
 
 #endif

@@ -1,10 +1,10 @@
-Flexgui as a whole is copyright (c) 2019 Total Spectrum Software Inc.
+Flexgui as a whole is copyright (c) 2019-2020 Total Spectrum Software Inc.
 
 Some individual parts are:
 
-Fastspin is copyright (c) 2011-2019 Total Spectrum Software Inc.
+Fastspin is copyright (c) 2011-2020 Total Spectrum Software Inc.
 
-loadp2 is copyright (c) 2018-2019 Dave Hein and Total Spectrum Software Inc.
+loadp2 is copyright (c) 2018-2020 Dave Hein and Total Spectrum Software Inc.
 
 PropLoader is copyright (c) 2015-2016 David Michael Betz
 
@@ -91,6 +91,11 @@ Government shall have only "Restricted Rights" as defined in Clause
 authors grant the U.S. Government and others acting in its behalf
 permission to use and distribute the software in accordance with the
 terms specified in this license.
+
+============================================================================
+Some sample code may have different licenses; see the source code of
+the samples directory for details. In particular, the micropython
+license is at samples/upython/LICENSE.
 
 ============================================================================
 The Parallax forum (https://forums.parallax.com) is a wonderful

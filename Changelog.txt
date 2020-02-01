@@ -1,3 +1,18 @@
+Version 4.1.2
+- Added links for loading include files
+
+Version 4.1.1
+- Fixed loading Spin help
+- Fixed some missing files in the packaging
+
+Version 4.1.0
+- Added option to automatically reload files changed outside the editor
+- Added fallback font chooser for old versions of Tcl/Tk (e.g. MacOS)
+- Added menu option for selecting program to use for flashing P2 (e.g. use SD card instead of flash)
+- Added menu options for changing serial baud rate
+- Made help menus for BASIC, C, and Spin which will load docs into a browser
+- Fixed a problem with searching immediately after opening file
+
 Version 4.0.5
 - Improvements to the Mac GUI
 - On Linux, run alternate terminal (if defined) instead of xterm

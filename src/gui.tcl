@@ -1,5 +1,5 @@
 # Simple GUI for Spin
-# Copyright 2018-2019 Total Spectrum Software
+# Copyright 2018-2020 Total Spectrum Software
 # Distributed under the terms of the MIT license;
 # see License.txt for details.
 #
@@ -9,25 +9,43 @@
 set aboutMsg "
 GUI tool for fastspin
 Version $spin2gui_version
-Copyright 2018-2019 Total Spectrum Software Inc.
+Copyright 2018-2020 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
 output will be correct.   
 "
+
+# some Tcl/Tk config
+# make sure tcl_wordchars is set
+catch {tcl_endOfWord}
+# change it
+set tcl_wordchars {[[:alnum:]_]}
+set tcl_nonwordchars {[^[:alnum:]_]}
 #
 # global variables
-# filenames($w) gives the file name in window $w, for all of the various tabs
-# filetimes($w) gives the last modified time for that file
+# ROOTDIR was set by our caller to be the directory from which all other
+# files are relative (usually the location of the program)
 #
 
+# config file name
 set CONFIG_FILE "$::env(HOME)/.flexgui.config"
 
+# prefix for shortcut keys (Command on Mac, Control elsewhere)
 if { [tk windowingsystem] == "aqua" } {
     set CTRL_PREFIX "Command"
 } else {
     set CTRL_PREFIX "Control"
 }
 
+# executable prefix; on Windows .exe is automatically appended, so we don't
+# have to explicitly specify it
+
+set EXE ""
+if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/fastspin.mac"] && [file exists "$ROOTDIR/bin/loadp2.mac"] } {
+    set EXE ".mac"
+}
+
+# prefix for starting a command in a window
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start \"Propeller Output %p\""
 } elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
@@ -38,39 +56,9 @@ if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "xterm -fs 14 -T \"Propeller Output %p\" -e"
 }
 
-# provide some default settings
-proc setShadowP1Defaults {} {
-    global shadow
-    global WINPREFIX
-    
-    set shadow(compilecmd) "\"%D/bin/fastspin\" -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader\" -Dbaudrate=115200 %P \"%B\" -r -t -k"
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader\" -Dbaudrate=115200 %P \"%B\" -e -k"
-}
-proc setShadowP2aDefaults {} {
-    global shadow
-    global WINPREFIX
-    
-    set shadow(compilecmd) "\"%D/bin/fastspin\" -2a -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" \"-9%b\" -q -k"
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"@0=%D/board/P2ES_flashloader.bin,@1000+%B\" -t -k"
-}
-proc setShadowP2bDefaults {} {
-    global shadow
-    global WINPREFIX
-    
-    set shadow(compilecmd) "\"%D/bin/fastspin\" -2 -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"%B\" \"-9%b\" -q -k"
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2\" %P -b230400 \"@0=%D/board/P2ES_flashloader.bin,@1000+%B\" -t -k"
-}
-proc copyShadowToConfig {} {
-    global config
-    global shadow
-    set config(compilecmd) $shadow(compilecmd)
-    set config(runcmd) $shadow(runcmd)
-    set config(flashcmd) $shadow(flashcmd)
-    checkPropVersion
-}
+# default configuration variables
+# the config() array is written to the config file and read
+# back at run time
 
 set config(library) "$ROOTDIR/include"
 set config(liblist) [list $config(library)]
@@ -80,11 +68,79 @@ set config(font) "TkFixedFont"
 set config(botfont) "courier 10"
 set config(sash) ""
 set config(tabwidth) 8
+set config(autoreload) 0
 set COMPORT " "
 set OPT "-O1"
 set COMPRESS "-z0"
 set PROP_VERSION ""
 set config(showlinenumbers) 1
+
+#
+# filenames($w) gives the file name in window $w, for all of the various tabs
+# filetimes($w) gives the last modified time for that file
+#
+
+proc getWindowFile { w } {
+    global filenames
+    while { "$w" != "" } {
+	if { [info exists filenames($w)] } {
+	    #puts "return $filenames($w)"
+	    return $filenames($w)
+	}
+	set w [winfo parent $w]
+    }
+    #puts "getWindowFile: $w: no answer"
+    #puts [parray filenames]
+    return ""
+}
+
+# provide some default settings
+proc setShadowP1Defaults {} {
+    global shadow
+    global WINPREFIX
+    global ROOTDIR
+    global EXE
+    
+    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -D_BAUD=%r -l %O %I \"%S\""
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -r -t -k"
+    set shadow(flashprogram) ""
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
+    set shadow(baud) 115200
+}
+proc setShadowP2aDefaults {} {
+    global shadow
+    global WINPREFIX
+    global ROOTDIR
+    global EXE
+    
+    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2a -l -D_BAUD=%r %O %I \"%S\""
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
+    set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
+    set shadow(baud) 230400
+}
+proc setShadowP2bDefaults {} {
+    global shadow
+    global WINPREFIX
+    global ROOTDIR
+    global EXE
+    
+    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2 -l -D_BAUD=%r %O %I \"%S\""
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
+    set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
+    set shadow(baud) 230400
+}
+proc copyShadowToConfig {} {
+    global config
+    global shadow
+    set config(compilecmd) $shadow(compilecmd)
+    set config(runcmd) $shadow(runcmd)
+    set config(flashcmd) $shadow(flashcmd)
+    set config(flashprogram) $shadow(flashprogram)
+    set config(baud) $shadow(baud)
+    checkPropVersion
+}
 
 proc checkPropVersion {} {
     global config
@@ -277,6 +333,7 @@ proc loadFileToWindow { fname win } {
     $win delete 1.0 end
     $win insert end $file_data
     $win edit modified false
+    $win mark set insert 1.0
     set filetimes($fname) [file mtime $fname]
     focus $win
 }
@@ -284,13 +341,17 @@ proc loadFileToWindow { fname win } {
 # save contents of a window to a file
 proc saveFileFromWindow { fname win } {
     global filetimes
-
+    global config
+    
     # check for other programs changing the file
     if { [file exists $fname] } {
         set disktime [file mtime $fname]
         if { $disktime > $filetimes($fname) } {
-	    set answer [tk_messageBox -icon question -type yesno -message "File $fname has changed on disk; overwrite it?" -default no]
-	    if { $answer eq "no" } {
+	    set answer $config(autoreload)
+	    if { ! $answer } {
+		set answer [tk_messageBox -icon question -type yesno -message "File $fname has changed on disk; overwrite it?" -default no]
+	    }
+	    if { ! $answer } {
 	        return
 	    }
 	}
@@ -322,11 +383,11 @@ proc saveFileFromWindow { fname win } {
 proc tagerrors { w } {
     $w tag remove errtxt 0.0 end
     $w tag remove warntxt 0.0 end
-    $w tag remove errlink 0.0 end
+    $w tag remove hyperlink 0.0 end
     
     $w tag configure errtxt -foreground red
     $w tag configure warntxt -foreground orange
-    $w tag configure errlink -foreground blue -underline true
+    $w tag configure hyperlink -foreground blue -underline true
 
     # set current position at beginning of file
     set cur 1.0
@@ -335,7 +396,7 @@ proc tagerrors { w } {
 	set cur [$w search -count length "error:" $cur end]
 	if {$cur eq ""} {break}
 	$w tag add errtxt $cur "$cur lineend"
-	$w tag add errlink "$cur linestart" "$cur - 2 chars"
+	$w tag add hyperlink "$cur linestart" "$cur - 2 chars"
 	set cur [$w index "$cur + $length char"]
     }
 
@@ -346,16 +407,16 @@ proc tagerrors { w } {
 	set cur [$w search -count length "warning:" $cur end]
 	if {$cur eq ""} {break}
 	$w tag add warntxt $cur "$cur lineend"
-	$w tag add errlink "$cur linestart" "$cur - 2 chars"
+	$w tag add hyperlink "$cur linestart" "$cur - 2 chars"
 	set cur [$w index "$cur + $length char"]
     }
     
 }
 
 set SpinTypes {
-    {{FastSpin files}   {.bas .bi .c .h .spin2 .spin .spinh} }
+    {{FastSpin files}   {.bas .bi .c .cc .cpp .h .spin2 .spin .spinh} }
     {{Interpreter files}   {.py .lsp .fth} }
-    {{C files}   {.c .cpp .cxx .cc .h .hh .hpp} }
+    {{C/C++ files}   {.c .cpp .cxx .cc .h .hh .hpp} }
     {{All files}    *}
 }
 
@@ -443,7 +504,7 @@ proc createNewTab {} {
     #.p.bot.txt delete 1.0 end
     set filenames($w) ""
     setupFramedText $w
-    #setHighlightingSpin $w.txt
+    setHighlightingForFile $w.txt ""
     setfont $w.txt $config(font)
     .p.nb add $w
     .p.nb tab $w -text "New File"
@@ -475,6 +536,12 @@ proc setupFramedText {w} {
     grid columnconfigure $w $w.txt -weight 1
     bind $w.txt <$CTRL_PREFIX-f> $searchcmd
     bind $w.txt <$CTRL_PREFIX-k> $replacecmd
+
+    # for some reason on my linux system the selection doesn't show
+    # up correctly
+    if { [tk windowingsystem] == "x11" } {
+	$w.txt configure -selectbackground blue -selectforeground white
+    }
 }
 
 #
@@ -517,7 +584,7 @@ proc loadFileToTab {w filename title} {
     } else {
 	setupFramedText $w
 	.p.nb add $w -text "$title"
-	#setHighlightingSpin $w.txt
+	setHighlightingForFile $w.txt $filename
     }
 
     
@@ -532,9 +599,31 @@ proc loadFileToTab {w filename title} {
     set filetimes($filename) [file mtime $filename]
 }
 
+proc findFileOnPath { filename startdir } {
+    global config
+    # normalize file name
+    if { [file pathtype $filename] != "absolute" } {
+	# first check startdir
+	set s [file join $startdir $filename]
+	if { [file exists $s] } {
+	    return [file normalize $s]
+	}
+	# look for the file name down the include path
+	foreach d $config(liblist) {
+	    set s [file join $d $filename]
+	    if { [file exists $s] } {
+		set filename [file normalize $s]
+		break
+	    }
+	}
+    }
+    return $filename
+}
+
 proc loadSourceFile { filename } {
     global filenames
-
+    
+    # fetch
     set w [getTabFor $filename]
     if { $w ne "" } {
 	.p.nb select $w
@@ -556,7 +645,7 @@ proc doOpenFile {} {
     global SpinTypes
     global BINFILE
 
-    set filename [tk_getOpenFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $config(lastdir) ]
+    set filename [tk_getOpenFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $config(lastdir) -title "Open File" ]
     if { [string length $filename] == 0 } {
 	return ""
     }
@@ -567,11 +656,24 @@ proc doOpenFile {} {
     return [loadSourceFile $filename]
 }
 
+proc pickFlashProgram {} {
+    global config
+    global BinTypes
+    global ROOTDIR
+    
+    set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $ROOTDIR/board -title "Select Flash Program"]
+    if { [string length $filename] == 0 } {
+	return
+    }
+    set config(flashprogram) $filename
+}
+
 # maybe save the current file; used for compilation
 # if no changes, then do not save
 proc saveFilesForCompile {} {
     global filenames
     global filetimes
+    global config
     set t [.p.nb tabs]
     set i 0
     set w [lindex $t $i]
@@ -598,8 +700,11 @@ proc saveFilesForCompile {} {
 		saveFileFromWindow $s $w.txt
 	    }
 	    if { $needRead eq "yes" } {
-		set answer [tk_messageBox -icon question -type yesno -message "File $s has changed on disk. Reload it?" -default yes]
-		if { $answer eq yes } {
+		set answer $config(autoreload)
+		if { ! $answer  } {
+		    set answer [tk_messageBox -icon question -type yesno -message "File $s has changed on disk. Reload it?" -default yes]
+		}
+		if { $answer } {
 		    loadFileToWindow $s $w.txt
 		    set needRead "no"
 		    set needWrite "no"
@@ -630,7 +735,7 @@ proc saveFile {w} {
     global config
     
     if { [string length $filenames($w)] == 0 } {
-	set filename [tk_getSaveFile -initialfile $filenames($w) -filetypes $SpinTypes -defaultextension $config(spinext) ]
+	set filename [tk_getSaveFile -initialfile $filenames($w) -filetypes $SpinTypes -defaultextension $config(spinext) -title "Save File" ]
 	if { [string length $filename] == 0 } {
 	    return ""
 	}
@@ -660,7 +765,7 @@ proc saveFileAs {w} {
 	set initdir [file dirname $filenames($w)]
 	set initfilename [file tail $filenames($w)]
     }
-    set filename [tk_getSaveFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $initdir -initialfile $initfilename ]
+    set filename [tk_getSaveFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $initdir -initialfile $initfilename -title "Save As" ]
     if { [string length $filename] == 0 } {
 	return
     }
@@ -678,7 +783,7 @@ proc scriptSendCurFile {} {
 #    if { $fname == "" } {
 #	return ""
 #    }
-    return "-e \"pausems(1500) textfile($fname)\""
+    return "-epausems(1500)textfile($fname)"
 }
 	
 # show the about message
@@ -687,9 +792,11 @@ proc doAbout {} {
     tk_messageBox -icon info -type ok -message "FlexGUI" -detail $aboutMsg
 }
 
-proc doHelp {} {
+proc doHelp { file title } {
     global ROOTDIR
-    loadFileToTab .p.nb.help "$ROOTDIR/doc/help.txt" "Help"
+    
+    #loadFileToTab .p.nb.help "$ROOTDIR/doc/help.txt" "Help"
+    loadFileToTab .p.nb.help $file $title
     makeReadOnly .p.nb.help.txt
 }
 
@@ -708,32 +815,45 @@ proc doSpecial {name extraargs} {
 	set BINFILE "$ROOTDIR/$name"
     }
     .p.bot.txt delete 1.0 end
-    doJustRun $extraargs
+    doJustRun "$extraargs"
     return 1
 }
 
 #
 # parameter is text coordinates like 2.72
 #
-proc doClickOnError {coord} {
-    set w .p.bot.txt
+proc doClickOnError { w coord } {
+    global filenames
+    
     set first "$coord linestart"
     set last "$coord lineend"
-    set linkptr [$w tag prevrange errlink $coord]
+    set linkptr [$w tag prevrange hyperlink $coord]
     set link1 [lindex $linkptr 0]
     set link2 [lindex $linkptr 1]
-    set linedata [.p.bot.txt get $link1 $link2]
+    set linedata [$w get $link1 $link2]
     set colonptr [string last ":" $linedata]
 
-    if { $colonptr eq "" } {
-	set fname ""
+    #puts "doClickOnError $w $coord"
+    #puts "first=|$first|"
+    #puts "linkptr=|$linkptr|"
+    #puts "linedata=|$linedata|"
+    #puts "colonptr=|$colonptr|"
+
+    if { $colonptr == -1 } {
+	set fname "$linedata"
 	set line ""
     } else {
 	set fname [string range $linedata 0 [expr $colonptr - 1]]
 	set line [string range $linedata [expr $colonptr + 1] end]
     }
-    #tk_messageBox -message "data: <$linedata> fname: <$fname> line: <$line>" -type ok
     if { $fname != "" } {
+	set startdir [getWindowFile $w]
+	if { $startdir != "" } {
+	    set startdir [file dirname $startdir]
+	} else {
+	    set startdir [file normalize "."]
+	}
+	set fname [findFileOnPath $fname $startdir]
 	set w [loadSourceFile $fname ]
 	set t $w.txt
 	$t tag config hilite -background yellow
@@ -742,13 +862,41 @@ proc doClickOnError {coord} {
 	    $t tag remove hilite $from $to
 	}
 	$t tag config hilite -background yellow
-	$t see $line.0
-	$t tag add hilite $line.0 $line.end
+	if { $line != "" } {
+	    $t see $line.0
+	    $t tag add hilite $line.0 $line.end
+	}
     }
 }
 
 #
 # set up syntax highlighting for a given ctext widget
+#
+
+proc setHighlightingForFile {w fname} {
+    setHyperLinkResponse $w
+    setHighlightingIncludes $w
+}
+
+#
+# version that just highlights includes
+#
+proc setHighlightingIncludes {w} {
+    set color(hyperlink) blue
+    set include1RE {(?:#include\ [^<]*<)([^>]+)}
+    set include2RE {(?:#include\ [^\"]*\")([^\"]+)}
+    set using1RE {(?:__using\([^\"]*\")([^\"]+)}
+    set using2RE {(?:class using[^\"]*\")([^\"]+)}
+    set implRE {(?:_IMPL\([^\"]*\")([^\"]+)}
+
+    set fullRE "$include1RE|$include2RE|$implRE|$using1RE|$using2RE"
+    ctext::addHighlightClassForRegexp $w hyperlink $color(hyperlink) $fullRE
+    $w tag configure hyperlink -underline true
+}
+
+#
+# Spin language version
+#
 proc setHighlightingSpin {w} {
     set color(comments) grey
     set color(keywords) DarkBlue
@@ -839,10 +987,6 @@ menu .mbar.help -tearoff 0
 .mbar.edit add separator
 .mbar.edit add command -label "Find..." -accelerator "$CTRL_PREFIX-F" -command {searchrep [focus] 0}
 .mbar.edit add command -label "Replace..." -accelerator "$CTRL_PREFIX-K" -command {searchrep [focus] 1}
-.mbar.edit add separator
-
-#.mbar.edit add command -label "Select Font..." -command { doSelectFont }
-.mbar.edit add command -label "Editor Appearance..." -command { doAppearance }
 
 .mbar add cascade -menu .mbar.options -label Options
 .mbar.options add radiobutton -label "No Optimization" -variable OPT -value "-O0"
@@ -851,19 +995,28 @@ menu .mbar.help -tearoff 0
 #.mbar.options add separator
 #.mbar.options add radiobutton -label "No Compression" -variable COMPRESS -value "-z0"
 #.mbar.options add radiobutton -label "Compress Code" -variable COMPRESS -value "-z1"
+.mbar.options add separator
+.mbar.options add command -label "Editor Options..." -command { doEditorOptions }
+
 
 .mbar add cascade -menu .mbar.run -label Commands
 .mbar.run add command -label "Compile" -command { doCompile }
 .mbar.run add command -label "Run binary on device..." -command { doLoadRun }
-.mbar.run add command -label "Compile and run" -accelerator "^R" -command { doCompileRun }
+.mbar.run add command -label "Compile and run" -accelerator "$CTRL_PREFIX-R" -command { doCompileRun }
 .mbar.run add separator
-.mbar.run add command -label "Compile and flash" -accelerator "^E" -command { doCompileFlash }
+.mbar.run add command -label "Compile and flash" -accelerator "$CTRL_PREFIX-E" -command { doCompileFlash }
 .mbar.run add command -label "Flash binary file..." -command { doLoadFlash }
 .mbar.run add separator
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
+.mbar.run add command -label "Choose P2 flash program..." -command { pickFlashProgram }
 
-.mbar add cascade -menu .mbar.comport -label Port
-.mbar.comport add radiobutton -label "Default (try to find port)" -variable COMPORT -value " "
+.mbar add cascade -menu .mbar.comport -label Serial
+.mbar.comport add radiobutton -label "115200 baud" -variable config(baud) -value 115200
+.mbar.comport add radiobutton -label "230400 baud" -variable config(baud) -value 230400
+.mbar.comport add radiobutton -label "921600 baud" -variable config(baud) -value 921600
+.mbar.comport add radiobutton -label "2000000 baud" -variable config(baud) -value 2000000
+.mbar.comport add separator
+.mbar.comport add radiobutton -label "Find port automatically" -variable COMPORT -value " "
 
 # search for serial ports using serial::listports (src/checkserial.tcl)
 set serlist [serial::listports]
@@ -888,7 +1041,10 @@ foreach v $serlist {
 .mbar.special add command -label "Terminal only" -command { doSpecial "-n" "" }
 
 .mbar add cascade -menu .mbar.help -label Help
-.mbar.help add command -label "Help" -command { doHelp }
+.mbar.help add command -label "GUI" -command { doHelp "$ROOTDIR/doc/help.txt" "Help" }
+.mbar.help add command -label "BASIC Language" -command { launchBrowser "file://$ROOTDIR/doc/basic.html" }
+.mbar.help add command -label "C Language" -command { launchBrowser "file://$ROOTDIR/doc/c.html" }
+.mbar.help add command -label "Spin Language" -command { launchBrowser "file://$ROOTDIR/doc/spin.html" }
 .mbar.help add separator
 .mbar.help add command -label "About..." -command { doAbout }
 
@@ -951,12 +1107,16 @@ if {[tk windowingsystem]=="aqua"} {
     bind . <3> "tk_popup .popup1 %X %Y"
 }
 
-#bind .p.bot.txt <Double-1> { doClickOnError "[%W index @%x,%y]" }
-set pbotcursor [.p.bot.txt cget -cursor]
+proc setHyperLinkResponse { w } {
 
-.p.bot.txt tag bind errlink <Enter> { .p.bot.txt configure -cursor fleur }
-.p.bot.txt tag bind errlink <Leave> { .p.bot.txt configure -cursor $pbotcursor }
-.p.bot.txt tag bind errlink <ButtonPress> { doClickOnError "[%W index @%x,%y]" }
+    set textcurs [::ttk::cursor text]
+    set linkcurs [::ttk::cursor link]
+    $w tag bind hyperlink <Enter> "$w configure -cursor $linkcurs"
+    $w tag bind hyperlink <Leave> "$w configure -cursor $textcurs"
+    $w tag bind hyperlink <ButtonPress> { doClickOnError %W "[%W index @%x,%y]" }
+}
+
+setHyperLinkResponse .p.bot.txt
 
 wm protocol . WM_DELETE_WINDOW {
     exitProgram
@@ -974,14 +1134,37 @@ config_open
 proc doSelectFont {} {
     global config
     set curfont $config(font)
-    tk fontchooser configure -parent . -font "$curfont" -command resetFont
-    tk fontchooser show
+    set version [info tclversion]
+    
+    if { $version > 8.5 } {
+	tk fontchooser configure -parent . -font "$curfont" -command resetFont
+	tk fontchooser show
+    } else {
+	set fnt [choosefont $curfont "Editor font"]
+	if { "$fnt" ne "" } {
+	    set config(font) $fnt
+	    setnbfonts $fnt
+	    .editopts.font.lb configure -font $fnt
+	}
+    }
 }
 
 proc doSelectBottomFont {} {
     global config
-    tk fontchooser configure -parent . -font "$config(botfont)" -command resetBottomFont
-    tk fontchooser show
+    set curfont $config(font)
+    set version [info tclversion]
+    
+    if { $version > 8.5 } {
+	tk fontchooser configure -parent . -font "$config(botfont)" -command resetBottomFont
+	tk fontchooser show
+    } else {
+	set fnt [choosefont $curfont "Command output font"]
+	if { "$fnt" ne "" } {
+	    set config(botfont) $fnt
+	    .p.bot.txt configure -font $fnt
+	    .editopts.bot.lb configure -font $fnt
+	}
+    }
 }
 
 proc resetFont {w} {
@@ -1019,7 +1202,7 @@ proc doneAppearance {} {
 #
 # editor appearance window
 #
-proc doAppearance {} {
+proc doEditorOptions {} {
     global config
 
     if {[winfo exists .editopts]} {
@@ -1032,7 +1215,7 @@ proc doAppearance {} {
     toplevel .editopts
     frame .editopts.top
     ttk::labelframe .editopts.font -text "Source code"
-    ttk::labelframe .editopts.bot -text "Compiler output"
+    ttk::labelframe .editopts.bot -text "\n Compiler output \n"
     frame .editopts.end
 
     label .editopts.top.l -text "\n  Editor Options  \n"
@@ -1045,24 +1228,31 @@ proc doAppearance {} {
     label .editopts.font.lb -text " Text font " -font $config(font)
     ttk::button .editopts.font.change -text " Change... " -command doSelectFont
     checkbutton .editopts.font.linenums -text "Show Linenumbers" -variable config(showlinenumbers) -command doShowLinenumbers
+    checkbutton .editopts.font.autoreload -text "Automatically Reload Files if changed externally" -variable config(autoreload)
     ttk::button .editopts.end.ok -text " OK " -command doneAppearance
 
     label .editopts.bot.lb -text "Compiler output font " -font $config(botfont)
     ttk::button .editopts.bot.change -text " Change... " -command doSelectBottomFont
+
+    grid columnconfigure .editopts 0 -weight 1
+    grid rowconfigure .editopts 0 -weight 1
     
-    grid .editopts.top.l -sticky nsew 
-    grid .editopts.font.tab.lab .editopts.font.tab.stops
-    grid .editopts.font.tab .editopts.font.lb .editopts.font.change
-    grid .editopts.font.linenums
-    grid .editopts.bot.lb .editopts.bot.change
-    
-    grid .editopts.end.ok -sticky nsew
     grid .editopts.top -sticky nsew
     grid .editopts.font -sticky nsew
     grid .editopts.bot -sticky nsew
     grid .editopts.end -sticky nsew
 
-    wm title .editopts "Editor Appearance"
+    grid .editopts.top.l -sticky nsew 
+    grid .editopts.font.tab.lab .editopts.font.tab.stops
+    grid .editopts.font.tab
+    grid .editopts.font.tab .editopts.font.lb .editopts.font.change
+    grid .editopts.font.linenums
+    grid .editopts.font.autoreload
+    grid .editopts.bot.lb .editopts.bot.change
+    
+    grid .editopts.end.ok -sticky nsew
+
+    wm title .editopts "Editor Options"
 }
 
 proc get_includepath {} {
@@ -1095,7 +1285,7 @@ proc mapPercent {str} {
 	set fullcomport ""
     }
     set bindir [file dirname $BINFILE]
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT ]
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT "%F" $config(flashprogram) "%r" $config(baud)]
     set result [string map $percentmap $str]
     return $result
 }
@@ -1207,7 +1397,7 @@ proc doListing {} {
 
 proc doJustRunCmd {cmdstr extraargs} {
     if { $extraargs ne "" } {
-	set cmdstr [concat $cmdstr " " $extraargs]
+	set cmdstr [concat "$cmdstr" " " "$extraargs"]
     }
     .p.bot.txt insert end "$cmdstr\n"
     
@@ -1254,7 +1444,7 @@ proc doLoadRun {} {
     global BINFILE
     global BinTypes
     
-    set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $config(lastdir)]
+    set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $config(lastdir) -title "Run Binary" ]
     if { [string length $filename] == 0 } {
 	return
     }
@@ -1268,7 +1458,7 @@ proc doLoadFlash {} {
     global BINFILE
     global BinTypes
     
-    set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $config(lastdir)]
+    set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $config(lastdir) -title "Select binary to flash"]
     if { [string length $filename] == 0 } {
 	return
     }
@@ -1299,10 +1489,12 @@ set cmddialoghelptext {
     %B = Replace with current binary file name
     %b = Replace with directory containing current binary file
     %D = Replace with directory of flexgui executable
+    %F = Replace with currently selected flash program (sd/flash)
     %I = Replace with all library/include directories
     %O = Replace with optimization level
     %p = Replace with port to use
     %P = Replace with port to use prefixed by -p
+    %r = Replace with current baud rate
     %S = Replace with current source file name
     %% = Insert a % character
 }
@@ -1338,6 +1530,9 @@ proc doRunOptions {} {
     ttk::labelframe .runopts.b -text "Run command"
     entry .runopts.b.runtext -width 40 -textvariable shadow(runcmd)
 
+    ttk::labelframe .runopts.c -text "Flash command"
+    entry .runopts.c.flashtext -width 40 -textvariable shadow(flashcmd)
+
     frame .runopts.change
     frame .runopts.end
 
@@ -1348,21 +1543,23 @@ proc doRunOptions {} {
     ttk::button .runopts.end.ok -text " OK " -command {copyShadowClose .runopts}
     ttk::button .runopts.end.cancel -text " Cancel " -command {destroy .runopts}
 
-    grid .runopts.a.compiletext -sticky nsew
-    grid .runopts.b.runtext -sticky nsew
-
-    grid .runopts.change.p2a .runopts.change.p1 -sticky nsew
-    grid .runopts.change.p2b -sticky nsew
-    grid .runopts.end.ok .runopts.end.cancel -sticky nsew
-    
     grid .runopts.toplabel -sticky nsew
     grid .runopts.a -sticky nsew
     grid .runopts.b -sticky nsew
+    grid .runopts.c -sticky nsew
     grid .runopts.change -sticky nsew
     grid .runopts.end -sticky nsew
 
+    grid .runopts.a.compiletext -sticky nsew
+    grid .runopts.b.runtext -sticky nsew
+    grid .runopts.c.flashtext -sticky nsew
+
+    grid .runopts.change.p2b .runopts.change.p2a .runopts.change.p1 -sticky nsew
+    grid .runopts.end.ok .runopts.end.cancel -sticky nsew
+    
     grid columnconfigure .runopts.a 0 -weight 1
     grid columnconfigure .runopts.b 0 -weight 1
+    grid columnconfigure .runopts.c 0 -weight 1
     grid rowconfigure .runopts 0 -weight 1
     grid columnconfigure .runopts 0 -weight 1
     

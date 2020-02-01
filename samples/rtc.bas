@@ -70,20 +70,18 @@ end sub
 ''
 '' main program
 ''
+dim s$
 
 '' initialize the time
-print "Enter year month day as YYYY-MM-DD ";
-var s$ = input$(10)
-print
-'print "read ["; s$; "]"
+input "Enter year month day as YYYY-MM-DD ", s$
+
+'print "read ["; s$; "]" ' for debugging
 
 YYYY = val(left$(s$, 4))
 MM = val(mid$(s$, 6, 2))
 DD = val(right$(s$, 2))
 
-print "Enter time as hh:mm:ss ";
-s$ = input$(8)
-print
+input "Enter time as hh:mm:ss ", s$
 
 hours = val(left$(s$, 2))
 mins = val(mid$(s$, 4, 2))

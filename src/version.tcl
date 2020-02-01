@@ -8,8 +8,8 @@
 # 2 "<stdin>" 2
 
 set spin2gui_version_major 4
-set spin2gui_version_minor 0
-set spin2gui_version_rev 6
+set spin2gui_version_minor 1
+set spin2gui_version_rev 2
 
 
 

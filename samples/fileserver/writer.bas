@@ -1,6 +1,12 @@
-const mode=0x010007f8
-const freq=160_000_000
-const baud=230_400
+#ifndef __P2__
+#error this demo is for P2 only
+#endif
+#ifndef _BAUD
+#define _BAUD 230400
+#endif
+
+const _clkfreq=160_000_000
+const baud=_BAUD
 
 dim f as class using "fs9p.cc"
 dim ser as class using "spin/SmartSerial"
@@ -8,7 +14,6 @@ dim r as integer
 dim handle as any
 dim crlf as ubyte(2)
 
-clkset(mode, freq)
 ser.start(63, 62, 0, baud)
 
 r = f.fs_init(@sendrecv)

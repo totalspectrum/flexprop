@@ -3,11 +3,7 @@
 ''
 #ifdef __P2__
 const ledpin = 56
-const _clkmode = 0x10007f8
 const _clkfreq = 160_000_000
-
-clkset(_clkmode, _clkfreq)
-_setbaud(230400)
 #else
 const ledpin = 16
 #endif

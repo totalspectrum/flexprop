@@ -935,7 +935,6 @@ proc ctext::highlight {win start end {afterTriggered 0}} {
     foreach {ichar tagInfo} [array get highlightSpecialCharsAr] {
 	set si $start
 	foreach {tagClass color} $tagInfo break
-
 	while 1 {
 	    set res [$twin search -- $ichar $si $end]
 	    if {"" == $res} {
@@ -963,10 +962,22 @@ proc ctext::highlight {win start end {afterTriggered 0}} {
 	    if {"" == $res} {
 		break
 	    }
-
+	    set endres "$res + $length chars"
+	    set thisMatch [$twin get $res $endres]
+	    ##puts "thisMatch=$thisMatch"
+	    # get more info about what matched
+	    set matchList [regexp -inline $re $thisMatch]
+	    set matchList [lreplace $matchList 0 0]
+	    ##puts "matchList=$matchList"
+	    set m [concat {*}$matchList]
+	    ##puts "m=$m"
+	    set mi [string first $m $thisMatch]
 	    set wordEnd [$twin index "$res + $length chars"]
-	    $twin tag add $tagClass $res $wordEnd
-	    $twin tag configure $tagClass -foreground $color
+	    if { $mi != -1 } {
+		set wordStart [$twin index "$res + $mi chars"]
+		$twin tag add $tagClass $wordStart $wordEnd
+		$twin tag configure $tagClass -foreground $color
+	    }
 	    set si $wordEnd
 
 	    incr numTimesLooped

@@ -5,10 +5,8 @@
 #ifdef __FASTSPIN__
 
 #ifdef __P2__
-const _clkmode = 0x010007f8
 const _clkfreq = 160_000_000
 const cycles_per_microsecond = 160.0
-const BAUD = 230_400
 #else
 const _clkfreq = 80_000_000
 const cycles_per_microsecond = 80.0
@@ -44,9 +42,8 @@ end function
 
 dim as uinteger cycles, i
 
-#ifdef __P2__
-clkset(_clkmode, _clkfreq)
-_setbaud(BAUD)
+#ifdef _BAUD
+_setbaud(_BAUD)
 #endif
 
 pause

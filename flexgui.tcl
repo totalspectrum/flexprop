@@ -1,4 +1,4 @@
-#!/usr/bin/wish
+#!/usr/bin/env wish
 #
 # Simple GUI for Spin
 # Copyright 2018-2019 Total Spectrum Software
@@ -16,8 +16,11 @@ package require Tk
 
 source $ROOTDIR/src/version.tcl
 source $ROOTDIR/src/autoscroll.tcl
+source $ROOTDIR/src/browser.tcl
 source $ROOTDIR/src/ctext/ctext.tcl
 source $ROOTDIR/src/checkserial.tcl
 source $ROOTDIR/src/pathbox.tcl
+source $ROOTDIR/src/fontchooser.tcl
 source $ROOTDIR/src/gui.tcl
 
+namespace import ::choosefont::choosefont

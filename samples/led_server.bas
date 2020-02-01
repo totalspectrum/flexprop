@@ -2,15 +2,18 @@
 '' a simple PASM based server to blink an LED, running in
 '' a COG
 ''
+'' This demo is P2 specific, as it uses assembly code for the COG
 ''
 '' Interface:
 '' The COG server listens for messages in a mailbox. The message
 '' specifies which pin it should blink, and how long to wait between
 '' blinks. This can be changed "on the fly".
 ''
+#ifndef __P2__
+#error this demo is for P2 only
+#endif
 
-#define FREQ 160000000
-#define MODE 0x010007f8
+const _clkfreq = 160_000_000
 
 ''
 '' assembly code for managing the LED
@@ -76,10 +79,9 @@ sub update_mbox(box as mailbox, pin as integer, delay as uinteger)
 end sub
 
 '' main program
-'' set up CLOCK and serial frequency
-    _clkset(MODE+3, FREQ)
-    _setbaud(230400)
-
+#ifdef _BAUD
+    _setbaud(_BAUD)
+#endif    
     print "LED test server..."
     
     '' start up our COGS

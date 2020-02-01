@@ -1,15 +1,18 @@
 '' simple fibonacci program
+
+#ifndef _BAUD
+#define _BAUD 115_200
+#endif
+
 CON
 #ifdef __P2__
-  _clkmode = $010007f8
-  _clkfreq = 160_000_000
-  baud = 230_400
+  _clkfreq = 200_000_000
 #else
   _clkmode = xtal1 + pll16x
   _clkfreq = 80_000_000
-  baud = 115_200
 #endif
-
+  baud = _BAUD
+  
 OBJ
 #ifdef __P2__
   ser: "spin/SmartSerial"
@@ -18,10 +21,8 @@ OBJ
 #endif
 
 PUB demo | i, n, t
-#ifdef __P2__
-  clkset(_clkmode, _clkfreq)
-#endif  
   ser.start_default(baud)
+  _waitms(100)
   repeat i from 1 to 10 step 1
     t := CNT
     n := fiborec(i)
