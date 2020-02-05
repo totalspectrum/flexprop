@@ -59,7 +59,7 @@ EXEBINFILES=bin/fastspin.exe bin/loadp2.exe bin/fastspin.mac bin/loadp2.mac bin/
 EXEFILES=flexgui.exe $(EXEBINFILES)
 
 ifdef OPENSPIN
-WIN_BINARIES=$(EXEFILES) bin/proploader.exe
+WIN_BINARIES=$(EXEFILES) bin/proploader.exe bin/proploader.mac
 NATIVE_BINARIES=bin/fastspin bin/loadp2 bin/proploader
 else
 WIN_BINARIES=$(EXEFILES)
@@ -217,6 +217,10 @@ bin/proploader.exe: proploader-msys-build/bin/proploader.exe
 	mkdir -p bin
 	cp $< $@
 
+bin/proploader.mac: proploader-macosx-build/bin/proploader
+	mkdir -p bin
+	cp $< $@
+
 bin/loadp2.exe: loadp2/build-win32/loadp2.exe
 	mkdir -p bin
 	cp $< $@
@@ -228,6 +232,9 @@ spin2cpp/build-win32/fastspin.exe:
 
 proploader-msys-build/bin/proploader.exe:
 	make -C PropLoader CROSS=win32
+
+proploader-macosx-build/bin/proploader:
+	make -C PropLoader CROSS=macosx
 
 loadp2/build-win32/loadp2.exe:
 	make -C loadp2 CROSS=win32
