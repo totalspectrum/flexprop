@@ -1,3 +1,6 @@
+Version 4.1.3
+- Fixed packaging of PropLoader
+
 Version 4.1.2
 - Added links for loading include files
 
