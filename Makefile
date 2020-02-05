@@ -55,7 +55,7 @@ endif
 # binaries to make
 #
 
-EXEBINFILES=bin/fastspin.exe bin/loadp2.exe bin/fastspin.mac bin/loadp2.mac bin/mac_terminal.sh
+EXEBINFILES=bin/fastspin.exe bin/loadp2.exe bin/fastspin.mac bin/loadp2.mac bin/mac_terminal.sh 
 EXEFILES=flexgui.exe $(EXEBINFILES)
 
 ifdef OPENSPIN
@@ -117,7 +117,7 @@ SIGN ?= ./spin2cpp/sign.dummy.sh
 
 flexgui.zip: flexgui_base $(WIN_BINARIES)
 	cp -r flexgui.exe flexgui/
-	cp -r $(EXEBINFILES) flexgui/bin
+	cp -r $(WIN_BINARIES) flexgui/bin
 	rm -f flexgui.zip
 	zip -r flexgui.zip flexgui
 
