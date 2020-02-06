@@ -35,7 +35,7 @@
 ;#define PRODNAME    GetStringFileInfo(EXE, PRODUCT_NAME)
 ;#define VERSION     GetStringFileInfo(EXE, FILE_VERSION)
 #define PRODNAME    "FlexGUI for Windows"
-#define VERSION     "4.1.2"
+#define VERSION     "4.1.3"
 #define COMPANY     GetFileCompany(EXE)
 #define COPYRIGHT   GetFileCopyright(EXE)
 
