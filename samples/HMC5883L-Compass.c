@@ -7,6 +7,8 @@
 #include <math.h>
 #include <stdio.h>
 
+#ifdef __propeller2__
+
 // to get the frequency we desire, we
 // specify P2_TARGET_MHZ then include "sys/p2es_clock.h"
 // e.g. to get 160_000_000, define P2_TARGET_MHZ to 160
@@ -22,6 +24,8 @@
 
 #ifndef _BAUD
 #define _BAUD 230400
+#endif
+
 #endif
 
 void compass_init(i2c *bus)
@@ -50,9 +54,11 @@ void compass_read(i2c *bus, int *px, int *py, int *pz)
 
 int main()
 {
+#ifdef __propeller2__
   clkset(_SETFREQ, _CLOCKFREQ);
   _setbaud(_BAUD);
   printf("clockmode is $%x, clock frequency %u Hz\n", _SETFREQ, _CLOCKFREQ);
+#endif
 
   printf("compass init: i2c on pins 28 & 29\n");
   i2c *bus = i2c_newbus(28, 29, 0);
