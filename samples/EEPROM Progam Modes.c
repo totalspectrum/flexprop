@@ -15,6 +15,8 @@
 
 int main(void)                                // main function code starts here
 {
+  ee_config(28, 29, 1);			      // configure for driving scl, needed for some eeprom setups
+
   int addr = 32768;                           // Lowest user EEPROM address
   char mode = ee_get_byte(addr);              // Value at address 32768 -> mode
   mode += 1;                                  // Add one

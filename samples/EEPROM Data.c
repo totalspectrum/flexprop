@@ -11,6 +11,8 @@
 
 int main(void)                                // main function
 {
+  ee_config(28, 29, 1);			      // configure for driving scl, needed for some eeprom setups
+
   int addr = 32769;                           // Pick EEPROM base address. 
 
   ee_putInt(42, addr);                        // 42 -> EEPROM address 32769
