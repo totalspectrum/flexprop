@@ -235,7 +235,7 @@ proploader-msys-build/bin/proploader.exe:
 	make -C PropLoader CROSS=win32
 endif
 
-ifndef ($(OS),macosx)
+ifneq ($(OS),macosx)
 proploader-macosx-build/bin/proploader:
 	make -C PropLoader CROSS=macosx
 endif
