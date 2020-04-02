@@ -230,14 +230,20 @@ bin/loadp2.exe: loadp2/build-win32/loadp2.exe
 spin2cpp/build-win32/fastspin.exe:
 	make -C spin2cpp CROSS=win32
 
+ifneq ($(OS),msys)
 proploader-msys-build/bin/proploader.exe:
 	make -C PropLoader CROSS=win32
+endif
 
+ifneq ($(OS),macosx)
 proploader-macosx-build/bin/proploader:
 	make -C PropLoader CROSS=macosx
+endif
 
+ifneq ($(OS),msys)
 loadp2/build-win32/loadp2.exe:
 	make -C loadp2 CROSS=win32
+endif
 
 $(RESOBJ): $(RES_RC)
 	$(WINRC) -o $@ --define STATIC_BUILD --include "$(TCLROOT)/tk/generic" --include "$(TCLROOT)/tcl/generic" --include "$(RESDIR)" "$<"
