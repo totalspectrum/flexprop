@@ -1,3 +1,6 @@
+Version 4.1.4
+- Added option to save session (so open files are reloaded at startup)
+
 Version 4.1.3
 - Fixed packaging of PropLoader
 

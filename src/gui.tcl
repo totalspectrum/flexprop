@@ -139,6 +139,7 @@ proc copyShadowToConfig {} {
     set config(flashcmd) $shadow(flashcmd)
     set config(flashprogram) $shadow(flashprogram)
     set config(baud) $shadow(baud)
+    set config(savesession) 1
     checkPropVersion
 }
 
@@ -214,6 +215,7 @@ proc config_open {} {
     global OPT
     global COMPRESS
     global COMPORT
+    global OPENFILES
     
     if {[file exists $CONFIG_FILE]} {
 	set fp [open $CONFIG_FILE r]
@@ -245,6 +247,10 @@ proc config_open {} {
 		# set optimize level
 		set COMPORT [lindex $data 1]
 	    }
+	    openfiles {
+		# record open files
+		set OPENFILES [lindex $data 1]
+	    }
 	    default {
 		set config([lindex $data 0]) [lindex $data 1]
 	    }
@@ -257,6 +263,7 @@ proc config_open {} {
     if { "$config(font)" eq "" } {
 	set config(font) "TkFixedFont"
     }
+
     return 1
 }
 
@@ -266,8 +273,10 @@ proc config_save {} {
     global OPT
     global COMPRESS
     global COMPORT
-
+    global OPENFILES
+    
     updateLibraryList
+    updateOpenFiles
     set config(sash) [.p sash coord 0]
     set fp [open $CONFIG_FILE w]
     puts $fp "# flexgui config info"
@@ -275,6 +284,7 @@ proc config_save {} {
     puts $fp "opt\t\{$OPT\}"
     puts $fp "compress\t\{$COMPRESS\}"
     puts $fp "comport\t\{$COMPORT\}"
+    puts $fp "openfiles\t\{$OPENFILES\}"
     foreach i [array names config] {
 	if {$i != ""} {
 	    puts $fp "$i\t\{$config($i)\}"
@@ -312,6 +322,22 @@ proc exitProgram { } {
     checkAllChanges
     config_save
     exit
+}
+
+# set list of open files
+proc updateOpenFiles { } {
+    global OPENFILES
+    global filenames
+    set t [.p.nb tabs]
+    set i 0
+    set w [lindex $t $i]
+    set OPENFILES [list]
+    while { $w ne "" } {
+	set s $filenames($w)
+	lappend OPENFILES $s
+	set i [expr "$i + 1"]
+	set w [lindex $t $i]
+    }
 }
 
 # close tab
@@ -654,6 +680,18 @@ proc doOpenFile {} {
     set BINFILE ""
     
     return [loadSourceFile $filename]
+}
+
+proc openLastFiles {} {
+    global OPENFILES
+    set i 0
+    set t $OPENFILES
+    set w [lindex $t $i]
+    while { $w ne "" } {
+	loadSourceFile [file normalize $w]
+	set i [expr "$i + 1"]
+	set w [lindex $t $i]
+    }
 }
 
 proc pickFlashProgram {} {
@@ -1229,6 +1267,7 @@ proc doEditorOptions {} {
     ttk::button .editopts.font.change -text " Change... " -command doSelectFont
     checkbutton .editopts.font.linenums -text "Show Linenumbers" -variable config(showlinenumbers) -command doShowLinenumbers
     checkbutton .editopts.font.autoreload -text "Automatically Reload Files if changed externally" -variable config(autoreload)
+    checkbutton .editopts.font.savewindows -text "Save session on exit" -variable config(savesession)
     ttk::button .editopts.end.ok -text " OK " -command doneAppearance
 
     label .editopts.bot.lb -text "Compiler output font " -font $config(botfont)
@@ -1248,6 +1287,7 @@ proc doEditorOptions {} {
     grid .editopts.font.tab .editopts.font.lb .editopts.font.change
     grid .editopts.font.linenums
     grid .editopts.font.autoreload
+    grid .editopts.font.savewindows
     grid .editopts.bot.lb .editopts.bot.change
     
     grid .editopts.end.ok -sticky nsew
@@ -1664,6 +1704,8 @@ if { $::argc > 0 } {
     foreach argx $argv {
         loadSourceFile [file normalize $argx]
     }
+} elseif { $config(savesession) } {
+    openLastFiles
 } else {
     createNewTab
 }

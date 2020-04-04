@@ -52,6 +52,9 @@ output window, and has an option to automatically load files changed
 by external programs (normally flexgui will prompt you to reload if
 it notices a change).
 
+The "Save session on exit" option, if enabled, causes the editor to reload any
+previously open files each time it is started.
+
 ### Commands
 
 The Commands menu allow you to compile, run a binary, or both compile
