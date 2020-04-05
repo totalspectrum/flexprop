@@ -73,7 +73,9 @@ set COMPORT " "
 set OPT "-O1"
 set COMPRESS "-z0"
 set PROP_VERSION ""
+set OPENFILES ""
 set config(showlinenumbers) 1
+set config(savesession) 1
 
 #
 # filenames($w) gives the file name in window $w, for all of the various tabs
@@ -139,7 +141,6 @@ proc copyShadowToConfig {} {
     set config(flashcmd) $shadow(flashcmd)
     set config(flashprogram) $shadow(flashprogram)
     set config(baud) $shadow(baud)
-    set config(savesession) 1
     checkPropVersion
 }
 
@@ -1704,7 +1705,7 @@ if { $::argc > 0 } {
     foreach argx $argv {
         loadSourceFile [file normalize $argx]
     }
-} elseif { $config(savesession) } {
+} elseif { $config(savesession) && [llength $OPENFILES] } {
     openLastFiles
 } else {
     createNewTab
