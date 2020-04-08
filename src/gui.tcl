@@ -1638,6 +1638,7 @@ proc searchrep {t {replace 1}} {
    } else {
        raise $w.f
        focus $w
+       $w.f icursor end
    }
 }
 
