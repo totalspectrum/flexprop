@@ -504,6 +504,7 @@ proc getLibrary {} {
 	raise .pb
     } else {
 	do_pb_create
+	wm title .pb "Library Paths"
     }
 }
 

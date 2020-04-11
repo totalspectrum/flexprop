@@ -15,6 +15,7 @@ proc do_pb_add {} {
     if { $lib ne "" } {
 	.pb.pathbox insert end $lib
     }
+    raise .pb
 }
 
 proc do_pb_ok {} {

@@ -1,6 +1,7 @@
 Version 4.1.5
 - Minor change to find dialog box to put the cursor at the end
 - Fixed a bug with startup code trying to open a renamed file
+- Fixed title on library directory dialog box
 
 Version 4.1.4b
 - Fixed startup code OPENFILES error
