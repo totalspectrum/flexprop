@@ -649,6 +649,12 @@ proc findFileOnPath { filename startdir } {
 
 proc loadSourceFile { filename } {
     global filenames
+
+    # sanity check
+    if { ![file exists $filename] } {
+	tk_messageBox -icon error -type ok -message "$filename\nis not found"
+	return
+    }
     
     # fetch
     set w [getTabFor $filename]
