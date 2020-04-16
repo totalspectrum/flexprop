@@ -1708,6 +1708,13 @@ bind .p.bot.txt <Expose> +setSash
 # needs to be initialized
 set BINFILE ""
 
+# mac os x special code
+if { [tk windowingsystem] == "aqua" } {
+    proc ::tk::mac::Quit {} {
+        exitProgram
+    }
+}
+
 # main code
 if { $::argc > 0 } {
     foreach argx $argv {
