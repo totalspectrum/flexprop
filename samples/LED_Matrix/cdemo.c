@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <propeller.h>
 
-struct __using("charlieplex_text.spin2") c;
+struct __using("charlieplex_text.spin") c;
 
 int main()
 {

@@ -35,9 +35,9 @@ democolors
 
 
 OBJ
-'   scrn: "vgatext_640x480.spin2"
-   scrn: "vgatext_800x600.spin2"
-'   scrn: "vgatext_1024x768.spin2"
+'   scrn: "vgatext_640x480.spin"
+   scrn: "vgatext_800x600.spin"
+'   scrn: "vgatext_1024x768.spin"
    ser: "spin/SmartSerial"
    
 PUB demo | x, y, fgcol, bgcol, ch, grey, col1, col2, idx

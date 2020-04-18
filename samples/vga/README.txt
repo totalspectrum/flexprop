@@ -14,7 +14,7 @@ BASIC demos
 
 Files
 -----
-vga_tile_driver.spin2 is the low level driver the drives the VGA. It
+vga_tile_driver.spin is the low level driver the drives the VGA. It
 takes most of its parameters (including the pins to use) in a
 parameter block that is passed in when it starts up. See below for
 details of this parameter block. Since the pin set to use is a
@@ -30,7 +30,7 @@ printing strings or numbers in hex and decimal.
 There are a number of sample drivers (see my github repository for
 all of them; in FlexGUI I'm just including the 800x600 one).
 
-vgatext_800x600.spin2 is the 800x600 version, supporting 100x40 characters
+vgatext_800x600.spin is the 800x600 version, supporting 100x40 characters
 
 Operation
 ---------
@@ -63,13 +63,13 @@ character (so only the standard ASCII characters are supported).
 
 DEMOS
 -----
-The Spin demo (demo.spin2) is the most complete example of how to use
+The Spin demo (demo.spin) is the most complete example of how to use
 the libraries. There is also a really simple example in BASIC
 (basdemo.bas).
 
 HOW IT WORKS
 ------------
-The actual driver is vga_tile_driver.spin2, which runs in its own COG.
+The actual driver is vga_tile_driver.spin, which runs in its own COG.
 It reads parameters from a mailbox, which has the following longs in
 order:
     starting pin for VGA

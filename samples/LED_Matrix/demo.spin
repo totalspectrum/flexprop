@@ -2,14 +2,14 @@
 ' charlieplex driver demo
 ' Connect LED MATRIX accessory board to 12-pin male header marked with P32 through P39.
 ' Uses objects:
-'	charlieplex_test.spin2 from   flexgui\samples\LED_Matrix 
+'	charlieplex_test.spin from   flexgui\samples\LED_Matrix 
 '	SmartSerial from              flexgui\include\spin
 '
 CON
   _clkfreq = 180_000_000
 
 obj
-  c: "charlieplex_text.spin2"    ' object to control LED matrix
+  c:   "charlieplex_text"        ' object to control LED matrix
   ser: "spin/SmartSerial"        ' standard serial object from include\spin
 
 pub main | i

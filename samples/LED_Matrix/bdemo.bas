@@ -13,7 +13,7 @@ const _clkfreq = 200_000_000
 #endif
 
 ' import the Spin2 charlieplex driver
-dim c as class using "charlieplex_text.spin2"
+dim c as class using "charlieplex_text.spin"
 
 ' start up the charlieplex driver
 if c.start() == 0 then
