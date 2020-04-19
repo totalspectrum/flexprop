@@ -59,10 +59,10 @@ EXEBINFILES=bin/fastspin.exe bin/loadp2.exe bin/fastspin.mac bin/loadp2.mac bin/
 EXEFILES=flexgui.exe $(EXEBINFILES)
 
 ifdef OPENSPIN
-WIN_BINARIES=$(EXEFILES) bin/proploader.exe bin/proploader.mac
+WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe bin/proploader.mac
 NATIVE_BINARIES=bin/fastspin bin/loadp2 bin/proploader
 else
-WIN_BINARIES=$(EXEFILES)
+WIN_BINARIES=$(EXEBINFILES)
 NATIVE_BINARIES=bin/fastspin bin/loadp2
 endif
 
@@ -115,7 +115,7 @@ BOARDFILES=board/P2ES_flashloader.bin board/P2ES_flashloader.spin2 board/P2ES_sd
 
 SIGN ?= ./spin2cpp/sign.dummy.sh
 
-flexgui.zip: flexgui_base $(WIN_BINARIES)
+flexgui.zip: flexgui_base flexgui.exe $(WIN_BINARIES)
 	cp -r flexgui.exe flexgui/
 	cp -r $(WIN_BINARIES) flexgui/bin
 	rm -f flexgui.zip
