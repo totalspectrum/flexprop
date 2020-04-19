@@ -28,7 +28,7 @@ VAR
     byte screen_buffer[COLS*ROWS*CELL_SIZE]
 
 OBJ
-    vga: "vga_tile_driver.spin2"
+    vga: "vga_tile_driver.spin"
 
 PUB start(pinbase) | i, pclkscale, pclk, sysclk, x, fontptr
   ' calculate clock frequency

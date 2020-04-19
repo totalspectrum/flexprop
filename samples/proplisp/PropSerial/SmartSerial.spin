@@ -10,49 +10,52 @@ CON
 VAR
   long rx_pin, tx_pin
 
-PUB start(rxpin, txpin, mode, baudrate) | bitperiod, txmode, rxmode
-  bitperiod := 7 + ((CLKFREQ / baudrate) << 16)
+PUB start(rxpin, txpin, mode, baudrate) | bitperiod, bit_mode
+  ' calculate delay between bits
+  bitperiod := (CLKFREQ / baudrate)
+
+  ' save parameters in the object
   rx_pin := rxpin
   tx_pin := txpin
-  txmode := _txmode
-  rxmode := _rxmode
-  wrpin_(txmode, txpin)
-  wxpin_(bitperiod, txpin)
-  dirh_(txpin)
-  wrpin_(rxmode, rxpin)
-  wxpin_(bitperiod, rxpin)
-  dirh_(rxpin)
-  return 1
-  
-PUB tx(val) | txpin
-  txpin := tx_pin
-  wypin_(val, txpin)
-  waitx_(1)
+
+  ' calculate smartpin mode for 8 bits per character
+  bit_mode := 7 + (bitperiod << 16)
+
+  ' set up the transmit pin
+  pinf(txpin)
+  wrpin(txpin, _txmode)
+  wxpin(txpin, bit_mode)
+  pinl(txpin)	' turn smartpin on by making the pin an output
+
+  ' set up the receive pin
+  pinf(rxpin)
+  wrpin(rxpin, _rxmode)
+  wxpin(rxpin, bit_mode)
+  pinl(rxpin)  ' turn smartpin on
+
+' send one byte
+PUB tx(val)
+  wypin(tx_pin, val)
   txflush
 
-PUB txflush | txpin, z
-  txpin := tx_pin
-  z := 1
-  repeat while z <> 0
-    asm
-      testp txpin wc
-   if_c mov z, #0
-    endasm
-
+' wait for character sent
+PUB txflush() | z
+  repeat
+    z := pinr(tx_pin)
+  while z == 0
+  
 ' check if byte received (never waits)
 ' returns -1 if no byte, otherwise byte
 
-PUB rxcheck : rxbyte | rxpin, z
+PUB rxcheck() : rxbyte | rxpin, z
   rxbyte := -1
   rxpin := rx_pin
-  asm
-    testp rxpin wc  ' char ready?
-    if_c rdpin rxbyte, rxpin
-    if_c shr rxbyte, #24
-  endasm
+  z := pinr(rxpin)
+  if z
+    rxbyte := rdpin(rxpin)>>24
 
 ' receive a byte (waits until one ready)
-PUB rx : v
+PUB rx() : v
   repeat
     v := rxcheck
   while v == -1

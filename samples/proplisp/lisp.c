@@ -70,7 +70,7 @@ FullDuplexSerial fds;
 #endif
 #ifdef __FLEXC__
 #ifdef __P2__
-struct __using("PropSerial/SmartSerial.spin2") fds;
+struct __using("PropSerial/SmartSerial.spin") fds;
 #else
 struct __using("PropSerial/FullDuplexSerial.spin") fds;
 #endif
