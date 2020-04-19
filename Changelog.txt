@@ -1,3 +1,7 @@
+Version 4.1.6
+- Fixed packaging problem that included flexgui.exe twice
+- Fixed P1 flash command not showing correctly in dialog
+
 Version 4.1.5
 - Minor change to find dialog box to put the cursor at the end
 - Fixed a bug with startup code trying to open a renamed file
