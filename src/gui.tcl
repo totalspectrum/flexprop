@@ -105,7 +105,7 @@ proc setShadowP1Defaults {} {
     
     set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -D_BAUD=%r -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -r -t -k"
-    set shadow(flashprogram) ""
+    set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
     set shadow(baud) 115200
 }
@@ -1558,12 +1558,11 @@ proc doRunOptions {} {
     
     set shadow(compilecmd) $config(compilecmd)
     set shadow(runcmd) $config(runcmd)
-    
+    set shadow(flashcmd) $config(flashcmd)
+
     if {[winfo exists .runopts]} {
 	if {![winfo viewable .runopts]} {
 	    wm deiconify .runopts
-	    set shadow(compilecmd) $config(compilecmd)
-	    set shadow(runcmd) $config(runcmd)
 	}
 	raise .runopts
 	return
