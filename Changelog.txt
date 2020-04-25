@@ -1,3 +1,6 @@
+Version 4.1.7
+- Fixed a problem with finding include files in error messages
+
 Version 4.1.6
 - Fixed packaging problem that included flexgui.exe twice
 - Fixed P1 flash command not showing correctly in dialog
