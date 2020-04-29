@@ -893,7 +893,7 @@ proc doClickOnError { w coord } {
 	set line [string range $linedata [expr $colonptr + 1] end]
     }
     if { $fname != "" } {
-	set startdir [getWindowFile $w]
+	set startdir $filenames([.p.nb select])
 	if { $startdir != "" } {
 	    set startdir [file dirname $startdir]
 	} else {
@@ -901,6 +901,9 @@ proc doClickOnError { w coord } {
 	}
 	set fname [findFileOnPath $fname $startdir]
 	set w [loadSourceFile $fname ]
+	if { $w == "" } {
+	    return
+	}
 	set t $w.txt
 	$t tag config hilite -background yellow
 	# remove hilight
