@@ -1,3 +1,6 @@
+Version 4.1.8
+- Preliminary (and not very satisfying) implementation of syntax checking.
+
 Version 4.1.7
 - Fixed a problem with finding include files in error messages
 
