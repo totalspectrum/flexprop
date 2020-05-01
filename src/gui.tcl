@@ -76,6 +76,7 @@ set PROP_VERSION ""
 set OPENFILES ""
 set config(showlinenumbers) 1
 set config(savesession) 1
+set config(syntaxhighlight) 0
 
 #
 # filenames($w) gives the file name in window $w, for all of the various tabs
@@ -362,6 +363,7 @@ proc loadFileToWindow { fname win } {
     $win edit modified false
     $win mark set insert 1.0
     set filetimes($fname) [file mtime $fname]
+    setHighlightingForFile $win $fname
     focus $win
 }
 
@@ -922,7 +924,31 @@ proc doClickOnError { w coord } {
 # set up syntax highlighting for a given ctext widget
 #
 
+set color(comments) cyan
+set color(keywords) DarkBlue
+set color(brackets) green
+set color(braces) lawngreen
+set color(parens) darkgreen
+set color(numbers) DeepPink
+set color(operators) green
+set color(strings)  red
+set color(varnames) black
+set color(preprocessor) mediumslateblue
+set color(types) purple
+set color(hyperlink) blue
+		
 proc setHighlightingForFile {w fname} {
+    global config
+    set ext [file extension $fname]
+    if { $config(syntaxhighlight) } {
+	set check1 [lsearch -exact {".c" ".cpp" ".cc" ".h" ".hpp"} $ext]
+	#puts "fname=$fname ext=$ext check1 = $check1"
+	if { $check1 >= 0 } {
+	    setSyntaxHighlightingC $w
+	} else {
+	    setSyntaxHighlightingSpin $w
+	}
+    }
     setHyperLinkResponse $w
     setHighlightingIncludes $w
 }
@@ -931,7 +957,7 @@ proc setHighlightingForFile {w fname} {
 # version that just highlights includes
 #
 proc setHighlightingIncludes {w} {
-    set color(hyperlink) blue
+    global color
     set include1RE {(?:#include\ [^<]*<)([^>]+)}
     set include2RE {(?:#include\ [^\"]*\")([^\"]+)}
     set using1RE {(?:__using\([^\"]*\")([^\"]+)}
@@ -944,17 +970,34 @@ proc setHighlightingIncludes {w} {
 }
 
 #
+# C language highlighting
+#
+proc setSyntaxHighlightingC {win} {
+    global color
+
+    ctext::addHighlightClassForSpecialChars $win brackets $color(brackets) {[]}
+    ctext::addHighlightClassForSpecialChars $win braces $color(braces) {{}}
+    ctext::addHighlightClassForSpecialChars $win parentheses $color(parens) {()}
+    ctext::addHighlightClassForSpecialChars $win quotes $color(strings) "\"\'"
+    ctext::addHighlightClass $win control $color(keywords) [list namespace while for if else do switch case __asm __pasm typedef]
+		
+    ctext::addHighlightClass $win types $color(types) [list \
+						    int char uint8_t int8_t uint16_t int16_t uint32_t int32_t intptr_t long double float unsigned signed void]
+	
+    ctext::addHighlightClass $win macros $color(preprocessor) [list \
+							      #define #undef #if #ifdef #ifndef #endif #elseif #include #import #exclude]
+	
+    ctext::addHighlightClassForSpecialChars $win math $color(operators) {+=*-/&^%!|<>}
+    #ctext::addHighlightClassForRegexp $win eolcomment $color(comments) {\/\/[^\n\r]*}
+    ctext::addHighlightClassForRegexp $win eolcomment $color(comments) {(?://\ )([^\r\n]+)}
+    #ctext::enableComments $win
+}
+
+#
 # Spin language version
 #
-proc setHighlightingSpin {w} {
-    set color(comments) grey
-    set color(keywords) DarkBlue
-    set color(brackets) purple
-    set color(numbers) DeepPink
-    set color(operators) green
-    set color(strings)  red
-    set color(varnames) black
-    set color(preprocessor) cyan
+proc setSyntaxHighlightingSpin {w} {
+    global color
     set keywordsbase [list Con Obj Dat Var Pub Pri Quit Exit Repeat While Until If Then Else Return Abort Long Word Byte Asm Endasm String]
     foreach i $keywordsbase {
 	lappend keywordsupper [string toupper $i]
@@ -985,10 +1028,10 @@ proc setHighlightingSpin {w} {
     ctext::addHighlightClassForRegexp $w strings $color(strings) {"(\\"||^"])*"}
     ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {^\#[a-z]+}
 
-    ctext::addHighlightClassForRegexp $w comments $color(comments) {\'[^\n\r]*}
-    ctext::enableComments $w
-    $w tag configure _cComment -foreground $color(comments)
-    $w tag raise _cComment
+    ctext::addHighlightClassForRegexp $w eolcomments $color(comments) {\'[^\']*}
+#    ctext::enableComments $w
+#    $w tag configure _cComment -foreground $color(comments)
+#    $w tag raise _cComment
 }
 
 menu .popup1 -tearoff 0
@@ -1277,7 +1320,8 @@ proc doEditorOptions {} {
     label .editopts.font.lb -text " Text font " -font $config(font)
     ttk::button .editopts.font.change -text " Change... " -command doSelectFont
     checkbutton .editopts.font.linenums -text "Show Linenumbers" -variable config(showlinenumbers) -command doShowLinenumbers
-    checkbutton .editopts.font.autoreload -text "Automatically Reload Files if changed externally" -variable config(autoreload)
+    checkbutton .editopts.font.syntax -text "Syntax Highlighting" -variable config(syntaxhighlight)
+    checkbutton .editopts.font.autoreload -text "Auto Reload Files if changed externally" -variable config(autoreload)
     checkbutton .editopts.font.savewindows -text "Save session on exit" -variable config(savesession)
     ttk::button .editopts.end.ok -text " OK " -command doneAppearance
 
@@ -1297,6 +1341,7 @@ proc doEditorOptions {} {
     grid .editopts.font.tab
     grid .editopts.font.tab .editopts.font.lb .editopts.font.change
     grid .editopts.font.linenums
+    grid .editopts.font.syntax
     grid .editopts.font.autoreload
     grid .editopts.font.savewindows
     grid .editopts.bot.lb .editopts.bot.change
