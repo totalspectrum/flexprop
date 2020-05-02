@@ -924,8 +924,8 @@ proc doClickOnError { w coord } {
 # set up syntax highlighting for a given ctext widget
 #
 
-set color(comments) cyan
-set color(keywords) DarkBlue
+set color(comments) grey
+set color(keywords) SlateBlue
 set color(brackets) green
 set color(braces) lawngreen
 set color(parens) darkgreen
@@ -940,6 +940,10 @@ set color(hyperlink) blue
 proc setHighlightingForFile {w fname} {
     global config
     set ext [file extension $fname]
+    ctext::clearHighlightClasses $w
+    foreach t [$w tag names] {
+	$w tag delete $t
+    }
     if { $config(syntaxhighlight) } {
 	set check1 [lsearch -exact {".c" ".cpp" ".cc" ".h" ".hpp"} $ext]
 	#puts "fname=$fname ext=$ext check1 = $check1"
@@ -976,7 +980,7 @@ proc setSyntaxHighlightingC {win} {
     global color
 
     ctext::addHighlightClassForSpecialChars $win brackets $color(brackets) {[]}
-    ctext::addHighlightClassForSpecialChars $win braces $color(braces) {{}}
+    ctext::addHighlightClassForSpecialChars $win braces $color(keywords) {{}}
     ctext::addHighlightClassForSpecialChars $win parentheses $color(parens) {()}
     ctext::addHighlightClassForSpecialChars $win quotes $color(strings) "\"\'"
     ctext::addHighlightClass $win control $color(keywords) [list namespace while for if else do switch case __asm __pasm typedef]
@@ -988,8 +992,8 @@ proc setSyntaxHighlightingC {win} {
 							      #define #undef #if #ifdef #ifndef #endif #elseif #include #import #exclude]
 	
     ctext::addHighlightClassForSpecialChars $win math $color(operators) {+=*-/&^%!|<>}
-    #ctext::addHighlightClassForRegexp $win eolcomment $color(comments) {\/\/[^\n\r]*}
-    ctext::addHighlightClassForRegexp $win eolcomment $color(comments) {(?://\ )([^\r\n]+)}
+    ctext::addHighlightClassForRegexp $win eolcomment $color(comments) {//[^\n\r]*}
+    #ctext::addHighlightClassForRegexp $win eolcomment $color(comments) {(?://\ )([^\r\n]+)}
     #ctext::enableComments $win
 }
 
@@ -1283,6 +1287,17 @@ proc doShowLinenumbers {} {
     }
 }
 
+proc resetHighlight {} {
+    global config
+    global filenames
+    set tablist [.p.nb tabs]
+    foreach w $tablist {
+	set fname [getWindowFile $w]
+	setHighlightingForFile $w.txt $fname
+	$w.txt highlight 1.0 end
+    }
+}
+
 proc doneAppearance {} {
     global config
 
@@ -1320,7 +1335,7 @@ proc doEditorOptions {} {
     label .editopts.font.lb -text " Text font " -font $config(font)
     ttk::button .editopts.font.change -text " Change... " -command doSelectFont
     checkbutton .editopts.font.linenums -text "Show Linenumbers" -variable config(showlinenumbers) -command doShowLinenumbers
-    checkbutton .editopts.font.syntax -text "Syntax Highlighting" -variable config(syntaxhighlight)
+    checkbutton .editopts.font.syntax -text "Syntax Highlighting" -variable config(syntaxhighlight) -command resetHighlight
     checkbutton .editopts.font.autoreload -text "Auto Reload Files if changed externally" -variable config(autoreload)
     checkbutton .editopts.font.savewindows -text "Save session on exit" -variable config(savesession)
     ttk::button .editopts.end.ok -text " OK " -command doneAppearance

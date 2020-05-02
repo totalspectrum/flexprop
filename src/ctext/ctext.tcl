@@ -1045,9 +1045,11 @@ proc ctext::highlight {win start end {afterTriggered 0}} {
 	    set wordEnd [$twin index "$res + $length chars"]
 	    if { $mi != -1 } {
 		set wordStart [$twin index "$res + $mi chars"]
-		$twin tag add $tagClass $wordStart $wordEnd
-		$twin tag configure $tagClass -foreground $color
+	    } else {
+		set wordStart $res
 	    }
+	    $twin tag add $tagClass $wordStart $wordEnd
+	    $twin tag configure $tagClass -foreground $color
 	    set si $wordEnd
 
 	    incr numTimesLooped
