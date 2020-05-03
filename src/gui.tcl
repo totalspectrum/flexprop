@@ -944,6 +944,7 @@ proc setHighlightingForFile {w fname} {
     foreach t [$w tag names] {
 	$w tag delete $t
     }
+    ctext::disableComments $w
     if { $config(syntaxhighlight) } {
 	set check1 [lsearch -exact {".c" ".cpp" ".cc" ".h" ".hpp"} $ext]
 	#puts "fname=$fname ext=$ext check1 = $check1"
@@ -976,25 +977,28 @@ proc setHighlightingIncludes {w} {
 #
 # C language highlighting
 #
-proc setSyntaxHighlightingC {win} {
+proc setSyntaxHighlightingC {w} {
     global color
 
-    ctext::addHighlightClassForSpecialChars $win brackets $color(brackets) {[]}
-    ctext::addHighlightClassForSpecialChars $win braces $color(keywords) {{}}
-    ctext::addHighlightClassForSpecialChars $win parentheses $color(parens) {()}
-    ctext::addHighlightClassForSpecialChars $win quotes $color(strings) "\"\'"
-    ctext::addHighlightClass $win control $color(keywords) [list namespace while for if else do switch case __asm __pasm typedef]
+    $w configure -commentstyle c
+    
+    ctext::addHighlightClassForSpecialChars $w brackets $color(brackets) {[]}
+    ctext::addHighlightClassForSpecialChars $w braces $color(keywords) {{}}
+    ctext::addHighlightClassForSpecialChars $w parentheses $color(parens) {()}
+    ctext::addHighlightClassForSpecialChars $w quotes $color(strings) "\"\'"
+    ctext::addHighlightClass $w control $color(keywords) [list namespace while for if else do switch case __asm __pasm typedef]
 		
-    ctext::addHighlightClass $win types $color(types) [list \
+    ctext::addHighlightClass $w types $color(types) [list \
 						    int char uint8_t int8_t uint16_t int16_t uint32_t int32_t intptr_t long double float unsigned signed void]
 	
-    ctext::addHighlightClass $win macros $color(preprocessor) [list \
+    ctext::addHighlightClass $w macros $color(preprocessor) [list \
 							      #define #undef #if #ifdef #ifndef #endif #elseif #include #import #exclude]
 	
-    ctext::addHighlightClassForSpecialChars $win math $color(operators) {+=*-/&^%!|<>}
-    ctext::addHighlightClassForRegexp $win eolcomment $color(comments) {//[^\n\r]*}
-    #ctext::addHighlightClassForRegexp $win eolcomment $color(comments) {(?://\ )([^\r\n]+)}
-    #ctext::enableComments $win
+    ctext::addHighlightClassForSpecialChars $w math $color(operators) {+=*-/&^%!|<>}
+    ctext::addHighlightClassForRegexp $w eolcomment $color(comments) {//[^\n\r]*}
+    ctext::enableComments $w
+    $w tag configure _cComment -foreground $color(comments)
+    $w tag raise _cComment
 }
 
 #
@@ -1011,6 +1015,8 @@ proc setSyntaxHighlightingSpin {w} {
     }
     set keywords [concat $keywordsbase $keywordsupper $keywordslower]
 
+    $w configure -commentstyle spin
+    
     ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \$ 
     ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \%
     ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 0
@@ -1033,9 +1039,9 @@ proc setSyntaxHighlightingSpin {w} {
     ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {^\#[a-z]+}
 
     ctext::addHighlightClassForRegexp $w eolcomments $color(comments) {\'[^\']*}
-#    ctext::enableComments $w
-#    $w tag configure _cComment -foreground $color(comments)
-#    $w tag raise _cComment
+    ctext::enableComments $w
+    $w tag configure _cComment -foreground $color(comments)
+    $w tag raise _cComment
 }
 
 menu .popup1 -tearoff 0
