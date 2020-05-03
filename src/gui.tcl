@@ -946,12 +946,17 @@ proc setHighlightingForFile {w fname} {
     }
     ctext::disableComments $w
     if { $config(syntaxhighlight) } {
-	set check1 [lsearch -exact {".c" ".cpp" ".cc" ".h" ".hpp"} $ext]
+	set check1 [lsearch -exact {".c" ".cpp" ".cc" ".h" ".hpp" ".C" ".H"} $ext]
 	#puts "fname=$fname ext=$ext check1 = $check1"
 	if { $check1 >= 0 } {
 	    setSyntaxHighlightingC $w
 	} else {
-	    setSyntaxHighlightingSpin $w
+	    set check1 [lsearch -exact {".bas" ".bi" ".BAS" ".Bas"} $ext]
+	    if { $check1 >= 0 } {
+		setSyntaxHighlightingBasic $w
+	    } else {
+		setSyntaxHighlightingSpin $w
+	    }
 	}
     }
     setHyperLinkResponse $w
@@ -1038,10 +1043,60 @@ proc setSyntaxHighlightingSpin {w} {
     ctext::addHighlightClassForRegexp $w strings $color(strings) {"(\\"||^"])*"}
     ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {^\#[a-z]+}
 
-    ctext::addHighlightClassForRegexp $w eolcomments $color(comments) {\'[^\']*}
+    ctext::addHighlightClassForRegexp $w eolcomments $color(comments) {\'[^\n]*}
     ctext::enableComments $w
     $w tag configure _cComment -foreground $color(comments)
     $w tag raise _cComment
+}
+
+proc setSyntaxHighlightingBasic {w} {
+    global color
+    set keywordslower [list as asm byref byval case catch class const continue data declare def defint defsng dim do end endif exit for function gosub goto if let next nil rem return select step sub then throw to try type until using var wend while with]
+    set opwordslower [list and andalso mod or orelse not shl shr xor]
+    set typewordslower [list any byte double integer long pointer ptr short single ubyte ulong ushort uword word]
+    
+    foreach i $keywordslower {
+	lappend keywordsupper [string toupper $i]
+    }
+    set keywords [concat $keywordsupper $keywordslower]
+    
+    foreach i $typewordslower {
+	lappend typewordsupper [string toupper $i]
+    }
+    set typewords [concat $typewordsupper $typewordslower]
+
+    foreach i $opwordslower {
+	lappend opwordsupper [string toupper $i]
+    }
+    set opwords [concat $opwordsupper $opwordslower]
+
+    
+    $w configure -commentstyle basic
+    
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \$ 
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \%
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 0
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 1
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 2
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 3
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 4
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 5
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 6
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 7
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 8
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 9
+
+    ctext::addHighlightClass $w keywords $color(keywords) $keywords
+    ctext::addHighlightClass $w operators $color(operators) $opwords
+
+    ctext::addHighlightClassForSpecialChars $w brackets $color(brackets) {[]()}
+    ctext::addHighlightClassForSpecialChars $w operators $color(operators) {+-=><!@~\*/&:|}
+
+    ctext::addHighlightClassForRegexp $w strings $color(strings) {"(\\"||^"])*"}
+    ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {^\#[a-z]+}
+
+    ctext::addHighlightClassForRegexp $w eolcomments $color(comments) {\'[^\n]*}
+    ctext::addHighlightClassForRegexp $w remcomments $color(comments) {(?:rem\ )([^\n]*)}
 }
 
 menu .popup1 -tearoff 0
