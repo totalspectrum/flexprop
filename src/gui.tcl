@@ -76,7 +76,7 @@ set PROP_VERSION ""
 set OPENFILES ""
 set config(showlinenumbers) 1
 set config(savesession) 1
-set config(syntaxhighlight) 0
+set config(syntaxhighlight) 1
 
 #
 # filenames($w) gives the file name in window $w, for all of the various tabs

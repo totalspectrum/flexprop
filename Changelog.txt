@@ -1,5 +1,6 @@
 Version 4.1.9
 - Added syntax coloring for BASIC
+- Turned on syntax coloring by default
 
 Version 4.1.8
 - Preliminary (and not very satisfying) implementation of syntax coloring.
