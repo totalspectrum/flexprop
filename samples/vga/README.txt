@@ -12,6 +12,13 @@ BASIC demos
 - Revision 0.3: Added 1028x768 support and polarity
 - Revision 0.2: Started work on ANSI escape codes
 
+Hardware
+--------
+This is designed for use with the P2-ES A/V accessory board, but
+probably any compatible pin-out will work. The base pin to use is a
+parameter to the driver, so it doesn't really matter where you plug it
+in (the samples are developed assuming a base pin of 48).
+
 Files
 -----
 vga_tile_driver.spin is the low level driver the drives the VGA. It
