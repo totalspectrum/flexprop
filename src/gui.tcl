@@ -1457,7 +1457,12 @@ proc mapPercent {str} {
 	set fullcomport ""
     }
     set bindir [file dirname $BINFILE]
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT "%F" $config(flashprogram) "%r" $config(baud)]
+    if { [.p.nb select] ne "" } {
+	set srcfile $filenames([.p.nb select])
+    } else {
+	set srcfile "undefined"
+    }
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT "%F" $config(flashprogram) "%r" $config(baud)]
     set result [string map $percentmap $str]
     return $result
 }

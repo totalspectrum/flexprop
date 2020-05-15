@@ -1,3 +1,6 @@
+Version 4.1.10
+- Fixed "Run binary on device" when no tabs open
+
 Version 4.1.9
 - Added syntax coloring for BASIC
 - Turned on syntax coloring by default
