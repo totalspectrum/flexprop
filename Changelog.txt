@@ -1,5 +1,6 @@
 Version 4.1.10
 - Fixed "Run binary on device" when no tabs open
+- Added option to rescan ports, and to look for WiFi devices for P1
 
 Version 4.1.9
 - Added syntax coloring for BASIC
