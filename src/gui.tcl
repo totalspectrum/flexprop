@@ -1109,6 +1109,7 @@ proc setSyntaxHighlightingBasic {w} {
 proc rescanPorts { } {
     global comport_last
     global PROP_VERSION
+    global EXE
     
     # search for serial ports using serial::listports (src/checkserial.tcl)
     .mbar.comport delete $comport_last end
@@ -1122,20 +1123,23 @@ proc rescanPorts { } {
 
     # look for WIFI devices
     if { $PROP_VERSION eq "P1" } {
-	set wifis [exec -ignorestderr bin/proploader -W]
+	set wifis [exec -ignorestderr bin/proploader$EXE -W]
 	set wifis [split $wifis "\n"]
 	foreach v $wifis {
-	    set comname $v
+	    set comname "$v"
 	    set portval ""
-	    set ipstart [string first $v "IP: "]
+	    set ipstart [string first "IP:" "$v"]
+	    #puts "for \[$v\] ipstart=$ipstart"
 	    if { $ipstart != -1 } {
-		set ipstart [expr $ipstart + 3]
+		set ipstart [expr $ipstart + 4]
 		set ipstring [string range $v $ipstart end]
-		set ipend [string first $comval ","]
+		set ipend [string first "," "$ipstring"]
 		set ipend [expr $ipend - 1]
+		#puts "  for <$comname> ipend=<$ipend>"
 		if { $ipend >= 0 } {
 		    set ipstring [string range $ipstring 0 $ipend]
 		    set portval "-i $ipstring"
+		    #puts "  -> portval=$portval"
 		}
 	    }
 	    if { $portval ne "" } {
@@ -1220,10 +1224,9 @@ menu .mbar.help -tearoff 0
 .mbar.comport add radiobutton -label "2000000 baud" -variable config(baud) -value 2000000
 .mbar.comport add separator
 .mbar.comport add command -label "Scan for ports" -command rescanPorts
+.mbar.comport add separator
 .mbar.comport add radiobutton -label "Find port automatically" -variable COMPORT -value " "
 set comport_last [.mbar.comport index end]
-
-rescanPorts
 
 .mbar add cascade -menu .mbar.special -label Special
 .mbar.special add separator
@@ -1895,3 +1898,6 @@ if { $::argc > 0 } {
 } else {
     createNewTab
 }
+
+rescanPorts
+
