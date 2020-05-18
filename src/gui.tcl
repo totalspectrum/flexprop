@@ -248,6 +248,10 @@ proc config_open {} {
 	    comport {
 		# set optimize level
 		set COMPORT [lindex $data 1]
+		# convert old COMPORT entries
+		if { $COMPORT ne " " && [string index "$COMPORT" 0] ne "-" } {
+		    set COMPORT "-p $COMPORT"
+		}
 	    }
 	    openfiles {
 		# record open files
@@ -1099,6 +1103,48 @@ proc setSyntaxHighlightingBasic {w} {
     ctext::addHighlightClassForRegexp $w remcomments $color(comments) {(?:rem\ )([^\n]*)}
 }
 
+#
+# scan for ports
+#
+proc rescanPorts { } {
+    global comport_last
+    global PROP_VERSION
+    
+    # search for serial ports using serial::listports (src/checkserial.tcl)
+    .mbar.comport delete $comport_last end
+    .mbar.comport add radiobutton -label "Find port automatically" -variable COMPORT -value " "
+    set serlist [serial::listports]
+    foreach v $serlist {
+	set comname [lrange [split $v "\\"] end end]
+	set portval [string map {\\ \\\\} "$v"]
+	.mbar.comport add radiobutton -label $comname -variable COMPORT -value "-p $portval"
+    }
+
+    # look for WIFI devices
+    if { $PROP_VERSION eq "P1" } {
+	set wifis [exec -ignorestderr bin/proploader -W]
+	set wifis [split $wifis "\n"]
+	foreach v $wifis {
+	    set comname $v
+	    set portval ""
+	    set ipstart [string first $v "IP: "]
+	    if { $ipstart != -1 } {
+		set ipstart [expr $ipstart + 3]
+		set ipstring [string range $v $ipstart end]
+		set ipend [string first $comval ","]
+		set ipend [expr $ipend - 1]
+		if { $ipend >= 0 } {
+		    set ipstring [string range $ipstring 0 $ipend]
+		    set portval "-i $ipstring"
+		}
+	    }
+	    if { $portval ne "" } {
+		.mbar.comport add radiobutton -label $comname -variable COMPORT -value "$portval"
+	    }
+	}
+    }
+}
+
 menu .popup1 -tearoff 0
 .popup1 add command -label "Cut" -command {event generate [focus] <<Cut>>}
 .popup1 add command -label "Copy" -command {event generate [focus] <<Copy>>}
@@ -1167,21 +1213,17 @@ menu .mbar.help -tearoff 0
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
 .mbar.run add command -label "Choose P2 flash program..." -command { pickFlashProgram }
 
-.mbar add cascade -menu .mbar.comport -label Serial
+.mbar add cascade -menu .mbar.comport -label Ports
 .mbar.comport add radiobutton -label "115200 baud" -variable config(baud) -value 115200
 .mbar.comport add radiobutton -label "230400 baud" -variable config(baud) -value 230400
 .mbar.comport add radiobutton -label "921600 baud" -variable config(baud) -value 921600
 .mbar.comport add radiobutton -label "2000000 baud" -variable config(baud) -value 2000000
 .mbar.comport add separator
+.mbar.comport add command -label "Scan for ports" -command rescanPorts
 .mbar.comport add radiobutton -label "Find port automatically" -variable COMPORT -value " "
+set comport_last [.mbar.comport index end]
 
-# search for serial ports using serial::listports (src/checkserial.tcl)
-set serlist [serial::listports]
-foreach v $serlist {
-    set comname [lrange [split $v "\\"] end end]
-    set portval [string map {\\ \\\\} "$v"]
-    .mbar.comport add radiobutton -label $comname -variable COMPORT -value $portval
-}
+rescanPorts
 
 .mbar add cascade -menu .mbar.special -label Special
 .mbar.special add separator
@@ -1452,7 +1494,7 @@ proc mapPercent {str} {
 #    set fulloptions "$OPT $COMPRESS"
     set fulloptions "$OPT"
     if { $COMPORT ne " " } {
-	set fullcomport "-p $COMPORT"
+	set fullcomport "$COMPORT"
     } else {
 	set fullcomport ""
     }
