@@ -1,3 +1,6 @@
+Version 4.1.11
+- Fixed a problem with P1 PropLoader startup timing
+
 Version 4.1.10
 - Fixed "Run binary on device" when no tabs open
 - Added option to rescan ports, and to look for WiFi devices for P1
