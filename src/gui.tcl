@@ -994,7 +994,6 @@ proc setSyntaxHighlightingC {w} {
     ctext::addHighlightClassForSpecialChars $w brackets $color(brackets) {[]}
     ctext::addHighlightClassForSpecialChars $w braces $color(keywords) {{}}
     ctext::addHighlightClassForSpecialChars $w parentheses $color(parens) {()}
-    ctext::addHighlightClassForSpecialChars $w quotes $color(strings) "\"\'"
     ctext::addHighlightClass $w control $color(keywords) [list namespace while for if else do switch case __asm __pasm typedef]
 		
     ctext::addHighlightClass $w types $color(types) [list \
@@ -1005,6 +1004,8 @@ proc setSyntaxHighlightingC {w} {
 	
     ctext::addHighlightClassForSpecialChars $w math $color(operators) {+=*-/&^%!|<>}
     ctext::addHighlightClassForRegexp $w eolcomment $color(comments) {//[^\n\r]*}
+    ctext::addHighlightClassForRegexp $w strings $color(strings) {\".[^\"]*\"}
+    #ctext::addHighlightClassForSpecialChars $w quotes $color(strings) "\"\'"
     ctext::enableComments $w
     $w tag configure _cComment -foreground $color(comments)
     $w tag raise _cComment
@@ -1044,7 +1045,7 @@ proc setSyntaxHighlightingSpin {w} {
     ctext::addHighlightClassForSpecialChars $w brackets $color(brackets) {[]()}
     ctext::addHighlightClassForSpecialChars $w operators $color(operators) {+-=><!@~\*/&:|}
 
-    ctext::addHighlightClassForRegexp $w strings $color(strings) {"(\\"||^"])*"}
+    ctext::addHighlightClassForRegexp $w strings $color(strings) {\".[^\"]*\"}
     ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {^\#[a-z]+}
 
     ctext::addHighlightClassForRegexp $w eolcomments $color(comments) {\'[^\n]*}
@@ -1092,11 +1093,12 @@ proc setSyntaxHighlightingBasic {w} {
 
     ctext::addHighlightClass $w keywords $color(keywords) $keywords
     ctext::addHighlightClass $w operators $color(operators) $opwords
+    ctext::addHighlightClass $w types $color(types) $typewords
 
     ctext::addHighlightClassForSpecialChars $w brackets $color(brackets) {[]()}
     ctext::addHighlightClassForSpecialChars $w operators $color(operators) {+-=><!@~\*/&:|}
 
-    ctext::addHighlightClassForRegexp $w strings $color(strings) {"(\\"||^"])*"}
+    ctext::addHighlightClassForRegexp $w strings $color(strings) {\".[^\"]*\"}
     ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {^\#[a-z]+}
 
     ctext::addHighlightClassForRegexp $w eolcomments $color(comments) {\'[^\n]*}
