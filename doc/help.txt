@@ -73,7 +73,7 @@ use for flashing may be selected with the "Choose P2 flash program..."
 menu. For example, choosing "P2ES_sdcard.bin" will cause the binary
 to be placed on an SD card instead of in the SPI flash.
 
-### Serial
+### Ports
 
 Presents a menu of serial port speeds and ports that may be selected.
 The default is to tell the loader program (loadp2 or proploader) to

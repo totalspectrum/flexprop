@@ -76,7 +76,7 @@ set PROP_VERSION ""
 set OPENFILES ""
 set config(showlinenumbers) 1
 set config(savesession) 1
-set config(syntaxhighlight) 0
+set config(syntaxhighlight) 1
 
 #
 # filenames($w) gives the file name in window $w, for all of the various tabs
@@ -248,6 +248,10 @@ proc config_open {} {
 	    comport {
 		# set optimize level
 		set COMPORT [lindex $data 1]
+		# convert old COMPORT entries
+		if { $COMPORT ne " " && [string index "$COMPORT" 0] ne "-" } {
+		    set COMPORT "-p $COMPORT"
+		}
 	    }
 	    openfiles {
 		# record open files
@@ -946,12 +950,17 @@ proc setHighlightingForFile {w fname} {
     }
     ctext::disableComments $w
     if { $config(syntaxhighlight) } {
-	set check1 [lsearch -exact {".c" ".cpp" ".cc" ".h" ".hpp"} $ext]
+	set check1 [lsearch -exact {".c" ".cpp" ".cc" ".h" ".hpp" ".C" ".H"} $ext]
 	#puts "fname=$fname ext=$ext check1 = $check1"
 	if { $check1 >= 0 } {
 	    setSyntaxHighlightingC $w
 	} else {
-	    setSyntaxHighlightingSpin $w
+	    set check1 [lsearch -exact {".bas" ".bi" ".BAS" ".Bas"} $ext]
+	    if { $check1 >= 0 } {
+		setSyntaxHighlightingBasic $w
+	    } else {
+		setSyntaxHighlightingSpin $w
+	    }
 	}
     }
     setHyperLinkResponse $w
@@ -985,7 +994,6 @@ proc setSyntaxHighlightingC {w} {
     ctext::addHighlightClassForSpecialChars $w brackets $color(brackets) {[]}
     ctext::addHighlightClassForSpecialChars $w braces $color(keywords) {{}}
     ctext::addHighlightClassForSpecialChars $w parentheses $color(parens) {()}
-    ctext::addHighlightClassForSpecialChars $w quotes $color(strings) "\"\'"
     ctext::addHighlightClass $w control $color(keywords) [list namespace while for if else do switch case __asm __pasm typedef]
 		
     ctext::addHighlightClass $w types $color(types) [list \
@@ -996,6 +1004,8 @@ proc setSyntaxHighlightingC {w} {
 	
     ctext::addHighlightClassForSpecialChars $w math $color(operators) {+=*-/&^%!|<>}
     ctext::addHighlightClassForRegexp $w eolcomment $color(comments) {//[^\n\r]*}
+    ctext::addHighlightClassForRegexp $w strings $color(strings) {\".[^\"]*\"}
+    #ctext::addHighlightClassForSpecialChars $w quotes $color(strings) "\"\'"
     ctext::enableComments $w
     $w tag configure _cComment -foreground $color(comments)
     $w tag raise _cComment
@@ -1035,13 +1045,110 @@ proc setSyntaxHighlightingSpin {w} {
     ctext::addHighlightClassForSpecialChars $w brackets $color(brackets) {[]()}
     ctext::addHighlightClassForSpecialChars $w operators $color(operators) {+-=><!@~\*/&:|}
 
-    ctext::addHighlightClassForRegexp $w strings $color(strings) {"(\\"||^"])*"}
+    ctext::addHighlightClassForRegexp $w strings $color(strings) {\".[^\"]*\"}
     ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {^\#[a-z]+}
 
-    ctext::addHighlightClassForRegexp $w eolcomments $color(comments) {\'[^\']*}
+    ctext::addHighlightClassForRegexp $w eolcomments $color(comments) {\'[^\n]*}
     ctext::enableComments $w
     $w tag configure _cComment -foreground $color(comments)
     $w tag raise _cComment
+}
+
+proc setSyntaxHighlightingBasic {w} {
+    global color
+    set keywordslower [list as asm byref byval case catch class const continue data declare def defint defsng dim do end endif exit for function gosub goto if let next nil rem return select step sub then throw to try type until using var wend while with]
+    set opwordslower [list and andalso mod or orelse not shl shr xor]
+    set typewordslower [list any byte double integer long pointer ptr short single ubyte ulong ushort uword word]
+    
+    foreach i $keywordslower {
+	lappend keywordsupper [string toupper $i]
+    }
+    set keywords [concat $keywordsupper $keywordslower]
+    
+    foreach i $typewordslower {
+	lappend typewordsupper [string toupper $i]
+    }
+    set typewords [concat $typewordsupper $typewordslower]
+
+    foreach i $opwordslower {
+	lappend opwordsupper [string toupper $i]
+    }
+    set opwords [concat $opwordsupper $opwordslower]
+
+    
+    $w configure -commentstyle basic
+    
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \$ 
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \%
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 0
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 1
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 2
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 3
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 4
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 5
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 6
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 7
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 8
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 9
+
+    ctext::addHighlightClass $w keywords $color(keywords) $keywords
+    ctext::addHighlightClass $w operators $color(operators) $opwords
+    ctext::addHighlightClass $w types $color(types) $typewords
+
+    ctext::addHighlightClassForSpecialChars $w brackets $color(brackets) {[]()}
+    ctext::addHighlightClassForSpecialChars $w operators $color(operators) {+-=><!@~\*/&:|}
+
+    ctext::addHighlightClassForRegexp $w strings $color(strings) {\".[^\"]*\"}
+    ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {^\#[a-z]+}
+
+    ctext::addHighlightClassForRegexp $w eolcomments $color(comments) {\'[^\n]*}
+    ctext::addHighlightClassForRegexp $w remcomments $color(comments) {(?:rem\ )([^\n]*)}
+}
+
+#
+# scan for ports
+#
+proc rescanPorts { } {
+    global comport_last
+    global PROP_VERSION
+    global EXE
+    
+    # search for serial ports using serial::listports (src/checkserial.tcl)
+    .mbar.comport delete $comport_last end
+    .mbar.comport add radiobutton -label "Find port automatically" -variable COMPORT -value " "
+    set serlist [serial::listports]
+    foreach v $serlist {
+	set comname [lrange [split $v "\\"] end end]
+	set portval [string map {\\ \\\\} "$v"]
+	.mbar.comport add radiobutton -label $comname -variable COMPORT -value "-p $portval"
+    }
+
+    # look for WIFI devices
+    if { $PROP_VERSION eq "P1" } {
+	set wifis [exec -ignorestderr bin/proploader$EXE -W]
+	set wifis [split $wifis "\n"]
+	foreach v $wifis {
+	    set comname "$v"
+	    set portval ""
+	    set ipstart [string first "IP:" "$v"]
+	    #puts "for \[$v\] ipstart=$ipstart"
+	    if { $ipstart != -1 } {
+		set ipstart [expr $ipstart + 4]
+		set ipstring [string range $v $ipstart end]
+		set ipend [string first "," "$ipstring"]
+		set ipend [expr $ipend - 1]
+		#puts "  for <$comname> ipend=<$ipend>"
+		if { $ipend >= 0 } {
+		    set ipstring [string range $ipstring 0 $ipend]
+		    set portval "-i $ipstring"
+		    #puts "  -> portval=$portval"
+		}
+	    }
+	    if { $portval ne "" } {
+		.mbar.comport add radiobutton -label $comname -variable COMPORT -value "$portval"
+	    }
+	}
+    }
 }
 
 menu .popup1 -tearoff 0
@@ -1112,21 +1219,16 @@ menu .mbar.help -tearoff 0
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
 .mbar.run add command -label "Choose P2 flash program..." -command { pickFlashProgram }
 
-.mbar add cascade -menu .mbar.comport -label Serial
+.mbar add cascade -menu .mbar.comport -label Ports
 .mbar.comport add radiobutton -label "115200 baud" -variable config(baud) -value 115200
 .mbar.comport add radiobutton -label "230400 baud" -variable config(baud) -value 230400
 .mbar.comport add radiobutton -label "921600 baud" -variable config(baud) -value 921600
 .mbar.comport add radiobutton -label "2000000 baud" -variable config(baud) -value 2000000
 .mbar.comport add separator
+.mbar.comport add command -label "Scan for ports" -command rescanPorts
+.mbar.comport add separator
 .mbar.comport add radiobutton -label "Find port automatically" -variable COMPORT -value " "
-
-# search for serial ports using serial::listports (src/checkserial.tcl)
-set serlist [serial::listports]
-foreach v $serlist {
-    set comname [lrange [split $v "\\"] end end]
-    set portval [string map {\\ \\\\} "$v"]
-    .mbar.comport add radiobutton -label $comname -variable COMPORT -value $portval
-}
+set comport_last [.mbar.comport index end]
 
 .mbar add cascade -menu .mbar.special -label Special
 .mbar.special add separator
@@ -1397,12 +1499,17 @@ proc mapPercent {str} {
 #    set fulloptions "$OPT $COMPRESS"
     set fulloptions "$OPT"
     if { $COMPORT ne " " } {
-	set fullcomport "-p $COMPORT"
+	set fullcomport "$COMPORT"
     } else {
 	set fullcomport ""
     }
     set bindir [file dirname $BINFILE]
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT "%F" $config(flashprogram) "%r" $config(baud)]
+    if { [.p.nb select] ne "" } {
+	set srcfile $filenames([.p.nb select])
+    } else {
+	set srcfile "undefined"
+    }
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT "%F" $config(flashprogram) "%r" $config(baud)]
     set result [string map $percentmap $str]
     return $result
 }
@@ -1793,3 +1900,6 @@ if { $::argc > 0 } {
 } else {
     createNewTab
 }
+
+rescanPorts
+

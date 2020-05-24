@@ -1,5 +1,16 @@
+Version 4.1.11
+- Fixed a problem with P1 PropLoader startup timing
+
+Version 4.1.10
+- Fixed "Run binary on device" when no tabs open
+- Added option to rescan ports, and to look for WiFi devices for P1
+
+Version 4.1.9
+- Added syntax coloring for BASIC
+- Turned on syntax coloring by default
+
 Version 4.1.8
-- Preliminary (and not very satisfying) implementation of syntax checking.
+- Preliminary (and not very satisfying) implementation of syntax coloring.
 
 Version 4.1.7
 - Fixed a problem with finding include files in error messages
