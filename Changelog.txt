@@ -1,3 +1,6 @@
+Version 4.1.12
+- Added general compiler documentation.
+
 Version 4.1.11
 - Fixed a problem with P1 PropLoader startup timing
 
