@@ -97,8 +97,8 @@ WINTK_LIBS = $(TCLROOT)/tk/win/libtk87.a $(TCLROOT)/tk/win/libtkstub87.a $(TCLRO
 VPATH=.:spin2cpp/doc
 
 ifdef PANDOC_EXISTS
-PDFFILES=spin2cpp/Fastspin.pdf spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
-HTMLFILES=spin2cpp/Fastspin.html spin2cpp/doc/basic.html spin2cpp/doc/c.html spin2cpp/doc/spin.html
+PDFFILES=spin2cpp/Fastspin.pdf spin2cpp/doc/general.pdf spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
+HTMLFILES=spin2cpp/Fastspin.html spin2cpp/doc/general.html spin2cpp/doc/basic.html spin2cpp/doc/c.html spin2cpp/doc/spin.html
 endif
 
 #

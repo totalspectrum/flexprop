@@ -1246,6 +1246,7 @@ set comport_last [.mbar.comport index end]
 
 .mbar add cascade -menu .mbar.help -label Help
 .mbar.help add command -label "GUI" -command { doHelp "$ROOTDIR/doc/help.txt" "Help" }
+.mbar.help add command -label "General compiler documentation" -command { launchBrowser "file://$ROOTDIR/doc/general.html" }
 .mbar.help add command -label "BASIC Language" -command { launchBrowser "file://$ROOTDIR/doc/basic.html" }
 .mbar.help add command -label "C Language" -command { launchBrowser "file://$ROOTDIR/doc/c.html" }
 .mbar.help add command -label "Spin Language" -command { launchBrowser "file://$ROOTDIR/doc/spin.html" }
