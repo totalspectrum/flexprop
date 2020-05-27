@@ -1,4 +1,4 @@
-Version 4.1.12
+Version 4.2.0
 - Added general compiler documentation.
 
 Version 4.1.11
