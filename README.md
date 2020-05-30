@@ -97,11 +97,11 @@ Under the `File` menu is an option for viewing the listing file, which shows the
 
 ## Other platforms
 
-Only a Windows binary is provided. For other platforms, run the `flexgui.tcl` script. You will need Tcl/Tk installed, but it is available for most versions of Unix (including Mac OS X). You'll also need to get binary versions of `fastspin` and `loadp2` for your platform, and copy them into the `bin` folder.
+Only a Windows binary is provided. For other platforms, run the `flexgui.tcl` script. You will need Tcl/Tk installed, but it is available for most versions of Unix (including Mac OS X). For linux, you'll also need to get binary versions of `fastspin` and `loadp2` for your platform, and copy them into the `bin` folder. For Windows and Mac OS X these binaries are already provided in the standard binary distribution of flexgui.
 
 ## High level languages
 
-The main advantage of flexgui over PNut (the "official" development tool for the Prop2) is that PNut doesn't yet support a high level language, whereas flexgui supports Spin, BASIC, and C. You can basically write ordinary Spin code, with Prop2 assembly code in the DAT section (instead of Prop1 assembly code). This makes prototyping your applications much easier.
+The main advantage of flexgui over PNut (the "official" development tool for the Prop2) is that PNut supports only Spin 2, whereas flexgui supports Spin 1, Spin 2, BASIC, and C. You can basically write ordinary Spin code, with Prop2 assembly code in the DAT section (instead of Prop1 assembly code). This makes prototyping your applications much easier.
 
 The code is compiled to P2 assembler by fastspin. This is somewhat different from the way Spin traditionally worked on the Prop1, where Spin code is typically compiled to bytecode and interpreted. (Note that fastspin does work for Prop1, and compiles to P1 assembler in that case.)
 
