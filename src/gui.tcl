@@ -77,6 +77,7 @@ set OPENFILES ""
 set config(showlinenumbers) 1
 set config(savesession) 1
 set config(syntaxhighlight) 1
+set config(autoindent) 1
 
 #
 # filenames($w) gives the file name in window $w, for all of the various tabs
@@ -570,7 +571,8 @@ proc setupFramedText {w} {
     grid columnconfigure $w $w.txt -weight 1
     bind $w.txt <$CTRL_PREFIX-f> $searchcmd
     bind $w.txt <$CTRL_PREFIX-k> $replacecmd
-
+    bind $w.txt <Return> {do_indent %W; break}
+    
     # for some reason on my linux system the selection doesn't show
     # up correctly
     if { [tk windowingsystem] == "x11" } {
@@ -1445,6 +1447,7 @@ proc doEditorOptions {} {
     ttk::button .editopts.font.change -text " Change... " -command doSelectFont
     checkbutton .editopts.font.linenums -text "Show Linenumbers" -variable config(showlinenumbers) -command doShowLinenumbers
     checkbutton .editopts.font.syntax -text "Syntax Highlighting" -variable config(syntaxhighlight) -command resetHighlight
+    checkbutton .editopts.font.autoindent -text "Automatic indenting" -variable config(autoindent)
     checkbutton .editopts.font.autoreload -text "Auto Reload Files if changed externally" -variable config(autoreload)
     checkbutton .editopts.font.savewindows -text "Save session on exit" -variable config(savesession)
     ttk::button .editopts.end.ok -text " OK " -command doneAppearance
@@ -1466,6 +1469,7 @@ proc doEditorOptions {} {
     grid .editopts.font.tab .editopts.font.lb .editopts.font.change
     grid .editopts.font.linenums
     grid .editopts.font.syntax
+    grid .editopts.font.autoindent
     grid .editopts.font.autoreload
     grid .editopts.font.savewindows
     grid .editopts.bot.lb .editopts.bot.change
@@ -1788,6 +1792,26 @@ proc doRunOptions {} {
     grid columnconfigure .runopts 0 -weight 1
     
     wm title .runopts "Executable Paths"
+}
+
+proc do_indent {w {extra "    "}} {
+    global config
+
+    if { $config(autoindent) } {
+	set lineno [expr {int([$w index insert])}]
+	set line [$w get $lineno.0 $lineno.end]
+	regexp {^(\s*)} $line -> prefix
+	if {[string index $line end] eq "\{"} {
+	    tk::TextInsert $w "\n$prefix$extra"
+	} elseif { [string index $line end] eq "\}" } {
+	    $w delete insert-[expr [string length $extra]+1]c insert-1c
+	    tk::TextInsert $w "\n[string range $prefix 0 end-[string length $extra]]"
+	} else {
+	    tk::TextInsert $w "\n$prefix"
+	}
+    } else {
+	tk::TextInsert $w "\n"
+    }
 }
 
 #
