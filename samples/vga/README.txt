@@ -3,6 +3,7 @@ VGA TILE DRIVER
 This is a simple VGA tile driver that supports standard ANSI escape
 codes. It's still a work in progress.
 
+- Revision 0.8: Allow for 16 pixel wide fonts
 - Revision 0.7: Added 2 byte/char and 1 byte/char modes
 - Revision 0.6: Made C drivers work with riscvp2 and Catalina, and
 added support for new hardware
@@ -11,13 +12,6 @@ BASIC demos
 - Revision 0.4: Fixed a bug with vsync polarity
 - Revision 0.3: Added 1028x768 support and polarity
 - Revision 0.2: Started work on ANSI escape codes
-
-Hardware
---------
-This is designed for use with the P2-ES A/V accessory board, but
-probably any compatible pin-out will work. The base pin to use is a
-parameter to the driver, so it doesn't really matter where you plug it
-in (the samples are developed assuming a base pin of 48).
 
 Files
 -----
@@ -34,17 +28,23 @@ codes and writing data into memory.
 std_text_routines.spinh are utility functions to provide things like
 printing strings or numbers in hex and decimal.
 
-There are a number of sample drivers (see my github repository for
-all of them; in FlexGUI I'm just including the 800x600 one).
+There are a number of sample drivers:
 
+vgatext_640x480.spin is the 640x480 version, supporting 80x30 characters
 vgatext_800x600.spin is the 800x600 version, supporting 100x40 characters
+
+These basically just define some constants, set up the font to
+use, and then include the vga_text_routines.spinh to provide the
+actual driver code.
 
 Operation
 ---------
-Tiles must always be 8 pixels wide. Theoretically they can be any
+Tiles must always be either 8 or 16 pixels wide. Theoretically they can be any
 height, but the demos use 16 pixels (15 for the 800x600, which is
-achieved by just ignoring the first row of an 8x16 font).
-
+achieved by just ignoring the first row of an 8x16 font). The code has are
+been tested with 8x8 and 16x32 font. The font data must be laid out as
+an image that is FONT_WIDTH*256 pixels wide and FONT_HEIGHT pixels
+high.
 
 The character data is ROWS*COLS*CELL_SIZE bytes long. CELL_SIZE is
 the number of bytes each character takes, and may be either 1, 2, 4 or 8.
@@ -71,12 +71,12 @@ character (so only the standard ASCII characters are supported).
 DEMOS
 -----
 The Spin demo (demo.spin) is the most complete example of how to use
-the libraries. There is also a really simple example in BASIC
+the libraries. There is also some really simple examples in BASIC
 (basdemo.bas).
 
 HOW IT WORKS
 ------------
-The actual driver is vga_tile_driver.spin, which runs in its own COG.
+The actual driver is vga_tile_driver.spin2, which runs in its own COG.
 It reads parameters from a mailbox, which has the following longs in
 order:
     starting pin for VGA
@@ -84,7 +84,7 @@ order:
     number of columns (e.g. 80 or 100)
     number of rows (e.g. 30 or 40)
     font data address
-    width of font (must be 8)
+    width of font (must be 8 or 16)
     height of font
     clock scaling factor (see below)
     horizontal front porch, pixels
@@ -119,23 +119,20 @@ can change the color every pixel.
 
 FONT
 ----
-The font is an 8xN bitmap, but it's laid out a bit differently from most
-fonts:
+The font is an 8xN or 16xN bitmap, but it's laid out a bit differently
+from most fonts:
 
 (1) The characters are all placed in one row in the bitmap; that is,
 byte 0 is the first row of character 0, byte 1 is the first row of
-character 1, and so on, until we get to byte 256 which is the second row
-of character 0. This is because we have to keep the data we need for all
-characters in COG memory, but we'll only ever need the data for one font
-row at a time. This data is read during the horizontal sync and blanking
-period.
+character 1, and so on, until we get to byte 256 (512 for 16 pixel
+wide fonts) which is the second row of character 0. This is because we
+have to keep the data we need for all characters in COG memory, but
+we'll only ever need the data for one font row at a time. This data is
+read during the horizontal sync and blanking period.
 
 (2) The rows are output bit 0 first, then bit 1, and so on, so the
 individual characters are "reversed" from how most fonts store them.
 This is due to the way the streamer works in immediate mode.
-
-The font provided is unscii, a public domain Unicode font, in several
-variants.
 
 CREDITS
 -------

@@ -5,9 +5,12 @@
 
 Runs in its own COG. See README.txt for theory of operation.
 
-Two variants are provided: an 8 bit palette version and a 32 bit
-full color. To select the 8 bit version pass "4" (4 bytes per pixel)
-for the bytes_per_char parameter; for 32 bit pass "8"
+Four variants are provided:
+
+8 bytes/char: uses full 24 bit color with all effects available
+4 bytes/char: uses 8bpp for foreground and background, all effects available
+2 bytes/char: uses 16 colors (4bpp) with blinking effect
+1 byte/char:  only allows 128 characters, 1 bit for blinking, no colors
 
 Methods:
 
@@ -35,8 +38,10 @@ start(params)
 CON
   intensity = 80    '0..128
 
-  LINE_HANDLER = $1c0  ' location of pixel subroutine in COG memory
-  LINE_HANDLER_END = $1f0
+  FIELD_HANDLER = $300  ' location of pixel subroutine in LUT memory
+  FIELD_HANDLER_END = $3a0
+  LINE_HANDLER = $3a0
+  LINE_HANDLER_END = $3ff
   
 DAT     
         org 0
@@ -112,6 +117,14 @@ x
 y
         mul     vpixels, font_height
 
+font_line_cnt
+	' check font width; handle 8 (default) or 16
+	cmp	font_width, #16 wz
+if_z	shl	font_line_bytes, #1
+	mov	font_line_cnt, font_line_bytes
+	shr	font_line_cnt, #2	' convert to longs
+	sub	font_line_cnt, #1
+	
 	' copy parameters into settings
 curchar
 	add	m_rf_even, font_width
@@ -162,23 +175,129 @@ cmodval
         wrpin   dacmode_c,basepin_val
 	dirh	basepin_val
 
+	' save original ptrb
+	mov	pb, ptrb
+	
 	' load different routines into upper LUT depending on the bytes per char
 	' 8, 4, 2, or 1
 	' ptrb still points at @entry; make it point to the code we want to load
 	'
 	encod	bytes_per_char, bytes_per_char		' convert 1, 2, 4, 8 to 0, 1, 2, 3
+	cmp	font_width, #16 wz
+  if_z	or	bytes_per_char, #4			' offset later in table
 	alts	bytes_per_char, #line_offset_table	' look up in line_offset_table
-	add	ptrb, 0-0				' the offset we want for the code to load
+	add	pb, 0-0				' the offset we want for the code to load
 
-	' now load the code into LUT
-	setq	#(LINE_HANDLER_END-LINE_HANDLER)-1
-	rdlong	LINE_HANDLER, ptrb
+	' now load the line code into LUT
+	setq2	#(LINE_HANDLER_END-LINE_HANDLER)-1
+	rdlong	(LINE_HANDLER & $1ff), pb
+
+	' and load the field code into LUT
+	add	ptrb, ##(@field_entry - @entry)
+	setq2   #(FIELD_HANDLER_END-FIELD_HANDLER)-1
+	rdlong	(FIELD_HANDLER&$1ff),ptrb
+
+	jmp	#\FIELD_HANDLER
+'
+'
+' Initialized data
+'RJA:  New dacmodes for real P2
+dacmode_s       long    %0000_0000_000_1011000000000_01_00000_0         'hsync is 123-ohm, 3.3V
+dacmode_c       long    %0000_0000_000_1011100000000_01_00000_0         'R/G/B are 75-ohm, 2.0V
+
+m_bs        long    $7F010000 {+HFRONT_PORCH}        'before sync
+m_sn        long    $7F010000 {+HSYNC}        'sync
+m_bv        long    $7F010000 {+HBACK_PORCH}        'before visible
+m_vi        long    $7F010000 {+HPIXELS}       'visible
+
+m_rf_even    long   $0F000000 {+FONT_WIDTH}     ' 1bpp
+m_rf_odd     long   $0F010000 {+FONT_WIDTH}     ' 1bpp LUT immediate
+
+' active character effects for this line
+' these bits have the following meanings:
+'    01 = hide (show all fgground color)
+'    02 = underline
+'    04 = strikethrough
+'    08 = reserved
+'    10 = blinking hide
+'    20 = blinking underline
+'    40 = blinking strikethrough
+'    80 = if hidden, use bgcolor instead of fgcolor
+
+line_effects	long 0
+
+' active effects for this field; the blinking ones will be turned off
+' on half of the fields
+field_effects   long 0
+
+' count of elapsed fields, used for blinking
+field_count	long	0
+
+' number of bytes in a font line (256 for 8 bit wide font)
+font_line_bytes  long 256
+
+	     ' standard ANSI 256 color palette
+color_palette
+	long	$00000000, $80000000, $00800000, $80800000, $00008000, $80008000, $00808000, $c0c0c000
+	long	$80808000, $ff000000, $00ff0000, $ffff0000, $0000ff00, $ff00ff00, $00ffff00, $ffffff00
+	long	$00000000, $00003300, $00006600, $00009900, $0000cc00, $0000ff00, $00330000, $00333300
+	long	$00336600, $00339900, $0033cc00, $0033ff00, $00660000, $00663300, $00666600, $00669900
+	long	$0066cc00, $0066ff00, $00990000, $00993300, $00996600, $00999900, $0099cc00, $0099ff00
+	long	$00cc0000, $00cc3300, $00cc6600, $00cc9900, $00cccc00, $00ccff00, $00ff0000, $00ff3300
+	long	$00ff6600, $00ff9900, $00ffcc00, $00ffff00, $33000000, $33003300, $33006600, $33009900
+	long	$3300cc00, $3300ff00, $33330000, $33333300, $33336600, $33339900, $3333cc00, $3333ff00
+	long	$33660000, $33663300, $33666600, $33669900, $3366cc00, $3366ff00, $33990000, $33993300
+	long	$33996600, $33999900, $3399cc00, $3399ff00, $33cc0000, $33cc3300, $33cc6600, $33cc9900
+	long	$33cccc00, $33ccff00, $33ff0000, $33ff3300, $33ff6600, $33ff9900, $33ffcc00, $33ffff00
+	long	$66000000, $66003300, $66006600, $66009900, $6600cc00, $6600ff00, $66330000, $66333300
+	long	$66336600, $66339900, $6633cc00, $6633ff00, $66660000, $66663300, $66666600, $66669900
+	long	$6666cc00, $6666ff00, $66990000, $66993300, $66996600, $66999900, $6699cc00, $6699ff00
+	long	$66cc0000, $66cc3300, $66cc6600, $66cc9900, $66cccc00, $66ccff00, $66ff0000, $66ff3300
+	long	$66ff6600, $66ff9900, $66ffcc00, $66ffff00, $99000000, $99003300, $99006600, $99009900
+	long	$9900cc00, $9900ff00, $99330000, $99333300, $99336600, $99339900, $9933cc00, $9933ff00
+	long	$99660000, $99663300, $99666600, $99669900, $9966cc00, $9966ff00, $99990000, $99993300
+	long	$99996600, $99999900, $9999cc00, $9999ff00, $99cc0000, $99cc3300, $99cc6600, $99cc9900
+	long	$99cccc00, $99ccff00, $99ff0000, $99ff3300, $99ff6600, $99ff9900, $99ffcc00, $99ffff00
+	long	$cc000000, $cc003300, $cc006600, $cc009900, $cc00cc00, $cc00ff00, $cc330000, $cc333300
+	long	$cc336600, $cc339900, $cc33cc00, $cc33ff00, $cc660000, $cc663300, $cc666600, $cc669900
+	long	$cc66cc00, $cc66ff00, $cc990000, $cc993300, $cc996600, $cc999900, $cc99cc00, $cc99ff00
+	long	$cccc0000, $cccc3300, $cccc6600, $cccc9900, $cccccc00, $ccccff00, $ccff0000, $ccff3300
+	long	$ccff6600, $ccff9900, $ccffcc00, $ccffff00, $ff000000, $ff003300, $ff006600, $ff009900
+	long	$ff00cc00, $ff00ff00, $ff330000, $ff333300, $ff336600, $ff339900, $ff33cc00, $ff33ff00
+	long	$ff660000, $ff663300, $ff666600, $ff669900, $ff66cc00, $ff66ff00, $ff990000, $ff993300
+	long	$ff996600, $ff999900, $ff99cc00, $ff99ff00, $ffcc0000, $ffcc3300, $ffcc6600, $ffcc9900
+	long	$ffcccc00, $ffccff00, $ffff0000, $ffff3300, $ffff6600, $ffff9900, $ffffcc00, $ffffff00
+	long	$08080800, $12121200, $1c1c1c00, $26262600, $30303000, $3a3a3a00, $44444400, $4e4e4e00
+	long	$58585800, $62626200, $6c6c6c00, $76767600, $80808000, $8a8a8a00, $94949400, $9e9e9e00
+	long	$a8a8a800, $b2b2b200, $bcbcbc00, $c6c6c600, $d0d0d000, $dadada00, $e4e4e400, $eeeeee00
+
+
+' space for 256 bytes of font data (256 characters * 2 byte/char)
+font_line byte 0[512]
+
+' table of offsets to the character handling subroutines
+line_offset_table
+	long	@char1_loop - @entry
+	long	@char2_loop - @entry
+	long	@char4_loop - @entry
+	long	@char8_loop - @entry
 	
+	long	@word1_loop - @entry
+	long	@word2_loop - @entry
+	long	@word4_loop - @entry
+	long	@word8_loop - @entry
+
+mask_ffff
+	long	$ffff
+	
+	fit	$1f0
+
+	org	FIELD_HANDLER
 '
 '
 ' Field loop
 '
-field   
+field_entry
 	mov     y,vfront_porch           'top blanks
         call    #blank
 	mov	buffer_ptr, buffer_base
@@ -231,12 +350,12 @@ end_of_line
 
         drvnot  vsync_val          'sync on
 
-        mov 	y,vsync_pulse            'sync blanks
+        mov 	y,vsync_pulse      'sync blanks
         call    #blank
 
         drvnot  vsync_val          'sync off
 
-        jmp     #field                  'loop
+        jmp     #field_entry       'loop
 
 	
 '
@@ -250,97 +369,16 @@ blank       call    #hsync          'blank lines
 hsync       xcont   m_bs,#0         'horizontal sync
             xcont   m_sn,#1
 	xcont m_bv, #0
-	setq	#63		' read 64 longs = 256 bytes from font table
+	'setq	#63		' read 64 longs = 256 bytes from font table
+	setq	font_line_cnt	' read data from font table
 	rdlong	font_line, font_ptr
-  _ret_	add	font_ptr, #256
-
-'
-'
-' Initialized data
-'RJA:  New dacmodes for real P2
-dacmode_s       long    %0000_0000_000_1011000000000_01_00000_0         'hsync is 123-ohm, 3.3V
-dacmode_c       long    %0000_0000_000_1011100000000_01_00000_0         'R/G/B are 75-ohm, 2.0V
-
-m_bs        long    $7F010000 {+HFRONT_PORCH}        'before sync
-m_sn        long    $7F010000 {+HSYNC}        'sync
-m_bv        long    $7F010000 {+HBACK_PORCH}        'before visible
-m_vi        long    $7F010000 {+HPIXELS}       'visible
-
-m_rf_even    long   $0F000000 {+FONT_WIDTH}     ' 1bpp
-m_rf_odd     long   $0F010000 {+FONT_WIDTH}     ' 1bpp LUT immediate
-
-' active character effects for this line
-' these bits have the following meanings:
-'    01 = hide (show all fgground color)
-'    02 = underline
-'    04 = strikethrough
-'    08 = reserved
-'    10 = blinking hide
-'    20 = blinking underline
-'    40 = blinking strikethrough
-'    80 = if hidden, use bgcolor instead of fgcolor
-
-line_effects	long 0
-
-' active effects for this field; the blinking ones will be turned off
-' on half of the fields
-field_effects   long 0
-
-' count of elapsed fields, used for blinking
-field_count	long	0
-
-	     ' standard ANSI 256 color palette
-color_palette
-	long	$00000000, $80000000, $00800000, $80800000, $00008000, $80008000, $00808000, $c0c0c000
-	long	$80808000, $ff000000, $00ff0000, $ffff0000, $0000ff00, $ff00ff00, $00ffff00, $ffffff00
-	long	$00000000, $00003300, $00006600, $00009900, $0000cc00, $0000ff00, $00330000, $00333300
-	long	$00336600, $00339900, $0033cc00, $0033ff00, $00660000, $00663300, $00666600, $00669900
-	long	$0066cc00, $0066ff00, $00990000, $00993300, $00996600, $00999900, $0099cc00, $0099ff00
-	long	$00cc0000, $00cc3300, $00cc6600, $00cc9900, $00cccc00, $00ccff00, $00ff0000, $00ff3300
-	long	$00ff6600, $00ff9900, $00ffcc00, $00ffff00, $33000000, $33003300, $33006600, $33009900
-	long	$3300cc00, $3300ff00, $33330000, $33333300, $33336600, $33339900, $3333cc00, $3333ff00
-	long	$33660000, $33663300, $33666600, $33669900, $3366cc00, $3366ff00, $33990000, $33993300
-	long	$33996600, $33999900, $3399cc00, $3399ff00, $33cc0000, $33cc3300, $33cc6600, $33cc9900
-	long	$33cccc00, $33ccff00, $33ff0000, $33ff3300, $33ff6600, $33ff9900, $33ffcc00, $33ffff00
-	long	$66000000, $66003300, $66006600, $66009900, $6600cc00, $6600ff00, $66330000, $66333300
-	long	$66336600, $66339900, $6633cc00, $6633ff00, $66660000, $66663300, $66666600, $66669900
-	long	$6666cc00, $6666ff00, $66990000, $66993300, $66996600, $66999900, $6699cc00, $6699ff00
-	long	$66cc0000, $66cc3300, $66cc6600, $66cc9900, $66cccc00, $66ccff00, $66ff0000, $66ff3300
-	long	$66ff6600, $66ff9900, $66ffcc00, $66ffff00, $99000000, $99003300, $99006600, $99009900
-	long	$9900cc00, $9900ff00, $99330000, $99333300, $99336600, $99339900, $9933cc00, $9933ff00
-	long	$99660000, $99663300, $99666600, $99669900, $9966cc00, $9966ff00, $99990000, $99993300
-	long	$99996600, $99999900, $9999cc00, $9999ff00, $99cc0000, $99cc3300, $99cc6600, $99cc9900
-	long	$99cccc00, $99ccff00, $99ff0000, $99ff3300, $99ff6600, $99ff9900, $99ffcc00, $99ffff00
-	long	$cc000000, $cc003300, $cc006600, $cc009900, $cc00cc00, $cc00ff00, $cc330000, $cc333300
-	long	$cc336600, $cc339900, $cc33cc00, $cc33ff00, $cc660000, $cc663300, $cc666600, $cc669900
-	long	$cc66cc00, $cc66ff00, $cc990000, $cc993300, $cc996600, $cc999900, $cc99cc00, $cc99ff00
-	long	$cccc0000, $cccc3300, $cccc6600, $cccc9900, $cccccc00, $ccccff00, $ccff0000, $ccff3300
-	long	$ccff6600, $ccff9900, $ccffcc00, $ccffff00, $ff000000, $ff003300, $ff006600, $ff009900
-	long	$ff00cc00, $ff00ff00, $ff330000, $ff333300, $ff336600, $ff339900, $ff33cc00, $ff33ff00
-	long	$ff660000, $ff663300, $ff666600, $ff669900, $ff66cc00, $ff66ff00, $ff990000, $ff993300
-	long	$ff996600, $ff999900, $ff99cc00, $ff99ff00, $ffcc0000, $ffcc3300, $ffcc6600, $ffcc9900
-	long	$ffcccc00, $ffccff00, $ffff0000, $ffff3300, $ffff6600, $ffff9900, $ffffcc00, $ffffff00
-	long	$08080800, $12121200, $1c1c1c00, $26262600, $30303000, $3a3a3a00, $44444400, $4e4e4e00
-	long	$58585800, $62626200, $6c6c6c00, $76767600, $80808000, $8a8a8a00, $94949400, $9e9e9e00
-	long	$a8a8a800, $b2b2b200, $bcbcbc00, $c6c6c600, $d0d0d000, $dadada00, $e4e4e400, $eeeeee00
+  _ret_	add	font_ptr, font_line_bytes
 
 
-' space for 256 bytes of font data
-font_line long 0[64]
-
-' table of offsets to the character handling subroutines
-line_offset_table
-	long	@char1_loop - @entry
-	long	@char2_loop - @entry
-	long	@char4_loop - @entry
-	long	@char8_loop - @entry
-
-	orgf	LINE_HANDLER
-
-	fit	LINE_HANDLER_END
+  	fit	FIELD_HANDLER_END
 	
 ''''''''''''''''''''''''''''''''''''''''''''''''''
-'' LUT subroutines
+'' LUT subroutines for 8 pixel wide fonts
 '' all of these should process a whole line of
 '' output
 ''
@@ -579,6 +617,252 @@ end_char8
 	ret
 	fit	LINE_HANDLER_END
 
+
+''''''''''''''''''''''''''''''''''''''''''''''''''
+'' LUT subroutines for 16 pixel wide fonts
+'' all of these should process a whole line of
+'' output
+''
+'' timing: generally speaking we process an even
+'' and odd character (16 pixels) at a time
+'' assuming a 250 MHz system clock this gives us
+'' the following requirements:
+
+'' 640x480 25 MHz pixel clock: 10 cycles/pixel
+''              so 5*16 == 80 instructions
+'' 800x600 40 MHz pixel clock:  6 cycles/pixel
+''              so 3*16 == 48 instructions
+'' 1024x768 65 MHz pixel clock: 3.75 cycles/pixel
+''              or roughly 30 instructions
+''              
+'' for a 160 MHz system clock:
+'' 640x480:  50 instructions
+'' 800x600:  32 instructions
+'' 1024x768: 19 instructions
+''''''''''''''''''''''''''''''''''''''''''''''''''
+
+	'' 8 bytes/character
+	'' 24 instructions
+	
+	org	LINE_HANDLER
+word8_loop
+	rep	@end_32bppword, char_cnt
+next_32bppword
+
+	'' even pixel
+	rflong	fgcolor
+	rflong	bgcolor
+	getbyte curchar, fgcolor, #0
+	test	bgcolor, line_effects wz
+	
+	andn	fgcolor, #$FF
+	andn	bgcolor, #$FF
+	altgw	curchar, #font_line	' fetch from font table
+	getword	curchar
+
+  if_nz or	curchar, mask_ffff	' if effect mask active add a line
+	xcont	m_rf_even, curchar
+	wrlut	bgcolor, #0
+	wrlut	fgcolor, #1
+
+	'' odd pixel
+	rflong	fgcolor
+	rflong	bgcolor
+	getbyte curchar, fgcolor, #0
+	test	bgcolor, line_effects wz
+	
+	andn	fgcolor, #$FF
+	andn	bgcolor, #$FF ' handle in the glyphat code
+	altgw	curchar, #font_line	' fetch from font table
+	getword	curchar
+	
+  if_nz or	curchar, mask_ffff	' if effect mask active add a line
+	xcont	m_rf_odd, curchar
+	wrlut	bgcolor, #32
+	wrlut	fgcolor, #33
+	
+	'' 
+	'' end of loop
+end_32bppword
+	ret
+
+	fit	LINE_HANDLER_END
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+	'' 4 bytes/char
+	'' 30 instructions
+	
+	org	LINE_HANDLER
+word4_loop
+	rep	@end_8bppword, char_cnt
+next_8bppword
+	'' even character
+	rfbyte	fgcolor
+	rfbyte	bgcolor
+	rfbyte	curchar
+	rfbyte	cureff wc
+
+	' do table lookup on colors
+	alts	fgcolor, #color_Palette
+	mov	fgcolor, 0-0
+	alts	bgcolor, #color_Palette
+	mov	bgcolor, 0-0
+	
+	altgw	curchar, #font_line	' fetch from font table
+	getword	curchar
+	and	cureff, line_effects wz	
+
+	
+  if_nz	muxnc	curchar, mask_ffff		' if effect mask active add a line
+	xcont	m_rf_even, curchar
+	wrlut	bgcolor, #0
+	wrlut	fgcolor, #1
+
+	'' odd character
+	rfbyte	fgcolor
+	rfbyte	bgcolor
+	rfbyte	curchar
+	rfbyte	cureff wc
+
+	' do table lookup on colors
+	alts	fgcolor, #color_Palette
+	mov	fgcolor, 0-0
+	alts	bgcolor, #color_Palette
+	mov	bgcolor, 0-0
+	
+	altgw	curchar, #font_line	' fetch from font table
+	getword	curchar
+	and	cureff, line_effects wz	
+'	test	cureff, #$80 wc
+	
+  if_nz muxnc	curchar, mask_ffff	' if effect mask active add a line
+	xcont	m_rf_odd, curchar
+	wrlut	bgcolor, #32
+	wrlut	fgcolor, #33
+	
+	'' 
+	'' end of loop
+end_8bppword
+	ret
+	fit	LINE_HANDLER_END
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''
+	' 2 bytes/char
+	' this consists of an 8 bit character followed by
+	' 8 bit effects; 1 bit blink, 3 bits bg color, 4 bits fg color
+	'
+	' 30 instructions
+	org	LINE_HANDLER
+word2_loop
+	and	line_effects, #$80
+	rep	@end_word16, char_cnt
+next_word16
+
+
+	'' even character
+	rfbyte	curchar
+	rfbyte	cureff wc
+	getnib	fgcolor, cureff, #0
+	getnib	bgcolor, cureff, #1
+	
+	' do table lookup on colors
+	alts	fgcolor, #color_Palette
+	mov	fgcolor, 0-0
+	alts	bgcolor, #color_Palette
+	mov	bgcolor, 0-0
+	
+	altgw	curchar, #font_line	' fetch from font table
+	getword	curchar
+	test	cureff, line_effects wz
+  if_nz	xor curchar, mask_ffff		' if effect mask active add a line
+  
+	xcont	m_rf_even, curchar
+	wrlut	bgcolor, #0
+	wrlut	fgcolor, #1
+
+	'' odd character
+	rfbyte	curchar
+	rfbyte	cureff wc
+	getnib	fgcolor, cureff, #0
+	getnib	bgcolor, cureff, #1
+	
+	' do table lookup on colors
+	alts	fgcolor, #color_Palette
+	mov	fgcolor, 0-0
+	alts	bgcolor, #color_Palette
+	mov	bgcolor, 0-0
+	
+	altgw	curchar, #font_line	' fetch from font table
+	getword	curchar
+	test	cureff, line_effects wz
+  if_nz	xor curchar, mask_ffff		' if effect mask active add a line
+  
+	xcont	m_rf_odd, curchar
+	wrlut	bgcolor, #32
+	wrlut	fgcolor, #33
+	
+	'' 
+	'' end of loop
+end_word16
+	ret
+	fit	LINE_HANDLER_END
+
+
+	''''''''''''''''''''''''''''''''''''''''''''''''''
+	' 1 bytes/char
+	' this consists of an 7 bit character; the high bit is
+	' used for blinking
+	'
+	' 16 instructions
+	org	LINE_HANDLER
+word1_loop
+	mov	fgcolor, color_Palette+7
+	mov	bgcolor, color_Palette
+	wrlut	bgcolor, #0
+	wrlut	fgcolor, #1
+	wrlut	bgcolor, #32
+	wrlut	fgcolor, #33
+	and	line_effects, #$80
+	
+	rep	@end_word8, char_cnt
+next_word8
+
+
+	'' even character
+	rfbyte	curchar
+	mov	cureff, curchar
+	and	curchar, #$7f
+	and	cureff, line_effects wz
+	
+	altgw	curchar, #font_line	' fetch from font table
+	getword	curchar
+	
+  if_nz	xor curchar, mask_ffff		' if effect mask active add a line
+	xcont	m_rf_even, curchar
+
+	'' odd character
+	rfbyte	curchar
+	mov	cureff, curchar
+	and	curchar, #$7f
+	and	cureff, line_effects wz
+	
+	altgw	curchar, #font_line	' fetch from font table
+	getword	curchar
+	
+  if_nz	xor curchar, mask_ffff		' if effect mask active add a line
+	xcont	m_rf_odd, curchar
+	
+	'' 
+	'' end of loop
+end_word8
+	ret
+	fit	LINE_HANDLER_END
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+
+''''''''''''''''''''''''''''''''''''''''''''''''''
+
 DAT
 	org	0
 	' code used to check hardware revision
@@ -606,11 +890,11 @@ VAR
   long mycog
   long hw_rev
   
-PUB start(params) | ptr, tmp
+PUB start(params) : tmp | ptr
 
   ' check what kind of hardware we are using
   if hw_rev == 0
-      hw_rev := check_hw_rev
+      hw_rev := check_hw_rev()
 
   if hw_rev == 1
       ' RevA (old) silicon
@@ -636,7 +920,7 @@ PUB start(params) | ptr, tmp
       long[ptr][0] := $0f000000 ' even characters
       long[ptr][1] := $0f010000 ' odd characters
 
-  mycog := cognew(@entry, params) + 1
+  mycog := coginit(16, @entry, params) + 1
   return mycog
 
 '
@@ -646,13 +930,13 @@ PUB start(params) | ptr, tmp
 ' ptra++ is applied the appropriate number of times in rev 2 silicon
 '
 
-PRI check_hw_rev | tmp
+PRI check_hw_rev() : tmp
   tmp := 0
-  cognew(@hwcheck, @tmp)
+  coginit(16, @hwcheck, @tmp)
   repeat while tmp == 0
   return tmp
   
-PUB stop
+PUB stop()
   if mycog
     cogstop(mycog-1)
     mycog := 0
@@ -668,7 +952,7 @@ PUB stop
 '
 CON PIXSHIFT = 31
 
-PUB calcscale(a, b) | shiftcnt
+PUB calcscale(a, b) : shiftcnt
   shiftcnt := PIXSHIFT
   ' remove factors of 5 (will be pretty common)
   repeat while 0 == (a // 5) and 0 == (b // 5)
@@ -682,4 +966,4 @@ PUB calcscale(a, b) | shiftcnt
   repeat while ((b & 1) == 0) and shiftcnt > 0
     b := b>>1
     shiftcnt--
-  return (a / b) << shiftcnt
+  shiftcnt := (a / b) << shiftcnt
