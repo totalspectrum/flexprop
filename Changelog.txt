@@ -1,3 +1,6 @@
+Version 4.2.2
+- Added an automatic indentation option.
+
 Version 4.2.0
 - Added general compiler documentation.
 
