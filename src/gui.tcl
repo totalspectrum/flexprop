@@ -935,7 +935,7 @@ set color(keywords) SlateBlue
 set color(brackets) green
 set color(braces) lawngreen
 set color(parens) darkgreen
-set color(numbers) DeepPink
+set color(numbers) DarkRed
 set color(operators) green
 set color(strings)  red
 set color(varnames) black
@@ -1005,9 +1005,11 @@ proc setSyntaxHighlightingC {w} {
 							      #define #undef #if #ifdef #ifndef #endif #elseif #include #import #exclude]
 	
     ctext::addHighlightClassForSpecialChars $w math $color(operators) {+=*-/&^%!|<>}
-    ctext::addHighlightClassForRegexp $w eolcomment $color(comments) {//[^\n\r]*}
     ctext::addHighlightClassForRegexp $w strings $color(strings) {\".[^\"]*\"}
-    #ctext::addHighlightClassForSpecialChars $w quotes $color(strings) "\"\'"
+    ctext::addHighlightClassForRegexp $w numbers $color(numbers) {(?:[^a-zA-Z0-9_]+)([0-9][0-9a-fA-Fxb_]*)}
+
+    ctext::addHighlightClassForRegexp $w eolcomment $color(comments) {//[^\n\r]*}
+							     
     ctext::enableComments $w
     $w tag configure _cComment -foreground $color(comments)
     $w tag raise _cComment
@@ -1031,16 +1033,16 @@ proc setSyntaxHighlightingSpin {w} {
     
     ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \$ 
     ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \%
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 0
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 1
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 2
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 3
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 4
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 5
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 6
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 7
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 8
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 9
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 0
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 1
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 2
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 3
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 4
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 5
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 6
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 7
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 8
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 9
 
     ctext::addHighlightClass $w keywords $color(keywords) $keywords
 
@@ -1049,6 +1051,8 @@ proc setSyntaxHighlightingSpin {w} {
 
     ctext::addHighlightClassForRegexp $w strings $color(strings) {\".[^\"]*\"}
     ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {^\#[a-z]+}
+
+    ctext::addHighlightClassForRegexp $w numbers $color(numbers) {(?:[^a-zA-Z0-9_]+)([0-9][0-9_]*)}
 
     ctext::addHighlightClassForRegexp $w eolcomments $color(comments) {\'[^\n]*}
     ctext::enableComments $w
@@ -1082,16 +1086,6 @@ proc setSyntaxHighlightingBasic {w} {
     
     ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \$ 
     ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \%
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 0
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 1
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 2
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 3
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 4
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 5
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 6
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 7
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 8
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 9
 
     ctext::addHighlightClass $w keywords $color(keywords) $keywords
     ctext::addHighlightClass $w operators $color(operators) $opwords
@@ -1102,6 +1096,8 @@ proc setSyntaxHighlightingBasic {w} {
 
     ctext::addHighlightClassForRegexp $w strings $color(strings) {\".[^\"]*\"}
     ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {^\#[a-z]+}
+
+    ctext::addHighlightClassForRegexp $w numbers $color(numbers) {(?:[^a-zA-Z0-9_]+)([0-9][0-9a-fA-Fxb_]*)}
 
     ctext::addHighlightClassForRegexp $w eolcomments $color(comments) {\'[^\n]*}
     ctext::addHighlightClassForRegexp $w remcomments $color(comments) {(?:rem\ )([^\n]*)}
