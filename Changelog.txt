@@ -1,6 +1,7 @@
 Version 4.2.2
 - Added an automatic indentation option.
 - Improved syntax highlighting of numbers.
+- Made listing window use preferred font.
 
 Version 4.2.0
 - Added general compiler documentation.
