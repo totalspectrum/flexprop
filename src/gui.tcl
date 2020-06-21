@@ -209,6 +209,9 @@ proc setnbfonts { fnt } {
     foreach w $nbtablist {
 	setfont $w.txt $fnt
     }
+    if {[winfo exists .list]} {
+	setfont .list.f.txt $fnt
+    }
 }
 
 # configuration settings
@@ -597,6 +600,7 @@ proc loadListingFile {filename} {
 	grid rowconfigure .list 0 -weight 1
 	grid .list.f -sticky nsew
     }
+    setfont .list.f.txt $config(font)
     loadFileToWindow $filename .list.f.txt
     .list.f.txt yview moveto $viewpos
     wm title .list [file tail $filename]
@@ -623,7 +627,6 @@ proc loadFileToTab {w filename title} {
 	setHighlightingForFile $w.txt $filename
     }
 
-    
     setfont $w.txt $config(font)
     loadFileToWindow $filename $w.txt
     $w.txt highlight 1.0 end
