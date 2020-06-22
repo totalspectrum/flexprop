@@ -1799,13 +1799,17 @@ proc do_indent {w {extra "    "}} {
     if { $config(autoindent) } {
 	set lineno [expr {int([$w index insert])}]
 	set line [$w get $lineno.0 $lineno.end]
-	set exlen [string length $extra]
 	regexp {^(\s*)} $line -> prefix
 	if {[string index $line end] eq "\{"} {
 	    tk::TextInsert $w "\n$prefix$extra"
-	} elseif { [string index $line end] eq "\}" && [string length $line] > $exlen } {
-	    $w delete insert-[expr $exlen+1]c insert-1c
-	    tk::TextInsert $w "\n[string range $prefix 0 end-$exlen]"
+	} elseif { [string index $line end] eq "\}" } {
+	    set exlen [string length $extra]
+	    if { $line eq "$prefix\}" && [string length $prefix] > 0 } {
+		$w delete insert-[expr $exlen+1]c insert-1c
+		tk::TextInsert $w "\n[string range $prefix 0 end-$exlen]"
+	    } else {
+		tk::TextInsert $w "\n$prefix"
+	    }
 	} else {
 	    tk::TextInsert $w "\n$prefix"
 	}
