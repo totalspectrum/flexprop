@@ -16,6 +16,10 @@ asm shared
 entry
 	' 4 LEDS (pins 56, 57, 58, 59) will be written to
 	' these are located in the OUTB register
+	' on the eval board, the LEDs are turned on by driving the
+	' corresponding pin LOW; this is the reverse of how one
+	' might expect things to work, so we flip that in this code
+	
 	drvh	#(3<<6) + 56	' drive high 4 pins starting at 56
 loop	
 	rdlong	flags, ptra	' read the values to write to LEDs
@@ -25,13 +29,16 @@ loop
 	mov	outb, flags	' write to the bits
 	jmp	#loop 		' and repeat
 
-	' the variables
+	' the variables used by this cog
 flags	long	0
 
 end asm
 
 '' variable to share with the ASM code
-dim as integer flagvar
+var flagvar = 0
+
+'' temporary variable
+var n = 0
 
 ''
 '' here is the BASIC code
@@ -42,11 +49,11 @@ var cogid = cpu(@entry, @flagvar)
 
 print "started server on cog "; cogid
 
-' now loop, counting on the LEDs by changing flagvar
-for i = 1 to 1000000
-  flagvar = i
-  pausems(500)	' wait one half second
-next i
+' now loop, asking for input on which leds to toggle
+do
+  input "Enter a number from 0 to 15: ", n
+  flagvar = n
+loop
 
 flagvar = 0
 
