@@ -3,7 +3,7 @@
 '' a BASIC program
 ''
 
-'' asm shared is like the DAT block in Spin; it creates
+'' "asm shared" is like the DAT block in Spin; it creates
 '' global data shared by all instances of an object
 
 '' we create a simple PASM program to run in another cog and
@@ -51,9 +51,9 @@ print "started server on cog "; cogid
 
 ' now loop, asking for input on which leds to toggle
 do
-  input "Enter a number from 0 to 15: ", n
+  input "Enter a number from 0 to 15 (-1 to quit): ", n
   flagvar = n
-loop
+loop while n <> -1
 
 flagvar = 0
 
