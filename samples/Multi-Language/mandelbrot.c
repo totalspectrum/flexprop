@@ -1,3 +1,8 @@
+//
+// Simple Mandelbrot demo program
+// Written by Eric R. Smith, based on code by forum user yeti
+// Distributed under the MIT License
+//
 #include <stdio.h>
 #include <propeller2.h>
 #include <stdlib.h>
@@ -58,6 +63,8 @@ void rendermandel(int offset);
 // math helpers
 //'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 #ifdef FIXED_POINT
+
+// conversion utilities to/from fixed point for
 // fixed point numbers with FIXED_POINT bits of precision
 typedef int Real;
 
@@ -71,11 +78,9 @@ float fromReal(Real a)
     return ((float)a) / (float)(1<<FIXED_POINT);
 }
 
+// simple routine to square a
 Real square(Real a)
 {
-    // useful for fixed point that cannot overflow (up to 14)
-    //return (a*a) >> FIXED_POINT;
-
     // full precision
     unsigned hi, lo;
     __asm {
@@ -120,8 +125,8 @@ int main()
     printf("Mandelbrot test program\n");
     _waitms(1);
 
-    NUMCPUs = MAXCPUs;
-    printf("NUMCPUs = %d MAXCPUs = %d\n", NUMCPUs, MAXCPUs);
+    // start up with just one CPU
+    NUMCPUs = 1;
     
     // now loop and do the rendering
     for(;;) {
@@ -131,11 +136,14 @@ int main()
         memset(frameBuffer, 0, SCRN_WIDTH*SCRN_HEIGHT);
         
         // launch helper  CPUs
+        // the helper function rendermandel takes a void * (as do all
+        // COG functions) hence the (void *) cast
+        
         for (i = 1; i < NUMCPUs; i++) {
-            cog = _cogstart(rendermandel, i, &stack[(i-1)*STACKSIZE], STACKSIZE);
+            cog = _cogstart(rendermandel, (void *)i, &stack[(i-1)*STACKSIZE], STACKSIZE);
             printf("started cog %d\n", cog);
         }
-        rendermandel(0);
+        rendermandel((void *)0);
 
         // read user input
         printf("Enter # of CPUs to use this time: ", NUMCPUs);
@@ -154,13 +162,29 @@ int main()
     }
 }
 
+// routine to plot a point at screen coordinate (x,y) and color "color"
 void plot(int x, int y, int color)
 {
     frameBuffer[y*SCRN_WIDTH+x] = color;
 }
 
-void rendermandel(int offset)
+//
+// the actual Mandelbrot renderer program
+// this isn't very well commented, sorry, but you can find
+// the Mandelbrot set algorithm on the web
+// To enable 2 cpu rendering, each cpu does every other line;
+// for 3 cpus, every 3rd line; etc. We have to know which line
+// to start on (the "offset") but otherwise all the CPUs can follow
+// the same algorithm
+//
+// a slightly odd point: the prototype for _cogstart requires that
+// the function being called take a void * parameter (normally used
+// to pass a pointer to a mailbox). We only need one parameter, so
+// we'll actually pass the offset in that and cast it to integer.
+//
+void rendermandel(void *arg)
 {
+    int offset = (int)arg;
     int skip = NUMCPUs;  // each CPU can skip the others' lines
     const Real xmin = toReal(-2.1);
     const Real xmax =  toReal(0.7);
