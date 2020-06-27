@@ -32,6 +32,10 @@ fileserver: Samples for the loadp2 9P file server
   
 LED_Matrix: Samples for the P2 LED Matrix accessory board
 
+Multi-Language:
+  Various programs to illustrate programming in PASM, Spin, C,
+  and BASIC. Also included is Roger Loh's P2 video driver.
+  
 proplisp: Lisp interpreter written in C
   README.md: Documentation
   lisp.c: Interactive interpreter
