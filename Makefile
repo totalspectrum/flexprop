@@ -145,7 +145,9 @@ clean:
 	rm -rf loadp2/board/*.bin
 	rm -rf samples/*.elf samples/*.binary samples/*~
 	rm -rf samples/*.lst samples/*.pasm samples/*.p2asm
-	rm -rf samples/*/*.elf samples/*/*.binary samples/*/*~
+# NOTE: we cannot delete samples/*/*.binary because we need
+# some of them
+	rm -rf samples/*/*.elf samples/*/*~
 	rm -rf samples/*/*.lst samples/*/*.pasm samples/*/*.p2asm
 	rm -rf samples/$(SUBSAMPLES)/*.binary
 	rm -rf $(RESOBJ)
