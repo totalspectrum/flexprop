@@ -1,3 +1,6 @@
+Version 4.2.3
+- Fixed autoindent behavior when } is at start of line
+
 Version 4.2.2
 - Added an automatic indentation option.
 - Improved syntax highlighting of numbers.

@@ -21,7 +21,7 @@ start(params)
   params[2]: number of columns
   params[3]: number of rows
   params[4]: pointer to font data
-  params[5]: font width (for now, must be 8)
+  params[5]: font width (for now, must be 8 or 16)
   params[6]: font height
   params[7]: pixel clock scaling value ($8000_0000 * pixel_clock / system_clock)
   params[8]: horizontal front porch

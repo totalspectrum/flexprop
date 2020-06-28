@@ -1,0 +1,2013 @@
+'******************************************************************************
+'*                                                                            *
+'*   P2 VGA/DVI/TV graphics and text mode video driver documentation          *
+'*   ===============================================================          *
+'*                                                                            *
+'*  This driver was inspired by original P2 video test code from Chip Gracey. *
+'*  Since then it has expanded with many display and output features provided *
+'*  below.  Thanks also for some assistance & suggestions from Parallax forum *
+'*  members who helped find optimizations allowing performance improvements.  *
+'*                                                                            *
+'*  Features:                                                                 *
+'*                                                                            *
+'*    - fully programmable output resolution and timing                       *
+'*    - selectable DVI/VGA/SDTV/HDTV output mode and P2 pin group             *
+'*    - multiple VGA sync options: RGBHV, RGBS, RGsB (SyncOnGreen) support    *
+'*    - component HDTV video support up to 1080i (YPrPb)                      *
+'*    - PAL or NTSC SDTV video over composite/S-video/component               *
+'*    - interlaced or progressive scan outputs in video modes                 *
+'*    - all P2 colour formats are supported in graphics modes                 *
+'*    - built in 16 colour text mode renderer                                 *
+'*    - programmable font size (1-256 scanlines), 8 pixel wide font           *
+'*    - up to 240 text columns supported in 1920 pixel wide modes             *
+'*    - optional text blinking attribute (VGA style 16 bit text data format)  *
+'*    - interlaced text font output support                                   *
+'*    - fine text scrolling capability                                        *
+'*    - pixel width doubling, scanline doubling in all built in modes         *
+'*    - dynamic colourspace converter parameters loaded per frame             *
+'*    - multiple independently sized text or graphics regions per screen      *
+'*    - a programmable mouse sprite available in all graphics/text regions    *
+'*    - region specific mouse image data, palettes and/or fonts               *
+'*    - selectable global mouse/region specific mouse co-ordinates            *
+'*    - dual text cursors with independent attributes & colours per region    *
+'*    - programmable top/bottom/side borders (per pixel boundary)             *
+'*    - programmable border colour (24 bit)                                   *
+'*    - programmable scanline source data skew/pitch                          *
+'*    - screen source buffer wraparound options per region allowing scrolling *
+'*    - per scanline status update for supporting external sprite drivers     *
+'*    - support for odd/even field/frame automatic page flipping              *
+'*    - software interface for requesting frame buffers from external memory  *
+'*    - low system clock speeds supported using transparent pass through mode *
+'*    - scalable performance, high clock cycle use features can be disabled   *
+'*                                                                            *
+'*  Revision history:                                                         *
+'*  -----------------                                                         *
+'*    0.8b  21 NOV 2019  rogloh       -initial BETA release-                  *
+'*                                                                            *
+'******************************************************************************
+{
+LICENSE TERMS
+-------------
+Copyright 2019 Roger Loh
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in 
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+THE SOFTWARE.
+}
+
+CON
+
+' clocks - customize the PLL values for different source crystal frequencies
+
+    CLK350MHz   = %1_000011_0001000101_1111_10_00 '(20MHz/4) * 70/1 = 350   MHz
+    CLK325MHz   = %1_000011_0001000000_1111_10_00 '(20MHz/4) * 65/1 = 325   MHz
+    CLK315MHz   = %1_000011_0000111110_1111_10_00 '(20MHz/4) * 63/1 = 315   MHz
+    CLK308MHz   = %1_000100_0001001100_1111_10_00 '(20MHz/5) * 77/1 = 308   MHz
+    CLK297MHz   = %1_010011_0100101000_1111_10_00 '(20MHz/20)*297/1 = 297   MHz 
+    CLK252MHz   = %1_000100_0000111110_1111_10_00 '(20MHz/5) * 63/1 = 252   MHz
+    CLK240MHz   = %1_000100_0000111011_1111_10_00 '(20MHz/5) * 60/1 = 240   MHz
+    CLK200MHz   = %1_000100_0000110001_1111_10_00 '(20MHz/5) * 50/1 = 200   MHz
+    CLK148_5MHz = %1_100111_0100101000_1111_10_00 '(20MHz/40)*297/1 = 148.5 MHz
+    CLK135MHz   = %1_000011_0000011010_1111_10_00 '(20MHz/4) * 27/1 = 135   MHz
+    CLK126MHz   = %1_010011_0001111101_1111_10_00 '(20MHz/20)*126/1 = 126   MHz
+    CLK108MHz   = %1_000100_0000011010_1111_10_00 '(20MHz/5) * 27/1 = 108   MHz
+    CLK74_25MHz = %1_010011_0100101000_0001_10_00 '(20MHz/20)*297/4 = 74.25 MHz
+    CLK65MHz    = %1_000100_0001000000_0001_10_00 '(20MHz/5) * 65/4 = 65    MHz
+    CLK54MHz    = %1_000100_0000011010_0000_10_00 '(20MHz/5) * 27/2 = 54    MHz
+    CLK50MHz    = %1_000011_0000100111_0001_10_00 '(20MHz/4) * 40/4 = 50    MHz
+    CLK40MHz    = %1_000100_0000100111_0001_10_00 '(20MHz/5) * 40/4 = 40    MHz
+    CLK27MHz    = %1_000100_0000011010_0001_10_00 '(20MHz/5) * 27/4 = 27    MHz
+    CLK25_2MHz  = %1_000100_0000111110_0100_10_00 '(20MHz/5) * 63/10= 25.2  MHz
+
+    SYNC_POS = 1
+    SYNC_NEG = 0
+
+' video modes
+    #-1, TEXT, LUT1, LUT2, LUT4, LUT8, RGBI, RGB8, RGB16, RGB24, LUMA_ORANGE, LUMA_BLUE, LUMA_GREEN, LUMA_CYAN, LUMA_RED, LUMA_MAGENTA, LUMA_YELLOW, LUMA_WHITE
+
+' video output types
+    #0, VGA, DVI, CVBS, SVIDEO, SVIDEO_CVBS, COMPONENT_SDTV, COMPONENT_HDTV
+
+' resolution
+    #0, RES_640x350, RES_640x480, RES_800x600, RES_1024x768, RES_1280x1024, RES_1920x1080, RES_1920x1200
+
+' VGA output flags
+    #0, RGBHV, RGBS, RGB_SOG 'SOG = sync on green
+
+' TV output flags
+    PROGRESSIVE = 0
+    INTERLACED  = 1
+    NTSC        = 0
+    PAL         = 2
+
+' DVI output flags
+    DVI_NORMAL   = 0
+    DVI_REVERSED = 1
+
+' region flags
+    FLASH_TEXT     = 1
+    GRAPHICS_MODE  = 2
+    DOUBLE_WIDE    = 4
+    DOUBLE_HIGH    = 8
+    INTERLACED_SRC = 16
+    TRANSPARENT_SRC= 32
+    MOUSE_REGION   = 64
+    MOUSE_ENABLE   = 128
+
+' cursor flags
+    CURS_PHASE1  = 0
+    CURS_PHASE2  = 16
+    CURS_TOPDOWN = 32
+    CURS_SOLID   = 64
+    CURS_ENABLE  = 128
+
+' blanking state
+    VBI_VSYNC = $80
+    VBI_FP    = $40
+    VBI_BP    = $20
+
+' colourspace & modulator levels (still work in progress)
+    SAT = 70
+    s = 60
+    r = SAT*1000/1646
+    CY_VGA = $5A00004C
+    CI_VGA = $005A004C
+    CQ_VGA = $00005A4C
+
+    CI_COMP_SDTV = (( 64*SAT/100) & $ff) << 24 + ((-53*SAT/100) & $ff) << 16 + ((-10*SAT/100) & $ff) << 8 + 128
+    CY_COMP_SDTV = 27 << 24 + 53 << 16 + 10 << 8 + 76 
+    CQ_COMP_SDTV = ((-22*SAT/100) & $ff) << 24 + ((-42*SAT/100) & $ff) << 16 + (( 64*SAT/100) & $ff) << 8 + 128
+
+    CI_COMP_HDTV = ((+64*s/128) & $FF) << 24 + ((-58*s/128) & $FF) << 16 + (( -6*s/128) & $FF) << 8 + 128
+    CY_COMP_HDTV = ((+27*s/128) & $FF) << 24 + ((+92*s/128) & $FF) << 16 + (( +9*s/128) & $FF) << 8 + 80
+    CQ_COMP_HDTV = ((-15*s/128) & $FF) << 24 + ((-49*s/128) & $FF) << 16 + ((+64*s/128) & $FF) << 8 + 128
+
+    CY_CVBS_SDTV = ((+38*SAT/128) & $FF) << 24 + ((+75*SAT/128) & $FF) << 16 + ((+15*SAT/128) & $FF) << 8 + (110*SAT/128 & $FF)
+    CI_CVBS_SDTV = ((+76*r/128) & $FF) << 24 + ((-35*r/128) & $FF) << 16 + ((-41*r/128) & $FF) << 8 + (100*SAT/128 & $FF)
+    CQ_CVBS_SDTV = ((+27*r/128) & $FF) << 24 + ((-67*r/128) & $FF) << 16 + ((+40*r/128) & $FF) << 8 + 128
+
+    DEFAULT_TEXT_COLOURS = $1F ' white on blue
+
+'----------------------------------------------------------------------------------
+
+VAR
+    long    ctx_region
+    long    ctx_display
+    byte    ctx_colours
+
+'----------------------------------------------------------------------------------
+' initialization methods
+'----------------------------------------------------------------------------------
+
+'initDisplay spawns driver COG returns cogid, display starts up blank until a region is attached
+'display - indicates address of where display data is to be stored
+'output - indicates type of output - VGA, DVI, COMPONENT_HDTV etc
+'basePin - pin number of starting pin or group of pins
+'syncPin - used for vertical sync output in VGA RGBHV mode
+'flags - indicates if interlaced/progessive, PAL/NTSC 
+'lineBuf - hub address of two scanline working buffer
+'maxLineSize - size of each scanline in the line buffer
+'userTiming - when non-zero points to timing structure to be used to setup display
+
+PUB initDisplay(display, output, basePin, syncPin, flags, lineBuf, maxLineSize, userTiming) | syncFlags, pin, timing
+    pin := basePin/4 & $f
+    if output == VGA
+        syncFlags := %0_0_000000
+        if flags == RGBHV
+            syncFlags |= syncPin & $3f
+        if flags == RGBS
+            syncFlags |= pin*4
+        if flags == RGB_SOG
+            syncFlags |= pin*4 + 2 ' sync on green
+        timing := @vga_timing
+    elseif output == DVI 
+        syncFlags := %1_0000000
+        pin := basePin/8
+        if flags == DVI_REVERSED
+            pin |= 8
+        timing := @vga_timing
+    else
+        syncFlags := %0_1_000000
+        if output == COMPONENT_HDTV
+            syncFlags |= %0_0_100010
+            if flags & INTERLACED <> 0
+                syncFlags |= %0_0_010000
+                timing := @hdint_timing ' 1080i60 default, TODO add 50Hz variant
+            else
+                if flags & PAL
+                    timing := @hd50_timing '720p50
+                else
+                    timing := @hd60_timing '720p60
+        else
+
+            if output == COMPONENT_SDTV
+                syncFlags |= %0_0_000111
+            elseif output == CVBS
+                syncFlags |= basePin & 3
+            elseif output == SVIDEO
+                syncFlags |= %0_0_000100
+            elseif output == SVIDEO_CVBS
+                syncFlags |= %0_0_000101
+
+            if flags & INTERLACED <> 0
+                syncFlags |= %0_0_010000
+                if flags & PAL <> 0
+                    syncFlags |= %0_0_001000
+                    timing := @int576_timing
+                else
+                    timing := @int480_timing
+            else ' progressive
+                if output == COMPONENT_SDTV
+                    if flags & PAL <> 0
+                        syncFlags |= %0_0_001000
+                        timing := @prog576_timing
+                    else
+                        timing := @prog480_timing
+                else ' CVBS/S-video
+                    if flags & PAL <> 0
+                        syncFlags |= %0_0_001000
+                        timing := @prog288_timing
+                    else
+                        timing := @prog240_timing
+
+    ' override with custom timing if specified
+    if userTiming <> 0 
+        timing := userTiming 
+
+    ' adjust PLL if a different clock is needed and one is specified in the timing structure
+    if long[24] <> long[timing][0] AND long[timing][0] <> 0 
+        clkset(long[timing][0], long[timing][1]) ' select new clock frequency
+
+    long[display][1] := syncFlags << 24 + pin << 20 + timing
+    long[display][2] := 0 'reserved
+    long[display][3] := 0 'ext mem
+    long[display][4] := lineBuf
+    long[display][5] := lineBuf + maxLineSize
+    long[display][6] := 0 'reserved
+    long[display][7] := -1 ' global mouse offscreen
+    long[display][8] := 0 ' no borders
+    long[display][9] := 0 ' border colour (black)
+    long[display][10] := 0 ' no region yet
+    if output == VGA
+        long[display][11] := CY_VGA
+        long[display][12] := CI_VGA
+        long[display][13] := CQ_VGA
+    elseif output == COMPONENT_SDTV
+        long[display][11]:= CI_COMP_SDTV
+        long[display][12]:= CY_COMP_SDTV ' Y on green output
+        long[display][13]:= CQ_COMP_SDTV
+    elseif output == COMPONENT_HDTV
+        long[display][11]:= CI_COMP_HDTV
+        long[display][12]:= CY_COMP_HDTV ' Y on green output
+        long[display][13]:= CQ_COMP_HDTV
+    else ' assume SDTV
+        long[display][11]:= CY_CVBS_SDTV
+        long[display][12]:= CI_CVBS_SDTV
+        long[display][13]:= CQ_CVBS_SDTV
+
+    return cognew(@videodriver, display)
+
+PUB initRegion(region, gfxMode, size, regionFlags, palette, font, fontSize, screenBuf, display)
+' sets up a region
+' optionally attaches it to a display (if non-zero)
+
+    long[region][0]  := 0 ' no link until added later
+    if (gfxMode > -1)
+        regionFlags := regionFlags | GRAPHICS_MODE
+    long[region][1]  := (size << 16) + ((regionFlags & $ff) << 8) + (gfxMode & $f)
+    long[region][2]  := screenBuf
+    long[region][3]  := screenBuf ' no wrap set yet
+    long[region][4]  := (((fontSize-1) & $ff) << 24) + font
+    long[region][5]  := palette
+    long[region][6]  := 0 ' cursor 1 off until enabled
+    long[region][7]  := 0 ' cursor 2 off until enabled
+    long[region][8]  := -1 ' region mouse offscreen
+    long[region][9]  := 0 ' mouse image
+    long[region][10] := 0 ' no wrap
+    long[region][11] := 0 ' no skew
+    long[region][12] := 0 ' hack!
+    if display
+        long[display][10] := region
+
+PUB getTiming(resolution)
+    if (resolution == RES_640x350)
+        return @ega_timing
+    if (resolution == RES_800x600)
+        return @svga_timing
+    if (resolution == RES_1024x768)
+        return @xga_timing
+    if (resolution == RES_1280x1024)
+        return @sxga_timing
+    if (resolution == RES_1920x1080)
+        return @fullhd_timing
+    if (resolution == RES_1920x1200)
+        return @wuxga_timing
+    return @vga_timing ' default
+
+PUB shutdown(display) ' untested method
+    cogstop(long[display][2]) ' use cogid from display structure
+
+'----------------------------------------------------------------------------------
+' video status methods
+'----------------------------------------------------------------------------------
+
+PUB getScanLine(display)
+    return (long[display] & $ffff)
+
+PUB getFieldCount(display)
+    return byte[display][2]
+
+PUB getBlankingState(display)
+    return byte[display][3]
+
+PUB waitForVsync(display)
+    repeat until byte[display][3] & VBI_VSYNC == 0
+    repeat until byte[display][3] & VBI_VSYNC <> 0
+
+PUB waitForBlanking(display)
+    repeat until byte[display][3] == 0
+    repeat until byte[display][3] & VBI_FP <> 0
+
+'----------------------------------------------------------------------------------
+' general region configuration methods
+'----------------------------------------------------------------------------------
+
+PUB setFlags(region, flags)
+    byte[region][5] := flags 
+
+PUB getFlags(region)
+    return byte[region][5]
+
+PUB setSize(region, size)
+    word[region][3] := size
+
+PUB getSize(region)
+    return word[region][3]
+
+PUB setMode(region, mode)
+    if (mode < 0) ' configure as text
+        byte[region][5] &= ~GRAPHICS_MODE 
+    else 
+        byte[region][4] := mode
+        byte[region][5] |= GRAPHICS_MODE
+
+PUB getMode(region)
+    if byte[region][5] & GRAPHICS_MODE
+        return byte[region][4]
+    else
+        return -1 ' text mode (OR should I just return the colour mode???)
+
+PUB setSource(region, buf)
+    long[region][2] := buf
+
+PUB getSource(region)
+    return long[region][2]
+
+PUB setWrapSource(region, buf)
+    long[region][3] := buf
+
+PUB getWrapSource(region)
+    return long[region][3]
+
+PUB setWrap(region, firstwrap, rewrap)
+    long[region][10] := (rewrap << 16) + firstwrap
+
+PUB setSkew(region, skew)
+    long[region][11] := skew
+
+PUB getSkew(region)
+    return long[region][11]
+
+PUB setFont(region, font, fontsize)
+    long[region][4] := ((fontsize-1) << 24) + (font & $fffff)
+
+PUB setPalette(region, palette)
+    long[region][5] := palette
+
+PUB setTextScanStart(region, startscan)
+    word[region][21] := startscan
+
+PUB setTextFlash(region, enable)
+    if (enable)
+        byte[region][5] |= FLASH_TEXT
+    else
+        byte[region][5] &= !FLASH_TEXT
+
+PUB setDoubleWide(region, enable)
+    if (enable)
+        byte[region][5] |= DOUBLE_WIDE
+    else
+        byte[region][5] &= !DOUBLE_WIDE
+
+PUB setDoubleHigh(region, enable)
+    if (enable)
+        byte[region][5] |= DOUBLE_HIGH
+    else
+        byte[region][5] &= !DOUBLE_HIGH
+
+'----------------------------------------------------------------------------------
+' text cursor related methods
+'----------------------------------------------------------------------------------
+
+PUB setCursor(region, cursid, row, col, flags, colour) | val
+    val := ((row & $ff) << 24) + ((col & $ff) << 16) + (flags & $ff << 8) + ((colour & $f) << 4) + (colour & $f)
+    if (cursid == 0) ' first cursor
+        long[region][6] := val
+    else ' second cursor
+        long[region][7] := val
+        
+PUB setCursorPos(region, cursid, row, col)
+    if (cursid == 0)
+        word[region][13] := ((row & $ff) << 8) + (col & $ff)
+    else
+        word[region][15] := ((row & $ff) << 8) + (col & $ff)
+
+PUB setCursorFlags(region, cursid, flags)
+    if (cursid == 0)
+        byte[region][25] := flags
+    else
+        byte[region][29] := flags
+
+PUB getCursorPos(region, cursid)
+    if (cursid == 0)
+        return word[region][13]
+    else
+        return word[region][15]
+
+PUB getCursorRow(region, cursid)
+    if (cursId == 0)
+        return byte[region][27]
+    else
+        return byte[region][31]
+
+PUB getCursorCol(region, cursid)
+    if (cursid == 0)
+        return byte[region][26]
+    else
+        return byte[region][30]
+
+PUB setCursorColour(region, cursid, colour) ' single colour cursor
+    if (cursid == 0)
+        byte[region][24] := (colour & $f) * $11
+    else
+        byte[region][28] := (colour & $f) * $11
+
+PUB setCursorColours(region, cursid, colour1, colour2) ' twin colour cursor
+    if (cursid == 0)
+        byte[region][24] := (colour1 & $f) + (colour2 & $f) << 4
+    else
+        byte[region][28] := (colour1 & $f) + (colour2 & $f) << 4
+
+PUB setCursorHeight(region, cursid, height) | flip
+    if height > 15
+        height := 15
+    if height < -15
+        height := -15
+    if height < 0
+        flip := CURS_TOPDOWN - height
+    else
+        flip := height
+    if (cursid == 0)
+        byte[region][25] &= !(CURS_TOPDOWN + $F)
+        byte[region][25] |= flip
+    else
+        byte[region][29] &= !(CURS_TOPDOWN + $F)
+        byte[region][29] |= flip
+
+'----------------------------------------------------------------------------------
+'  mouse related methods
+'----------------------------------------------------------------------------------
+
+PUB setRegionMouse(region, x, y)
+    long[region][8] := (y << 16) + (x & $ffff)
+
+PUB setGlobalMouse(display, x, y)
+    long[display][7] := (y << 16) + (x & $ffff)
+
+PUB setMouseImage(region, image, x, y)
+    long[region][9] := ((y & $f) << 28) + ((x & $f) << 24) + image
+
+PUB showMouse(region, regionMouse)
+    if regionMouse
+        byte[region][5] |= MOUSE_ENABLE + MOUSE_REGION
+    else ' global
+        byte[region][5] |= MOUSE_ENABLE
+
+PUB hideMouse(region)
+    byte[region][5] &= !MOUSE_ENABLE
+
+'----------------------------------------------------------------------------------
+'  overall display related methods
+'----------------------------------------------------------------------------------
+
+PUB linkRegion(region1, region2) ' link region 2 after region 1
+    long[region2][0] := long[region1][0]
+    long[region1][0] := region2
+    
+PUB setDisplayRegions(display, region)
+    long[display][10] := region
+'   setTextContext(display, region, DEFAULT_TEXT_COLOURS)
+
+PUB setDisplayBorderSizes(display, top, bottom, width)
+    long[display][8] := top + (bottom << 16)
+    byte[display][36] := width
+
+PUB setDisplayBorderColour(display, rgb)
+    long[display][9] := (rgb << 8) + byte[display][36]
+
+PUB setYIQ(display, cy, ci, cq)
+    long[display][11] := cy
+    long[display][12] := ci
+    long[display][13] := cq
+
+'----------------------------------------------------------------------------------
+' status/dimensioning related methods
+'----------------------------------------------------------------------------------
+
+PUB getActiveLines(display)
+    return (long[long[display][1]][3] & $7ff)
+
+PUB getActivePixels(display)
+    return ((long[long[display][1]][2] & $ff) << 3) 
+
+PUB getCurrentRows(region) | height
+    height := getFontHeight(region)
+    if getFlags(region) & DOUBLE_HIGH
+        height *= 2
+    return (getSize(region) + height - 1) / height ' round up
+
+PUB getCurrentColumns(region, display) | size, width
+    width := 8
+    if getFlags(region) & DOUBLE_WIDE
+        width *= 2
+    return (getActivePixels(display) + width - 1) / width ' round up
+
+PUB getFontHeight(region)
+    return byte[region][19]+1
+
+PUB getBitDepth(region)
+    if byte[region][5] & GRAPHICS_MODE == 0
+        return 4
+    case byte[region][4]
+        0:  return 1
+        1:  return 2
+        2:  return 4
+        6:  return 16
+        7:  return 32
+        OTHER:  return 8
+        
+PUB getRegionStructSize
+    return 12*4
+
+PUB getDisplayStructSize
+    return 14*4
+
+'----------------------------------------------------------------------------------
+'  printing related methods (STILL UNDER CONSTRUCTION & SOMEWHAT BUGGY!)
+'----------------------------------------------------------------------------------
+
+PUB out(char) | src, size, row, col, rows, columns
+' TODO: fix this, it's not very efficient right now, and just put in for some early debug etc
+
+    if  ctx_region == 0 OR ctx_display == 0 OR byte[ctx_region][5] & GRAPHICS_MODE <> 0 
+        return
+    row := getCursorRow(ctx_region, 0)
+    col := getCursorCol(ctx_region, 0)
+    rows := getCurrentRows(ctx_region)
+    columns := getCurrentColumns(ctx_region, ctx_display)
+    if char == 8
+        if col
+            col--
+            out(32)
+            col--
+    if char == 13
+        col := 0
+    elseif char <> 8
+        if (char > 31)
+            word[long[ctx_region][2]][row*columns + col] := (ctx_colours & $ff) << 8 + (char & $ff)
+            col++
+        if col == columns OR char == 10
+            col := 0
+            row++
+            if row == rows
+                row--
+                src := getSource(ctx_region)
+                size := columns*2 '+ getSkew(ctx_region) ' size of a row
+                bytemove(src, src+size, size*(rows-1)) ' scroll up
+                wordfill(src + row*columns*2, (ctx_colours & $ff) << 8 + 32, size/2)
+    setCursorPos(ctx_region, 0, row, col)
+
+PUB printStr(str) | x
+    x:=0
+    repeat until byte[str][x] == 0
+        out(byte[str][x++])
+
+PUB crlf
+    out(13)
+    out(10)
+
+' temporary API hacks below until a better approach is found
+PUB setTextContext(display, region, colours)
+    'hack: store display link in region
+    ctx_display := display
+    ctx_region := region
+    ctx_colours := colours
+    'long[region][12] := display
+    
+PUB setTextColour(fg, bg) 
+    'hack: using this lazy way to store this colour somewhere
+    ctx_colours := (bg & $f) << 4 | (fg & $f)
+
+
+PUB dec(value) | i
+
+'' Print a decimal number
+
+  if value < 0
+    -value
+    out("-")
+
+  i := 1_000_000_000
+
+  repeat 10
+    if value => i
+      out(value / i + "0")
+      value //= i
+      result~~
+    elseif result or i == 1
+      out("0")
+    i /= 10
+
+
+PUB hex(value, digits)
+
+'' Print a hexadecimal number
+
+  value <<= (8 - digits) << 2
+  repeat digits
+    out(lookupz((value <-= 4) & $F : "0".."9", "A".."F"))
+
+
+PUB bin(value, digits)
+
+'' Print a binary number
+
+  value <<= 32 - digits
+  repeat digits
+    out((value <-= 1) & 1 + "0")
+
+'----------------------------------------------------------------------------------
+
+CON
+
+    SYNC_POS = 1
+    SYNC_NEG = 0
+
+    EXTMEMREQ = %1011 ' external memory burst read request
+    MBOX1_INIT = $FFFFFFFF
+    MBOX2_INIT = 0
+
+    V_VISIBLE       = 600
+    V_FP            = 1 
+    V_SYNC          = 4
+    V_BP            = 23
+
+    H_VISIBLE       = 800
+    H_FP            = 40
+    H_SYNC          = 128
+    H_BP            = 88 
+
+    V_SYNC_POLARITY = SYNC_NEG
+    H_SYNC_POLARITY = SYNC_NEG
+
+    COLS            = (H_VISIBLE/8)
+
+            
+'------------------------------------------------------------------------------
+DAT
+            orgh
+videodriver
+            org 0
+
+'--------------------------------------------------------------------------------------------------
+'
+' Initial driver entry code, this is also reused later for variable storage 
+'
+'--------------------------------------------------------------------------------------------------
+statusaddr                  mov     statusaddr, ptra        'save ptra as the status address
+paramaddr                   rdlong  ptrb, ptra[1]           'read pin & custom timing info
+mailbox1                    rdlong  mailbox1, ptra[3] wc    'read mailbox address information
+linebuf1                    rdlong  linebuf1, ptra[4]       'extract scan line buffer address
+linebuf2                    rdlong  linebuf2, ptra[5]       'extract scan line buffer address
+mailbox2                    add     ptra, #28               'skip past the init parameters
+status                      mov     paramaddr, ptra         'save pointer to first region data
+region                      cogid   c                       'get our cog id
+modedata                    getbyte b, mailbox1, #3         'get mailbox spacing in bytes
+screenaddr1                 and     b, #$7f                 'clear top bit that is set 
+screenaddr2                 mul     b, c                    'multiply by our COG ID 
+fontaddr                    add     mailbox1, b             'add spacing to mailbox base
+paletteaddr                 getnib  mailbox2, mailbox1, #5  'get mailbox2 offset in longs
+cursor1                     mul     mailbox2, #4            'scale from longs to bytes
+cursor2                     add     mailbox2, mailbox1      'include offset to compute address
+mouse_xy    if_nc           setd    extm_test, #bpptable    'force external mem off if no mbox    
+mouseptr                    setq2   #511                    'read up to 512 instructions 
+wrap                        rdlong  $000, cmodval           '...and load into LUT RAM
+skew                        jmp     #$200                   'continue initialization in LUT RAM
+            
+
+'--------------------------------------------------------------------------------------------------
+' Main field/frame generation loop
+'--------------------------------------------------------------------------------------------------
+
+fieldloop 
+                            setq    #7-1                    'read 7 longs from hub
+                            rdlong  globalmouse, paramaddr  'reload frame parameters to COGRAM
+                            setcy   cy                      'setup the colour space converter
+                            setci   ci
+                            setcq   cq
+                            mov     region, initialregion   'setup first region and limit
+                            getword regionsize, borders, #0 'extract top border size
+                            shr     borders, #16            'extract bottom border size
+                            getbyte a, brdrcolour, #0       'extract side border size
+                            setword m_brdr, a, #0           'setup number of side border pixels
+                            setword m_rf, vis_pixels, #0    'start with default scanline width
+                            sub     m_rf, a                 'adjust for left side border
+                            sub     m_rf, a                 'adjust for right side border
+                            mov     d, #0 wcz               'setup d+c,z flags for mouse+region
+                            setbyte brdrcolour, d, #0       'clear out LSB of border colour
+                            call    #borderregion           'setup region defaults for border
+
+                            setbyte status, #$20, #3        'update status - doing back porch
+patchvbp                    callpa  #V_BP-0, #blank         'send vertical back porch lines
+
+                            mov     ptrb, linebuf1          'restart line buffer
+                            test    regionsize  wz          'check if a top border is present
+            if_z            call    #newregion              'if not, start a new region
+                            mov     pa, vis_lines           'set number of visible lines
+                            call    videomode               'begin video after last border line
+
+lineloop
+                            call    #hsync                  'do horizontal sync
+
+                            setq2   #15                     'read small palettes at this time
+                            rdlong  $100, paletteaddr       'read from hub RAM
+            if_c_and_z      callpb  save, #do_mouse         'c=1, render the mouse after hsync
+                            rdfast  #0, save                'setup the streamer read address
+                            add     status, #1
+
+                            cmp     pa, borders wz          'check if reached bottom border
+            if_z            mov     regionsize, #0          'if yes stop further region updates
+            if_z            call    #borderregion           'and go back to border generation
+                            test    m_brdr, #255 wz         'check if we have a side border
+            if_nz           xcont   m_brdr, brdrcolour      'create left border pixels
+                            xcont   m_rf, palselect         'generate the visible line
+            if_nz           xcont   m_brdr, brdrcolour      'create right border pixels
+
+                            sub     regionsize, #1 wz       'decrement the region's size count
+            if_z            call    #newregion              'when 0, reload another region
+
+                            call    videomode               'create the next video scan line
+                            xcont   m_bs, hsync0            'generate horizontal FP blanking
+                            djnz    pa, #lineloop           'continue for all active lines
+
+                            setbyte status, #$40, #3        'update status - doing front porch
+patchvfp                    callpa  #V_FP-0, #blank         'send vertical front porch lines
+
+                            add     fieldcount, #1          'increase the field counter
+                            test    fieldcount, #15 wz      'check for 16 fields elapsed
+            if_z            xor     flash, #$ff             'flash text ~2Hz
+
+syncspace                                                   '!! These 18 instructions must be
+                                                            '...maintained for patching into!
+                            sub     m_vi, m_slim            'reduces blank line width
+proghd0                     add     m_sn, m_slim            'widens sync (SD) 
+proghd1                     setnib  flipref, #%1111, #7     '...changes back porch (HD)
+vsyncon                     drvnot  #0-0                    '(patched) vsync pin on
+                            setcmod cmodval
+                            mov     hsync0, sync_001        'vsync on, hsync off
+                            decod   status, #31             'update status - in vertical sync
+                            setbyte status, fieldcount, #2
+                            mov     hsync1, sync_000        'vsync on, hsync on
+
+patchvsync                  callpa  #V_SYNC-0, #blank       'send vertical sync blanks
+vsyncoff                    xor     cmodval, #1             'vsync pin off
+                            setcmod cmodval
+                            mov     hsync0, sync_003        'vsync & hsync off (neg polarity)
+                            mov     hsync1, sync_002        'vsync off, hsync on
+                            add     m_vi, m_slim            'restores blank line width
+proghd2                     sub     m_sn, m_slim            'restores sync width (SD)
+proghd3                     setnib  flipref, #0, #7         '...or restores back porch (HD)
+                            nop                             'must keep room for 18 instructions!
+
+                            jmp     #fieldloop              'continue on to a new field/frame
+
+'--------------------------------------------------------------------------------------------------
+' Subroutines
+'--------------------------------------------------------------------------------------------------
+
+hsync                       xzero   m_sn, hsync1            'generate the sync pulse
+                            wrlong  status, statusaddr      'update the sync status per line
+dobreeze                    xcont   m_br, hsync0            'do breezeway before colour burst
+doburst                     xcont   m_cb, colourburst       'do the PAL/NTSC colour burst
+flipref                     xor     colourburst, colourflip 'toggle PAL colour ref per scanline
+bp          _ret_           xcont   m_bv, hsync0            'generate the back porch
+
+'..................................................................................................
+
+blank                       call    #hsync                  'do hsync at the start of the line
+                            xcont   m_vi, hsync0            'generate blank line pixels
+            _ret_           djnz    pa, #blank              'repeat to generate multiple lines
+
+'..................................................................................................
+' Code to reload and setup all configurable parameters per display region
+
+newregion                   zerox   region, #19 wz          'check for any more regions?
+borderregion
+            if_z            setnib  m_rf, #1, #4            'setup streamer for immediate data
+            if_z            setnib  m_rf, #7, #7            'setup streamer for immediate data
+            if_z            mov     videomode, #nullmode
+                            mov     palselect, brdrcolour   'set default border colour
+            if_z            ret     wcz                     'and exit if no more regions
+
+                            setq    #12-1                   'read region parameters from hub
+                            rdlong  region, region          'update region data
+                            getword regionsize, modedata, #1 'extract region size
+
+                            testb   modedata, #9 wc         'determine mode type 1=gfx, 0=text
+                            testb   modedata, #12 wz        'check if interlaced source
+                            testb   fieldcount, #0 andz
+            if_z_and_c      mov     screenaddr1, cursor1     
+            if_z_and_c      mov     screenaddr2, cursor2    
+
+                            mov     palselect, #8           'clear default
+                            getbyte rowheight, fontaddr, #3 'extract font height
+                            getword rowscan, wrap, #1       'get initial font scanline
+
+            if_z            incmod  rowscan, rowheight wz
+                            wrz     row
+
+                            getword wrap, wrap, #0          'clear unwanted top 16 bits now
+                            neg     scanline, #1
+            if_c            mov     videomode, #gen_gfx     'setup function pointers
+            if_nc           mov     videomode, #gen_text    '..for the appropriate mode
+                            testb   modedata, #3 wz         'if gfx, 1=LUMA8, 0=non LUMA8
+            if_c_and_z      setnib  palselect, modedata, #0
+                            getnib  a, modedata, #0         'colour mode 0 is special below
+                            cmp     a, #3 wz                'check for the 8 bit LUTRAM mode
+            if_c_and_z      mov     palselect, #0           'use low LUTRAM for 8 bit palettes
+            if_c_and_z      setq2   #255                    'read in a 256 colour palette from
+            if_c_and_z      rdlong  0, paletteaddr          '...HUB to LUT RAM 
+                            fle     a, #8 wz                'collapse LUMA8 modes, test for 0
+                            alts    a, #modetable           'setup mode table indexing
+                            mov     bppidx, 0-0             'get mode information
+            if_c            setnib  m_rf, bppidx, #4        'set streamer nibble for gfx mode
+                            shr     bppidx, #4                   
+            if_c            setnib  m_rf, bppidx, #7        'set streamer nibble for gfx mode
+            if_nc           setnib  m_rf, #7, #7            'set streamer nibble for text mode
+            if_nc           setnib  m_rf, #6, #4            'set streamer nibble for text mode
+
+            if_c            getnib  transfers, bppidx, #1
+            if_c            add     transfers, #1           'setup transfer count in gfx mode
+                            getnib  bppidx, bppidx, #4
+            if_nc           mov     bppidx, #2              'text mode uses 4bpp
+p0                          mov     linebufsize, #COLS
+                            shl     linebufsize, bppidx
+
+p7                          mov     b, #(COLS/2)-1          'setup default burst for gfx modes
+p8          if_z            sub     b, #(COLS/4)            'decrease burst if mode 0
+                            setd    burst, b
+                            testb   modedata, #10 wz        'test for pixel doubling
+            if_z            shr     b, #1                   'halve the transfer size if doubled
+                            setd    transferloop, b         'value patched is actually size-1
+                            add     b, #1                   '...so increment to get real size
+                            setd    double, b
+                            alts    bppidx, #doublebits
+            if_c            mov     pattern, 0-0
+                            setd    doubleloop, pattern
+            if_c            shr     pattern, #9
+
+            _ret_           mov     ptra, screenaddr1       'restart screen buffer at start
+                        
+'..................................................................................................
+' Code to generate a mouse sprite in all the different colour depths
+
+do_mouse
+                            push    ptra
+                            push    ptrb
+
+                            testb   modedata, #14 wz
+            if_nz           mov     mouse_xy, globalmouse   'use global screen co-ordinates
+            if_z            mov     d, scanline             'use local region co-ordinates
+
+                            getword a, mouse_xy, #1         'get mouse y screen co-ordinate
+                            getnib  b, mouseptr, #7         'get y hotspot of mouse image
+                            sub     a, b                    'compensate for the y hotspot
+                            subr    a, d                    'compute sprite row offset     
+                            cmpr    a, #15 wc               'check if sprite covers scanline
+                            
+                            alts    bppidx, #bpptable       'bppidx is an index from 0-5
+                            mov     bitmask, 0-0            'get table entry using bpp index
+                            mul     a, bitmask              'multiply mouse row by its length
+                            shr     bitmask, #16 wz         'extract mask portion
+            if_z            not     bitmask                 'fix up the 32 bpp case
+                            mov     bpp, bitmask
+                            ones    bpp                     'convert into real bpp
+
+                            add     a, mouseptr             'add offset to base mouse address
+                            setq2   #17-1                   'get 17 longs max, mouse mask+image
+                            rdlong  $120, a                 'read mouse data and store in LUT
+                                
+                            getword offset, mouse_xy, #0    'get mouse x screen co-ordinate 
+                            getnib  b, mouseptr, #6         'get x hotspot of mouse image
+
+                            mov     pixels, offset
+                            sub     offset, b               'compensate for the x hotspot
+            if_nc           subr    pixels, vis_pixels wcz  'compute pixels until end of line
+                            add     pixels, b               'increase by the x hotspot amount
+                            fle     pixels, #16             'limit drawn pixels to 16
+
+            if_c_or_z       jmp     #exitmouse              'exit if sprite is out of x/y range
+            
+                            mov     ptrb, #$120             'ptrb is used for mouse image data
+                            rdlut   c, ptrb++               'read in the mouse mask first
+
+                            abs     a, offset               'retain offset (and make positive) 
+                            muls    offset, bpp             'convert number of pixels into bits
+                            abs     b, offset wc            'test for negative value (clipped)
+                            mov     muxmask, bitmask        'setup mask for pixel's data size
+            if_nc           rol     muxmask, b              'align mask for first data pixel
+            if_c            rol     bitmask, b              'align mask for first mouse pixel
+            if_c            shr     c, a                    'eliminate mouse pixels if clipped
+                            shr     b, #5                   'convert bits to longs
+            if_c            add     ptrb, b                 'advance mouse data to skip pixels
+
+                            shl     b, #2                   'convert longs to bytes
+            if_nc           add     pb, b                   'adjust scanline buffer position                
+                            setq2   #16-1                   'read 16 scanline longs into LUT
+                            rdlong  $110, pb                'using adjusted hub read position
+
+                            mov     ptra, #$110             'ptra used for source image data
+                            rdlut   a, ptra                 'get original scanline pixel data
+                            test    $, #1 wc                'c=1 will trigger initial read
+
+                            rep     @endmouse, pixels       'repeat loop for up to 16 pixels
+            if_c            rdlut   b, ptrb++               'get next mouse sprite pixel(s)
+            if_c            rol     b, offset               'align with the source input data
+                            shr     c, #1 wc                'get mask bit 1=set, 0=transparent
+            if_c            setq    muxmask                 'configure the muxq mask
+            if_c            muxq    a, b                    'select original or mouse pixel
+            if_c            wrlut   a, ptra                 'write back updated data if altered
+                            rol     muxmask, bpp wc         'advance mask by 1,2,4,8,16,32 bits
+            if_c            rdlut   a, ++ptra               '...and read next source pixel(s)
+                            rol     bitmask, bpp wc         'rotate mask for mouse data reload
+endmouse
+                            fle     ptra, #$11f             'any way to eliminate this instrn?
+                            sub     ptra, #$110
+                            setq2   ptra 
+                            wrlong  $110, pb                'write LUT image data back to hub
+exitmouse                   pop     ptrb
+                            pop     ptra
+                            ret     wcz
+
+'..................................................................................................
+' Code to generate the next text scan line and cursor(s)
+
+gen_text    
+                            mov     b, rowscan              'build font table base address 
+                            shl     b, #8                   'for this font and row's scanline 
+                            add     b, fontaddr      
+                            setq    #64-1                   '64 longs holds 256 bytes of font
+                            rdlong  font, b                 'read in font data for scanline
+
+                            testb   modedata, #8 wz         'flashing / full colour background?
+            if_z            setr    testflash, #$83         'use text flashing code test
+            if_nz           setr    testflash, #$EA         'change into helfpul zerox c,#15 wc
+
+                            testb   modedata, #10 wz        'pixel double test
+                            setq2   #120-1                  'read maximum of 120 longs from HUB
+                            rdlong  $110, ptra              'to get next 240 chars with colours
+p9                          mov     pb, #$10f+COLS/2        'setup LUT read pointer at end
+p10         if_z            sub     pb, #COLS/4             '...of where character data is
+
+                            mov     save, ptrb              'save pointer register
+                            mov     ptrb, #$1ff             'setup write location in LUT RAM     
+
+p1          if_z            sets    adv, #COLS              'increase by half normal columns
+p2          if_nz           sets    adv, #COLS*2            'increase by normal columns
+
+                            mov     a, #%11000 wc           'reset starting lookup index
+p3          if_z            rep     @endwide, #COLS/2       '2100 clocks for 40 double wide
+p4          if_nz           rep     @endnormal, #COLS       '2760 clocks for 80 normal wide
+                            skipf   a                       'skip 2 of the next 5 instructions
+                            xor     a, #%11110              'flip skip sequence for next time
+                            rdlut   d, pb                   'read pair of characters/colours
+                            getword c, d, #1                'select first word in long (skipf)
+                            getword c, d, #0                'select second word in long (skipf)
+                            sub     pb, #1                  'decrement LUT read index (skipf)
+                            getbyte b, c, #0                'extract font offset for char 
+                            altgb   b, #font                'determine font lookup address
+                            getbyte pixels, 0-0, #0         'get font for character's scanline
+testflash                   bitl    c, #15 wcz              'test (and clear) flashing bit
+flash       if_c            and     pixels, #$ff            'make it all background if flashing
+                            movbyts c, #%01010101           'colours becomes BF_BF_BF_BF
+                            mov     b, c                    'grab a copy for muxing step next
+                            rol     b, #4                   'b becomes FB_FB_FB_FB
+                            setq    ##$F0FF000F             'mux mask adjusts fg and bg colours
+                            muxq    c, b                    'c becomes FF_FB_BF_BB
+                            testb   modedata, #10 wz        'repeat columns test, z was trashed
+endnormal                                                   'end rep 2 instructions early (skipf)
+            if_nz           movbyts c, pixels               'select pixel colours for char
+            if_nz           wrlut   c, ptrb--               'write coloured pixel data into LUT 
+
+                            setword pixels, pixels, #1      'replicate low words in long
+                            mergew  pixels                  '...to then double pixels
+                            mov     b, c                    'save a copy before we lose colours
+                            movbyts c, pixels               'compute 4 lower colours of char
+                            ror     pixels, #8              'get upper 8 pixels
+                            movbyts b, pixels               'compute 4 higher colours of char
+endwide                                                     'end rep 2 instructions early (skipf)
+            if_z            wrlut   b, ptrb--               'save it to LUT RAM
+            if_z            wrlut   c, ptrb--               'save it to LUT RAM
+
+                            mov     ptrb, save              'restore ptrb
+p5                          setq2   #COLS-1                 'write all column pixels to HUB RAM
+p11                         wrlong  $200-COLS, ptrb         'from LUT storage
+
+                            'do both cursors here
+                            bitz    increment, #2           'setup whether cursor is doubled
+                            bitz    scale, #0               'and multiply offset accordingly
+
+                            rep     @endcursor, #2          'repeat twice for two cursors
+                            mov     c, cursor1+0            'get cursor data
+                            xor     $-1, #1                 'alternate cursors
+                            getbyte a, c, #2                'get cursor's x position (col)
+scale                       shl     a, #2+0                 'transform x to long address offset
+                            add     a, ptrb                 'add offset to start of line buffer
+                            getnib  b, c, #2
+                            sub     b, #1 wc
+                            subr    b, rowheight
+            if_nc           cmp     b, rowscan wcz          'compare this scanline count
+                            testb   c, #13 xorc
+                            getbyte b, c, #3                'get cursor's y position (row)
+            if_z_or_c       cmp     b, row wz               'check if cursor is on this row
+                            testb   c, #15 andz             'check if cursor is enabled
+
+                            testb   c, #12 wc               'select the blink phase to apply
+cursflash                   testb   fieldcount, #4-0 xorc   'get flashing bit from field count
+            if_c            testb   c, #14 andz             'if blink, apply blink to z
+                            
+                         '  setnib  c, c, #1                'replicate colour nibble in byte 0
+                            movbyts c, #0                   'replicate colour over all 8 pixels
+            if_z            wrlong  c, a                    'write cursor color to line buffer
+increment                   add     a, #4-0 wc               'advance to next long if wide text
+            if_z            wrlong  c, a                    'repeat to get double wide cursor
+endcursor
+                            testbn  modedata, #11 wz        'z=1 if line doubling off
+                            testbn  scanline, #0 orz        'z=1 if second line
+            if_z            incmod  rowscan, rowheight wc   'z=1 & c=1 if wrapped
+
+                            testb   modedata, #12 andz
+            if_z_and_c      add     rowscan, #1
+            if_z_and_nc     incmod  rowscan, rowheight wc
+
+            if_c            add     row, #1                 'advance to next row
+adv         if_c            add     ptra, #0-0              'advance by half or full columns
+            if_c            add     ptra, skew              'allows windowing into wider screen
+                            jmp     #selectbuf              'select next buffer to write to
+
+'..................................................................................................
+' Code to generate next graphics scan line and handle external memory access
+
+gen_gfx
+                            mov     save, ptrb              'preserve for fifo use later
+                            mov     d, ptra                 'preserve initial source pointer
+extm_test                   testb   screenaddr1, #31 wz     'check for external memory usage
+                            testb   modedata, #13 wc        'check transparent/sprite mode and
+            if_c_and_nz     mov     save, ptra              '...display from ptra if no ext mem
+            if_c_and_nz     jmp     #copy_done              '...we don't use external memory
+            if_z            getnib  a, screenaddr1, #6      'extract bank address
+            if_z            setnib  ptra, a, #6             'copy into external request
+            if_z            setnib  ptra, #EXTMEMREQ, #7    'add memory read request to address
+p6          if_z            setbyte ptrb, #COLS, #3         'transfer 80 "units" of memory data
+            if_z            setnib  ptrb, bppidx, #5        '...multiplied by bpp into HUB RAM
+            if_z            wrlong  ptrb, mailbox2          'setup memory request information
+            if_z            wrlong  ptra, mailbox1          'initiate memory request transfer
+            if_z            add     ptra, linebufsize       'increase ptra by this amount
+            if_c_or_z       bith    mouseptr, #23           'remember for late mouse render
+            if_c_or_z       jmp     #copy_done              'no need to do any copy this time
+            
+                            testb   modedata, #10 wc        'check for pixel width doubling
+            if_nc           setd    writeback, #$188        'no doubling, copied from same addr
+            if_c            setd    writeback, #$110        'data copied from different place
+                            mov     c, transfers            'setup number of read burst loops
+transferloop                setq2   #0-0                    'block copy from HUB source to LUT
+                            rdlong  $188, ptra++
+double      if_c            callpb  #0-0, #doublepixels     'double pixels when enabled
+burst                       setq2   #0-0                    'setup output burst for hub writes
+writeback                   wrlong  $0-0, ptrb++            '...and write back to line buffer
+                            djnz    c, #transferloop        'repeat
+copy_done
+                            add     ptra, skew              'allow for some horizontal panning
+                            testbn  scanline, #0 wz         'check odd/even line state
+                            testb   modedata, #11 wc        'check for line doubled mode
+            if_c_and_nz     mov     ptra, d                 'rewind source ptr to repeat line
+
+selectbuf                   testb   ptrb, #31 wz
+            if_nz           mov     ptrb, linebuf1
+            if_z            mov     ptrb, linebuf2
+
+                            sub     wrap, #1 wz             'check for wrap around to 2nd buf
+            if_z            mov     ptra, screenaddr2       'handle it
+                            testb   modedata, #9 wc
+            if_c_and_z      mov     wrap, rowscan
+            if_z            mov     screenaddr1,screenaddr2 'copy into screenaddr1 for later
+                            add     scanline, #1
+                            bitl    mouseptr, #23 wcz       'test&clear when mouse is rendered
+                            testb   modedata, #15 wz        'test if mouse shown in this region
+                            getword d, status, #0           'get current scanline from top in d
+            if_z_and_nc     callpb  save, #do_mouse         'c=0, render the mouse before hsync
+nullmode                                                    'c=1 is returned for a late mouse
+            _ret_           setbyte status, #0, #3          'update status - doing active lines
+
+'..................................................................................................
+' Code to double pixels in all the different colour depths
+
+doublepixels
+                            push    ptra                    'preserve current pointers
+                            push    ptrb
+                            mov     ptra, #$188             'setup pointers for LUT accesses
+                            mov     ptrb, #$110
+doubleloop                  rep     #0-0, pb                'patched pixel doubling loop count
+                            skipf   pattern                 '1  2  4  8 16 32
+                            rdlut   a, ptra++               '*  *  *  *  *  *
+                            setq    nibblemask              '      *
+                            splitw  a                       '   *     
+                            mov     b, a                    '*  *  *  *  *
+                            movbyts a, #%%2020              '   * 
+                            movbyts a, #%%1100              '      *  *  
+                            movbyts a, #%%1010              '*           *  
+                            wrlut   a, ptrb++               '               *
+                            mergeb  a                       '   *            
+                            mergew  a                       '*               
+                            mov     pb, a                   '      *                           
+                            shl     pb, #4                  '      *                
+                            muxq    a, pb                   '      *         
+                            wrlut   a, ptrb++               '*  *  *  *  *  *Short 32bpp loop
+                            movbyts b, #%%3131              '   *           |returns here but
+                            movbyts b, #%%3322              '      *  *     |falls through at
+                            movbyts b, #%%3232              '*           *  |end after its REP
+                            mergew  b                       '*              |block completes.
+                            mergeb  b                       '   *           |
+                            mov     pb, b                   '      *        |
+                            shl     pb, #4                  '      *        |
+                            muxq    b, pb                   '      *        |
+                            wrlut   b, ptrb++               '*  *  *  *  *  |<skipped for 32bpp
+                            jmp     #exitmouse              'share common code to restore ptrs
+
+'--------------------------------------------------------------------------------------------------
+' Initialized data
+'--------------------------------------------------------------------------------------------------
+'                   __instr_skip_patterns____instcount
+doublebits  long    %01111001101110110110110_000001001
+doublenits  long    %01110111001111011100010_000001010
+doublenibs  long    %00001110100001111010100_000001110
+doublebytes long    %01111110101111111010110_000000111
+doublewords long    %01111101101111110110110_000000111
+doublelongs long    %10000000001111101111110_000000100
+
+nibblemask  long    $0ff00ff0
+
+bpptable
+            long    $0001_00_08                             '1bpp
+            long    $0003_00_08                             '2bpp
+            long    $000F_00_0C                             '4bpp
+            long    $00FF_00_14                             '8bpp
+            long    $FFFF_00_24                             '16bpp
+            long    $0000_00_44                             '32bpp 
+
+modetable           'idx_linesize_xfer_nib7_nib4  
+            long    %000_00000101_0000_0111_0010 
+            long    %001_00001010_0000_0111_0100 
+            long    %010_00010100_0001_0111_0110
+            long    %011_00101000_0011_0111_1000
+            long    %011_00101000_0011_1011_0011
+            long    %011_00101000_0011_1011_0100
+            long    %100_01010000_0111_1011_0101
+            long    %101_10100000_1111_1011_0110
+            long    %011_00101000_0011_1011_0010
+            
+                    '_CHNL0_(R)__CHNL1_(G)__CHNL0_(B)_
+sync_000    long    %1101010100_1101010100_1101010100_11    '-vsync -hsync
+sync_001    long    %1101010100_1101010100_0010101011_10    '-vsync +hsync
+sync_002    long    %1101010100_1101010100_0101010100_11    '+vsync -hsync
+sync_003    long    %1101010100_1101010100_1010101011_10    '+vsync +hsync
+
+m_bs        long    $7fb10000 + H_FP                        'front porch before sync
+m_sn        long    $7fb10000 + H_SYNC                      'sync
+m_br        long    $7fb10000                               'breezeway 
+m_cb        long    $7fb10000                               'colour burst
+m_bv        long    $7fb10000 + H_BP                        'back porch before visible
+
+m_vi        long    $7fb10000 + H_VISIBLE                   'visible
+m_rf        long    $7fb60000 + H_VISIBLE                   'visible 8x4b for LUT lookup
+
+m_brdr      long    $7fb10000
+m_half      long    $7fb10000 + 864/2
+m_slim      long    $7fb10000 + 432 - 64 - 68
+
+colourburst long    $50700001                               'colour burst colour
+colourflip  long    $0                                      'PAL colour burst flip XOR value
+vis_pixels  long    H_VISIBLE              
+vis_lines   long    V_VISIBLE
+fieldcount  long    0
+        
+cmodval     long    @@@setupcode                            'points to LUT init code in HUB
+videomode
+vsyncpin    long    %1111111111_00                          'used to flip hsync
+dacmode_s                                                   'hsync 123-ohm 3.3V value below
+hsync0      long    %0000_0000_000_1011000000000_01_00000_0 
+dacmode_c                                                   'R/G/B 75-ohm 2.0V value below
+hsync1      long    %0000_0000_000_1011100000000_01_00000_0 
+
+regionsize  long    0
+globalmouse long    0
+borders     long    0
+brdrcolour  long    0
+
+font                                                        '64 entry font table stored here
+initialregion                                               '...as well as scratch/sync code
+
+            ' SDTV interlaced sync code (PAL variant is coded, NTSC is patched over this)
+
+interlacedsd                                                'some different sync code patches
+                            testb   fieldcount, #0 wc       'field interlace state
+cy          if_c            call    #\hsync                 'deal with interlaced field lines
+ci          if_c            xcont   m_slim, hsync0          'send a slim half line
+cq
+bitmask
+ntsc1                       rep #2, #5-0                    'defaults to PAL
+muxmask                     xcont   sync_000, hsync1        'generate horizontal blanking/sync
+offset                      xcont   sync_001, hsync0 
+
+                            decod   status, #31             'update status - in vertical sync
+bpp                         setbyte status, fieldcount, #2  'update field counter in status
+writestat                   wrlong  status, statusaddr
+
+ntsc2                       rep #2, #5-0                    'defaults to PAL
+                            xcont   sync_002, hsync1        'generate horizontal blanking/sync
+                            xcont   sync_003, hsync0 
+
+ntsc3                       rep #2, #5-0                    'defaults to PAL
+                            xcont   sync_000, hsync1        'generate horizontal blanking/sync
+                            xcont   sync_001, hsync0 
+                                                            'PAL variant below is the default 
+                                                            'while NTSC gets patched
+ntsc4       if_c            xcont   sync_000, hsync1        'generate horizontal blanking/sync
+ntsc5       if_c            xcont   sync_001, hsync0 
+ntsc6                       xcont   m_half, hsync0          'remainder of interlaced line (PAL)
+
+
+                ' HDTV interlaced sync code
+
+interlacedhd
+                            testb   fieldcount, #0 wc       'get field interlace state
+            if_c            call    #\hsync                 'deal with interlaced field lines
+            if_c            xcont   m_half, hsync0          'send a half line with sync high
+
+            if_c            mov     a, m_vi                 
+            if_nc           mov     a, m_half
+
+                            decod   status, #31             'update status - in vertical sync
+                            setbyte status, fieldcount, #2  'update field counter in status
+
+hdloopstart                 mov     b, #10-0 
+hdloop                      call    #\hsync 
+                            xcont   m_half, hsync1
+                            xcont   m_bs, hsync0
+                            djnz    b, #hdloop
+
+                            call    #\hsync 
+                            xcont   m_half, hsync0          'generate horizontal blanking/sync
+                            xcont   m_bs, hsync0
+                            call    #\hsync
+                            xcont   a, hsync0 
+            if_nc           xcont   m_bs, hsync0
+
+            org     font+64                                 'pad out remainder of font/scratch area
+'--------------------------------------------------------------------------------------------------
+' Uninitialized data
+'--------------------------------------------------------------------------------------------------
+          
+bppidx      res     1
+rowheight                                   'name used in text mode only
+pattern     res     1                       'name used in gfx mode only
+row                                         'name used in text mode only
+transfers   res     1                       'name used in gfx mode only
+palselect   res     1
+linebufsize res     1
+scanline    res     1
+rowscan     res     1
+pixels      res     1
+
+a           res     1
+b           res     1
+c           res     1
+d           res     1
+save        res     1             
+
+            fit     $1f6                    'ensure we fit in the COG
+'--------------------------------------------------------------------------------------------------
+' LUT RAM code (startup configuration only)
+'--------------------------------------------------------------------------------------------------
+            orgh
+            org     $200
+            
+' temporary configuration code loaded to LUT and executed during driver startup
+setupcode
+                            wrlong  c, ptra[-5]             'write our our COG ID
+            if_c            wrlong  ##MBOX2_INIT, mailbox2  'initialize our mailbox with defaults
+            if_c            wrlong  ##MBOX1_INIT, mailbox1  'initialize our mailbox with defaults
+                            mov     pb, ptrb                'make a copy to preserve things
+                            bith    linebuf1, #31           'setup buffer toggle bit states
+                            bitl    linebuf2, #31           '..in both line buffer addresses
+                            mov     save, linebuf1          'initialize for the first time
+                            testb   ptrb, #31 wc            'test for analog (0) or digital (1)
+            if_c            jmp     #setupdvi               'if digital, do DVI setup
+                            testb   ptrb, #30 wc            'test for TV mode (1) or RGB (0)
+                            shl     c, #8                   'move cog ID into place for OR
+                            or      dacmode_s, c            'install cog ID into sync DAC
+                            or      dacmode_c, c            'install cog ID into colour DACs 
+            if_nc           jmp     #setupvga               'if not TV mode, do VGA setup
+
+setuptv
+                            call    #\setuptiming
+                            getnib  a, pb, #5               'extract pin group 
+                            mul     a, #4                   'convert pin group to pin base
+                            getbyte b, pb, #3               'get syncoptions field
+                            testb   b, #5 wc                'test for HD sync (1), SD sync (0)
+            if_c            jmp     #hdtvsync
+                            testb   b, #2 wc                'test for composite (0), other (1)
+            if_nc           jmp     #compositevideo
+                            rczr    b wcz                   'convert two lsb's into flags
+            if_c            jmp     #componentvideo
+
+s_video
+                            mov     cmodval, #%00_10_1000_0 'enable Y/C video generation
+                            add     a, #(1<<6)              'setup two pins (Y+C)
+            if_z            add     a, #(1<<6)              'setup three pins (Y+C+Composite)
+                            jmp     #sdtvcommon
+
+compositevideo
+                            mov     cmodval, #%00_11_1000_0 'enable composite video generation
+                            and     b, #3                   'get selected output DAC ID
+                            add     a, b                    'add to DAC ID offset
+sdtvcommon
+                            wrpin   dacmode_c, a            'enable DAC mode on DAC pin(s)
+                            dirh    a                       'enable pin output
+                            mov     hsync0, #1              'idle hsync
+                            mov     hsync1, #2 wz           'active hsync, clear z
+                            
+                            'sync_000 holds sync/2
+                            'sync_001 holds line/2 - sync/2
+                            'sync_002 holds line/2 - sync
+                            'sync_003 holds sync
+interlacedcommon
+                            getword a, m_vi, #0             'get visible + front porch pixels
+                            getword b, m_bv, #0             'get back porch pixels
+                            add     a, b                    'sum them together
+                            getword b, m_sn, #0             'get sync width to be added
+                            add     a, b                    'a contains total pixels/line (H)
+                            mov     sync_003, b             'store the sync width
+                            shr     b, #1                   'b now contains half sync width
+                            mov     sync_000, b             'store the half sync width
+                            
+                            shr     a, #1                   'a = H/2
+                            setword m_half, a, #0           'setup m_half for half a scan line
+                            sub     a, sync_000             'a = H/2 - sync/2
+                            mov     sync_001, a             'save this value
+                            sub     a, sync_000             'a = H/2 - sync
+                            mov     sync_002, a             'save this value 
+                            mov     m_slim, m_half          'compute m_slim next
+                            sub     m_slim, sync_003        'm_slim is half line - sync width
+                            getword b, m_bv, #0             'get back porch pixels
+                            sub     m_slim, b               'subtract them from m_slim
+
+                            getbyte a, c, #0                'get colour burst pixels
+                            setword m_cb, a, #0             'store it in m_cb streamer mode
+                            sub     b, a                    'subtract burst from back porch
+                            getbyte a, c, #1                'get breezeway pixels
+                            setword m_br, a, #0             'store it in m_br streamer mode
+                            sub     b, a                    'compensate for breezeway size
+            if_nz           setword m_bv, b, #0             'write updated value to back porch
+                                                            '..but not for interlaced component
+
+                            mov     patchvfp, writestat     'no front porch (just equalization)
+                            
+                            testb   pb, #27 wz              'test for NTSC/PAL (patch for NTSC)
+            if_nz           sets    ntsc1, #6               'NTSC uses 6 equalizing pulses
+            if_nz           sets    ntsc2, #6               'NTSC uses 6 serrated vsync pulses
+            if_nz           sets    ntsc3, #6               'NTSC uses 6 equalizing pulses
+            if_nz           mov     ntsc4, #0               'not used for NTSC case
+            if_nz           mov     ntsc5, #0               'not used for NTSC case
+            if_nz           setnib  ntsc6, #%1100, #7       'turn on if_c condition for NTSC
+
+                            testb   pb, #28 wc              'test for interlaced/progressive
+            if_z_and_nc     sets    ntsc1, #4               'prog PAL uses 4 equalizing pulses
+            if_nc           mov     cy, #0
+            if_nc           mov     ci, #0
+            if_nc           mov     ntsc4, #0
+            if_nc           mov     ntsc5, #0
+            if_nc           mov     ntsc6, #0
+
+                            getword a, m_sn, #1             'get sync streamer mode top word   
+                            setword sync_000, a, #1         'and use to build streamer modes
+                            setword sync_001, a, #1
+                            setword sync_002, a, #1
+                            setword sync_003, a, #1
+
+                            callpa  #interlacedsd, #copysync
+                            jmp     #setupclk               'now setup the clock
+                 
+componentvideo
+                            mov     cmodval, #%00_01_1_0100 'enable component video generation
+            if_nz           xor     cmodval, #%1100         'flip Y/Pr sync outputs if chosen
+                            add     a, #(2<<6)+1            'skip DAC0 and setup pins (Y+Pr+Pb)
+                            wrpin   dacmode_c, a            'enable DACs in pin group
+                            dirh    a                       'enable pin group output
+                            testb   pb, #28 wz              'test for interlaced/progressive
+
+                            mov     dobreeze, #0            'kill unwanted instructions
+                            mov     doburst, #0
+                            mov     colourflip, #0
+                            mov     sync_003, #0            'idle hsync, idle vsync
+                            mov     sync_002, #(-76 & $ff)  'active hsync, idle vsync
+                            mov     sync_001, #0            'idle hsync, active vsync
+                            mov     sync_000, #(-76 & $ff)  'active hsync, active vsync
+                            mov     hsync0, sync_003        'vsync & hsync off (neg polarity)
+                            mov     hsync1, sync_002        'vsync off, hsync on
+            if_z            jmp     #interlacedcommon       'interlaced sync version
+
+                            mov     proghd1, #0             'progressive sync version
+                            mov     proghd3, #0
+                            mov     vsyncon, #0
+                            mov     vsyncoff, #0
+                            
+                            getword m_slim, m_vi, #0        'get normal visible + fp width
+                            getword a, m_sn, #0             'get normal sync width
+                            sub     m_slim, a               'save the delta for vsync interval
+                            jmp     #setupclk
+
+hdtvsync
+                            mov     cmodval, #%00_01_1000_0 'enable component video generation
+                            add     a, #1                   'skip base DAC0
+                            add     a, #(2<<6)              'setup three pins (Y+Pr+Pb)
+                            wrpin   dacmode_c, a            'enable DACs on these 3 pins
+                            dirh    a                       'enable pin output
+                            testb   b, #4 wz                'check for interlaced/progressive 
+                            and     b, #7                   'use 3 lsb's as sync outputs
+                            shl     b, #1
+                            or      cmodval, b
+                            getword a, m_sn, #0             'get the sync width in pixels 
+                            shr     a, #1 wc                'split it into two halves
+                            setword m_sn, a, #0             'use first half for low sync
+                            mov     m_cb, m_sn              'use second half for high sync
+            if_c            add     m_cb, #1                'compensate for any odd pixels
+                            mov     colourburst, #((+105*60/128)&$ff)  
+                            mov     hsync1, #((-105*60/128)&$ff) 
+                            mov     hsync0, #0
+            if_z            jmp     #hdtvinterlaced         'do interlaced version
+
+hdtvprogressive
+                            mov     proghd0, #0             'kill unwanted instructions
+                            mov     proghd2, #0
+                            mov     vsyncon, #0
+                            mov     vsyncoff, #0
+                            mov     flipref, dobreeze       'rearrange streamer instructions
+                            mov     dobreeze, #0            'nop away old instruction
+                            setnib  flipref, #0, #7         'return early during normal lines
+                            sets    bp, #hsync1             'use negative sync "colour"
+                            mov     m_br, m_bv              'use breezeway to do back porch
+                            getword a, m_bv, #0             'get back porch width
+                            getword m_slim, m_vi, #0        'get normal visible + fp width
+                            sub     m_slim, a               'save the delta for vsync interval
+                            setword m_bv, m_slim, #0        'and keep it in m_bv during vsync
+                            
+                            mov     sync_003, hsync0        'idle hsync, idle vsync
+                            mov     sync_002, hsync1        'active hsync, idle vsync
+                            mov     sync_001, hsync0        'idle hsync, active vsync
+                            mov     sync_000, hsync1        'active hsync, active vsync
+                            jmp     #setupclk
+
+hdtvinterlaced
+                            mov     a, patchvsync           'get vertical sync line count
+                            shr     a, #9                   '...stored in the d-field
+                            shl     a, #1                   'double it (they are half lines)
+                            sets    hdloopstart, a          'patch into hd code before copy
+                            callpa  #interlacedhd, #copysync 
+
+                            getword a, m_vi, #0             'get visible + front porch pixels
+                            getword b, m_bv, #0             'get back porch pixels
+                            add     a, b                    'sum them together
+                            getword b, m_sn, #0             'get sync width to be added
+                            add     a, b                    'a contains total pixels/line (H)
+                            shr     a, #1                   'a is half line size
+                            mov     m_half, m_vi
+                            sub     m_half, a
+                            getword a, m_bs, #0
+                            sub     m_half, a              
+                            sub     patchvbp, ##$200        'one line gets used by vsync code
+
+                            mov     dobreeze, #0            'nop away old instruction
+                            mov     flipref, #0
+                            jmp     #setupclk
+
+copysync                    setd    pa, #syncspace          'copy code into space for sync
+                            rep     #2, #18                 'repeat 2 instructions 18 times
+                            alti    pa, #%111_111           'auto increment
+                            mov     0-0, 0-0                'copy longs
+                            ret                             
+
+setupdvi                                                    'code configures for DVI
+                            mov     dobreeze, #0
+                            mov     doburst, #0
+                            mov     m_slim, #0 
+                            mov     proghd1, #0
+                            mov     proghd3, #0
+                            call    #\setuptiming           'check for any timing override
+                     
+            if_z            xor     sync_000, vsyncpin      'setup hsync polarity 
+            if_z            xor     sync_001, vsyncpin      'flip if +hsync
+            if_z            xor     sync_002, vsyncpin      'hsync is otherwise negative
+            if_z            xor     sync_003, vsyncpin      'vsync_pin data holds flip mask
+                            
+            if_c            bitnot  sync_000, #11           'setup vsync polarity
+            if_c            bitnot  sync_001, #11           'flipping bit 11 makes +vsync
+            if_c            bitnot  sync_002, #11           'vsync is otherwise negative
+            if_c            bitnot  sync_003, #11           'by default
+
+                            mov     vsyncoff, #0            'disable sync output instructions
+                            mov     vsyncon, #0             
+
+                            mov     cmodval, #%10_00_0000_0 'enable DVI in CMOD
+                            getnib  a, pb, #5               'extract pin group 
+                            bitl    a, #3 wcz               'test forward/backward DVI order
+                            bitc    cmodval, #7             'setup in CMOD
+                            shl     a, #4
+                            or      a, #$81
+                            setbyte m_bs, a, #2
+                            setbyte m_sn, a, #2
+                            setbyte m_bv, a, #2
+                            setbyte m_vi, a, #2
+                            setbyte m_brdr, a, #2
+                            add     a, #5
+                            setbyte m_rf, a, #2
+                            sub     a, #$86
+                            shr     a, #1
+                            or      a, #7<<6
+                          
+                            setcmod cmodval                 'setup using cmod register
+                            setxfrq ##$0CCCCCCC+1           'always set frequency to 1/10 clk
+			    wrpin  ##%001001<<8, a          'uncomment for full drive output
+ '                           wrpin   ##%10110_0011_0000_10_00000_0, a  '123 ohm BITDAC for pins
+                            drvl    a                       'enable DVI output pins in group
+                            mov     hsync0, sync_003        'vsync & hsync off (neg polarity)
+                            mov     hsync1, sync_002        'vsync off, hsync on
+                            jmp     #fieldloop              'begin outputting video frames
+
+setupvga                                                    'code configures for analog/VGA
+                            mov     dobreeze, #0
+                            mov     doburst, #0
+                            mov     m_slim, #0
+                            mov     proghd1, #0
+                            mov     proghd3, #0
+                            mov     cmodval, #%00_01_0000_0
+                            call    #\setuptiming           'check for any timing override
+
+                            bitnz   cmodval, #0             'set hsync polarity default
+                            getbyte vsyncpin, pb, #3        'get the vsync pin
+
+                            mov     b, vsyncpin             'get the sync/options field
+                            and     b, #%111100             'get base pin of vsync
+
+                            getnib  a, pb, #5               'extract analog 4-pin group
+                            mul     a, #4                   'convert to real pin base number
+
+                            mov     sync_003, #0            'idle hsync, idle vsync
+                            mov     sync_002, #1            'active hsync, idle vsync
+                            mov     sync_001, #0            'idle hsync, active vsync
+                            mov     sync_000, #1            'active hsync, active vsync
+
+                            cmp     a, b wz                 'check if pin group matches 
+
+                            ' 5pin VGA: RGBHV
+            if_nz           drvnc   vsyncpin                'start with inactive vsync
+                            setd    vsyncon, vsyncpin
+            if_nz           mov     vsyncoff, vsyncon       'use correct method for vsync
+            if_nz           jmp     #setup_4pins            'done 5 pin VGA, go setup pins
+                            test    vsyncpin, #3 wz         'test 2 lsbs of vsync, 4 cases
+                                                            '00: RGBS 1Vp-p sync into 75ohms
+                                                            '01: RGB/YPrPb with sync on DAC1
+                                                            '10: RGB/YPrPb with sync on DAC2
+                                                            '11: RGB/YPrPb with sync on DAC3
+
+                            ' 4pin VGA: RGBS (VGA with Composite Sync)
+            if_z            mov     dacmode_s, dacmode_c    'drive 75 ohm sync input, not ttl
+            if_z            mov     vsyncon, vsyncoff       'use correct method for vsync
+            if_z            jmp     #setup_4pins
+                            ' 3pin VGA: RGB/component cases: eg. SyncOnGreen or YPrPb
+                            sets    vsyncoff, #0
+                            mov     vsyncon, vsyncoff
+                            mov     sync_000, #0
+                            mov     sync_001, #180  
+                            mov     sync_002, #180
+                            mov     sync_003, #0  
+                            mov     b, #1
+                            and     vsyncpin, #3
+                            shl     b, vsyncpin
+                            or      cmodval, b
+                            jmp     #setup_3pins
+setup_4pins
+                            wrpin   dacmode_s, a            'setup sync mode on DAC0 in group
+                            dirh    a                       'enable the sync pin
+setup_3pins
+                            add     a, #1 + (2<<6)          'setup next pin group
+                            wrpin   dacmode_c, a            'setup colour mode on DACs1-3
+                            dirh    a                       'enable this pin group
+                            mov     hsync0, sync_003        'vsync & hsync off (neg polarity)
+                            mov     hsync1, sync_002        'vsync off, hsync on
+
+setupclk    
+                            rdlong  a, ptrb[4]              'get xfrq value or divider
+                            getword b, a, #1                'extract upper long
+                            test    b wz                    'check if xrfq value or divider
+            if_nz           jmp     #applyclks              'for dividers, upper long is 0
+                            getword c, a, #0                'get fractional pixel clock ratio
+                            test    c wz                    'check for divide by zero case
+                            
+            if_z            mov     c, ##2560               '..if so, assume divider is 10.000
+                            qfrac   #$80, c                 'divide $80_0000_0000 by ratio  
+                            getqx   a                       'get quotient
+                            getqy   b wz                    'get remainder and test for 0
+            if_nz           add     a,  #1                  'round up if a fractional result
+applyclks   
+                            rdlong  b, ptrb[6]              'read CFRQ parameter
+                            setcmod cmodval                 'setup using cmod register
+                            setcfrq b                       'set the colour modulator rate
+                            setxfrq a                       'set the streamer rate
+                            jmp     #fieldloop              'begin outputting video frames
+
+
+setuptiming
+                            mov     a, #H_SYNC_POLARITY     'setup some default polarities
+                            sub     a, #1 wz                'z=1 if positive hsync desired
+                            ones    a, #V_SYNC_POLARITY wc  'c=1 if positive vsync desired
+                            zerox   ptrb, #19               'check if we have custom timing
+                            tjz     ptrb, #donetiming       'return if we do not
+
+                            'read in custom timing block and patch all COG code accordingly
+
+                            rdlong  a, ptrb[2]              'read custom horizontal timing
+                            getbyte b, a, #0                'get columns
+                            fles    b, #240                 'set maximum of 1920 pixels
+                            mov     vis_pixels, b           'save as visible columns
+                            mul     vis_pixels, #8          'convert to pixels
+                            sets    p1, b                   'patch columns into code
+                            sets    p4, b
+                            sets    p6, b
+                            sets    p0, b                   
+                            mov     c, b
+                            shl     b, #1                   'compute columns*2
+                            sets    p2, b                   'patch columns*2 into code
+                            shr     b, #2                   'compute columns/2
+                            sets    p3, b                   'patch columns/2 into code
+                            sets    p7, b                   
+                            sets    p9, b
+                            add     p9, #$10f
+                            sub     p7, #1                  'patch columns/2 - 1 into code
+                            shr     b, #1                   'compute columns/4 
+                            sets    p8, b                   'patch columns/4 into code
+                            sets    p10, b                  
+                            sub     c, #1                   'compute columns -1
+                            setd    p5, c                   'patch columns - 1 into code
+                            subr    c, #$1ff
+                            setd    p11, c
+                            setword m_vi, vis_pixels, #0    'setup streamer blank line
+                            setword m_rf, vis_pixels, #0    'setup streamer visible line
+                            getbyte b, a, #1                'get back porch pixels
+                            setword m_bv, b, #0             'setup H_BP
+                            getbyte b, a, #2                'get horizontal sync pixels
+                            setword m_sn, b, #0             'setup H_SYNC
+                            getbyte b, a, #3                'get front porch pixels
+                            and     b, #%111_1111 wz        'check for extended front porch(HD)
+                            rdlong  c, ptrb[5]              'read extended sync timing
+            if_z            getword b, c, #0                'use extended front porch value
+
+                            setword m_bs, b, #0             'setup H_FP
+                            add     m_vi, b                 'include front porch in blank line
+                            testb   a, #31 wz               'get hsync polarity into Z flag
+
+                            rdlong  a, ptrb[3]              'read custom vertical timing
+                            testb   a, #31 wc               'get vsync polarity into C flag
+                            mov     vis_lines, ##$7FF       'setup 11 bit mask
+                            and     vis_lines, a            'extract 11 LSb's 
+                            shr     a, #11
+                            setd    patchvbp, a             'setup V_BP
+                            shr     a, #9
+                            mov     b, #7                   '3 bit mask
+                            and     b, a                    'extract 3 LSB's
+                            setd    patchvsync, b           'setup V_SYNC
+                            shr     a, #3
+            if_c            bitnot  a, #8                   'clear this bit for next setd
+                            setd    patchvfp, a             'setup V_FP
+
+                            rdlong  c, ptrb[5]              'read colour burst params
+                            getword c, c, #1                'stored in upper long
+{
+                            mov     b, ##CLK252MHz          'TEMPORARY CODE to SET PLL during
+                            hubset  b                       'development, not in final code!
+                            rdlong  b, ptrb[0]              'get new PLL rate
+                            hubset  b
+                            waitx   ##25_000_000 / 100      'delay >10ms for PLL
+                            or      b, #3
+                            hubset  b
+}
+donetiming
+                            ret                             'returned flags contain polarities
+
+            fit $400
+
+
+            orgh
+prog240_timing     '720x240p timing @ 60Hz with 13.5MHz pixel clock
+            long   CLK108MHz
+            long   108000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_NEG<<31) | ( 16<<24) | ( 64<<16) | ( 58<<8 ) | (720/8)
+            'long  (SYNC_NEG<<31) | ( 56<<24) | ( 64<<16) | ( 98<<8 ) | (640/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_NEG<<31) | ( 0<<23) | (  0<<20) | ( 13<<11) | 240
+            long   8<<8
+            long   (8<<24) + (36<<16)
+            'long    round(3579545.0 / 108000000.0 * float($7FFFFFFF) * 2.0)
+            long   284704235/2 'reserved for CFRQ parameter
+
+prog288_timing     '720x288p timing @ 50Hz with 13.5MHz pixel clock
+            long   CLK108MHz
+            long   108000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_NEG<<31) | ( 12<<24) | ( 64<<16) | ( 68<<8 ) | (720/8)
+            'long   (SYNC_NEG<<31) | ( 52<<24) | ( 64<<16) | (108<<8 ) | (640/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_NEG<<31) | ( 0<<23) | (  5<<20) | ( 17<<11) | 288
+            long   8<<8
+            long   (8<<24) + (30<<16)
+            long   352634214/2' reserved for CFRQ parameter
+
+int480_timing      '720x480i timing @ 60Hz with 13.5MHz pixel clock
+            long   CLK108MHz
+            long   108000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_NEG<<31) | ( 16<<24) | ( 64<<16) | ( 58<<8 ) | (720/8)
+            'long   (SYNC_NEG<<31) | ( 56<<24) | ( 64<<16) | ( 98<<8 ) | (640/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_NEG<<31) | ( 0<<23) | (  5<<20) | ( 13<<11) | 240
+            long   8<<8
+            long   (8<<24) + (36<<16)
+            'long    round(3579545.0 / 108000000.0 * float($7FFFFFFF) * 2.0)
+            long   284704235/2 'reserved for CFRQ parameter
+
+int576_timing      '720x576i timing @ 50Hz with 13.5MHz pixel clock
+            long   CLK108MHz
+            long   108000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_NEG<<31) | ( 12<<24) | ( 64<<16) | ( 68<<8 ) | (720/8)
+            'long   (SYNC_NEG<<31) | ( 52<<24) | ( 64<<16) | (108<<8 ) | (640/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_NEG<<31) | ( 0<<23) | (  5<<20) | ( 17<<11) | 287
+            long   8<<8
+            long   (8<<24) + (30<<16)
+            long   352634214/2' reserved for CFRQ parameter
+
+prog480_timing     '720x480p timing @ 60Hz with 27MHz pixel clock
+            long   CLK135MHz
+            long   135000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_NEG<<31) | ( 16<<24) | ( 48<<16) | ( 74<<8 ) | (720/8)
+            'long   (SYNC_NEG<<31) | ( 16<<24) | ( 64<<16) | ( 58<<8 ) | (720/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_NEG<<31) | ( 7<<23) | (  6<<20) | ( 32<<11) | 480
+            long   5<<8         
+            long   (8<<24) + (36<<16)
+            long   0   ' reserved for CFRQ parameter
+
+prog576_timing     '720x576p timing @ 50Hz with 27MHz pixel clock
+            long   CLK135MHz
+            long   135000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_NEG<<31) | ( 12<<24) | ( 48<<16) | ( 84<<8 ) | (720/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_NEG<<31) | ( 5<<23) | (  5<<20) | ( 39<<11) | 576
+            long   5<<8           
+            long   (8<<24) + (30<<16)
+            long   176317107   ' reserved for CFRQ parameter
+
+vga_timing         'VGA resolution 640x480 60Hz with 25.2MHz pixel clock
+            long   CLK252MHz
+            long   252000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_NEG<<31) | ( 16<<24) | ( 96<<16) | ( 48<<8 ) | (640/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_NEG<<31) | ( 10<<23) | (  2<<20) | ( 33<<11) | 480
+            long   10 << 8 ' $0ccccccc+1 ' 10 << 8 
+            long   0
+            long   0   ' reserved for CFRQ parameter
+
+vga400_timing      'VGA resolution 640x400 70Hz with 25.2MHz pixel clock
+            long   CLK252MHz
+            long   252000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_NEG<<31) | ( 16<<24) | ( 96<<16) | ( 48<<8 ) | (640/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_POS<<31) | ( 12<<23) | (  2<<20) | ( 35<<11) | 400
+            long   10 << 8
+            long   0   
+            long   0   ' reserved for CFRQ parameter
+                   
+ega_timing         'EGA resolution 640x350 70Hz with 25.2MHz pixel clock
+            long   CLK252MHz
+            long   252000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_POS<<31) | ( 16<<24) | ( 96<<16) | ( 48<<8 ) | (640/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_NEG<<31) | ( 37<<23) | (  2<<20) | ( 60<<11) | 350
+            long   10 << 8
+            long   0   
+            long   0   ' reserved for CFRQ parameter
+
+svga_timing   ' SVGA resolution 800x600 60Hz with 40MHz pixel clock
+            long   CLK240MHz
+            long   240_000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_POS<<31) | ( 40<<24) | (128<<16) | ( 88<<8 ) | (800/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_POS<<31) | (  1<<23) | (  4<<20) | ( 23<<11) | 600
+            long    6 << 8
+            long    0
+            long    0   ' reserved for CFRQ parameter
+
+svga_dvi_timing   ' massively reduced blanking for 800x600 50Hz at 25.2MHz clk YMMV
+            long   CLK252MHz
+            long   252000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_POS<<31) | (  8<<24) | (  8<<16) | (  8<<8 ) | (800/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_POS<<31) | (  2<<23) | (  2<<20) | ( 11<<11) | 600
+            long    8 << 8
+            long    0
+            long    0   ' reserved for CFRQ parameter
+
+xga_timing ' 1024x768@60Hz at 65*5 MHz YMMV
+            long   CLK325MHz
+            long   325000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_NEG<<31) | ( 24<<24) | (136<<16) | (160<<8 ) |(1024/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_NEG<<31) | (  3<<23) | (  6<<20) | ( 29<<11) | 768
+            long    5 << 8
+            long    0 
+            long    0   ' reserved for CFRQ parameter
+
+sxga_timing ' 1280x1024@60Hz at 108*3 MHz YMMV
+            long   CLK325MHz
+            long   325000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_POS<<31) | ( 48<<24) | (112<<16) | (248<<8 ) |(1280/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_NEG<<31) | (  1<<23) | (  3<<20) | ( 38<<11) | 1024
+            long   3 << 8
+            long   0 
+            long   0   ' reserved for CFRQ parameter
+
+
+wuxga_timing ' experimental 1920x1200@60Hz for Dell 2405FPW at 77*4 MHz YMMV
+            long   CLK308MHz
+            long   308000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_POS<<31) | ( 16<<24) | ( 16<<16) | (128<<8 ) |(1920/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_NEG<<31) | (  8<<23) | (  3<<20) | ( 23<<11) | 1200
+            long   2<<8
+            long   0 
+            long   0   ' reserved for CFRQ parameter
+
+hd60_timing        
+            long   CLK350MHz
+            long   350000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_NEG<<31) | ( 70<<24) | ( 80<<16) | (220<<8 ) |(1280/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_NEG<<31) | (  5<<23) | (  5<<20) | ( 20<<11) | 720 
+            long   5<<8
+            long   0
+            long   0   ' reserved for CFRQ parameter
+
+hd50_timing        
+            long   CLK297MHz
+            long   297000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_NEG<<31) | (  0<<24) | ( 80<<16) | (220<<8 ) |(1280/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_NEG<<31) | (  5<<23) | (  5<<20) | ( 20<<11) | 720 
+            long   4<<8
+            long   400                               'extended front porch
+            long   0   ' reserved for CFRQ parameter
+
+fullhd_timing      
+            long   CLK297MHz
+            long   297000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_POS<<31) | ( 44<<24) | ( 88<<16) | (148<<8 ) |(1920/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_POS<<31) | (  4<<23) | (  5<<20) | ( 36<<11) | 1080
+            long   2<<8
+            long   0
+            long   0   ' reserved for CFRQ parameter
+
+hdint_timing       
+            long   CLK350MHz
+            long   350000000
+                   '_HSyncPolarity___FrontPorch__SyncWidth___BackPorch__Columns
+                   '     1 bit         7 bits      8 bits      8 bits    8 bits
+            long   (SYNC_POS<<31) | ( 44<<24) | ( 88<<16) | (148<<8 ) |(1920/8)
+                   
+                   '_VSyncPolarity___FrontPorch__SyncWidth___BackPorch__Visible
+                   '     1 bit         8 bits      3 bits      9 bits   11 bits
+            long   (SYNC_POS<<31) | (  2<<23) | (  5<<20) | ( 15<<11) | 540  
+            long   5<<8
+            long   0
+            long   0
