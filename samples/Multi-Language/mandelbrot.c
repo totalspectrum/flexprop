@@ -12,9 +12,9 @@
 //
 
 // if defined, use fixed point math
-// in principle this should work for larger precision,
-// but there's a bug somewhere so that 16 is the max
-#define FIXED_POINT 16
+// the number of bits of precision is given here
+// make sure the numbers won't overflow before increasing this!
+#define FIXED_POINT 24
 
 // baud rate for serial
 #ifndef _BAUD
@@ -89,7 +89,7 @@ Real square(Real a)
         getqx lo
         getqy hi
     };
-    return (hi<<(FIXED_POINT-32)) | (lo>>FIXED_POINT);
+    return (hi<<(32-FIXED_POINT)) | (lo>>FIXED_POINT);
 }
 #else
 typedef float Real;
