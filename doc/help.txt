@@ -42,8 +42,18 @@ bugs (if the program works with no optimization but fails with
 optimization enabled, then either there's a timing issue or a compiler
 bug).
 
-"Full Optimization" may produce faster code, but it will typically
+"Default optimization" is the normal level of optimization.
+
+"Full Optimization" will often produce faster code, but it will typically
 consume more resources (including COG memory).
+
+"No extra warnings" means the compiler will only warn about serious
+problems.
+
+"Enable compatibility warnings" will cause the compiler to also warn
+about some differences between fastspin and the official Spin2
+compiler. Fixing these warnings will make porting your code to the
+Parallax compiler easier (although there still may be issues!)
 
 The "Editor Options..." dialog allows you to change the way the source
 code editor looks, e.g. changing the font used for the text, or the

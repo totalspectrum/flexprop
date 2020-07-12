@@ -72,6 +72,7 @@ set config(autoreload) 0
 set COMPORT " "
 set OPT "-O1"
 set COMPRESS "-z0"
+set WARNFLAGS "-Wnone"
 set PROP_VERSION ""
 set OPENFILES ""
 set config(showlinenumbers) 1
@@ -220,6 +221,7 @@ proc config_open {} {
     global CONFIG_FILE
     global OPT
     global COMPRESS
+    global WARNFLAGS
     global COMPORT
     global OPENFILES
     
@@ -248,6 +250,10 @@ proc config_open {} {
 	    compress {
 		# set compression level
 		set COMPRESS [lindex $data 1]
+	    }
+	    warnflags {
+		# set warning flags
+		set WARNFLAGS [lindex $data 1]
 	    }
 	    comport {
 		# set optimize level
@@ -282,6 +288,7 @@ proc config_save {} {
     global CONFIG_FILE
     global OPT
     global COMPRESS
+    global WARNFLAGS
     global COMPORT
     global OPENFILES
     
@@ -295,6 +302,7 @@ proc config_save {} {
     puts $fp "compress\t\{$COMPRESS\}"
     puts $fp "comport\t\{$COMPORT\}"
     puts $fp "openfiles\t\{$OPENFILES\}"
+    puts $fp "warnflags\t\{$WARNFLAGS\}"
     foreach i [array names config] {
 	if {$i != ""} {
 	    puts $fp "$i\t\{$config($i)\}"
@@ -1202,6 +1210,9 @@ menu .mbar.help -tearoff 0
 .mbar.options add radiobutton -label "No Optimization" -variable OPT -value "-O0"
 .mbar.options add radiobutton -label "Default Optimization" -variable OPT -value "-O1"
 .mbar.options add radiobutton -label "Full Optimization" -variable OPT -value "-O2"
+.mbar.options add separator
+.mbar.options add radiobutton -label "No extra warnings" -variable WARNFLAGS -value "-Wnone"
+.mbar.options add radiobutton -label "Enable compatibility warnings" -variable WARNFLAGS -value "-Wall"
 #.mbar.options add separator
 #.mbar.options add radiobutton -label "No Compression" -variable COMPRESS -value "-z0"
 #.mbar.options add radiobutton -label "Compress Code" -variable COMPRESS -value "-z1"
@@ -1496,12 +1507,17 @@ proc mapPercent {str} {
     global BINFILE
     global ROOTDIR
     global OPT
+    global WARNFLAGS
     global COMPRESS
     global COMPORT
     global config
 
-#    set fulloptions "$OPT $COMPRESS"
-    set fulloptions "$OPT"
+    set ourwarn $WARNFLAGS
+    if { "$ourwarn" eq "-Wnone" } {
+	set ourwarn ""
+    }
+#    set fulloptions "$OPT $ourwarn $COMPRESS"
+    set fulloptions "$OPT $ourwarn"
     if { $COMPORT ne " " } {
 	set fullcomport "$COMPORT"
     } else {

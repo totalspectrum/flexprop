@@ -1,3 +1,9 @@
+Version 4.2.5
+- Added menu options for changing warning level
+
+Version 4.2.4
+- No GUI changes
+
 Version 4.2.3
 - Fixed autoindent behavior when } is at start of line
 
