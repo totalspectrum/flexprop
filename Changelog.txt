@@ -1,5 +1,6 @@
 Version 4.2.5
 - Added menu options for changing warning level
+- Fixed clicking on links (filenames) containing colons in the editor
 
 Version 4.2.4
 - No GUI changes

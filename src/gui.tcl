@@ -885,6 +885,7 @@ proc doSpecial {name extraargs} {
 }
 
 #
+# click on an error message and find the corresponding line
 # parameter is text coordinates like 2.72
 #
 proc doClickOnError { w coord } {
@@ -937,6 +938,52 @@ proc doClickOnError { w coord } {
     }
 }
 
+# simpler click function for clicking on a hyperlink in text
+# this one can just use the file name we already picked out of
+# the surrounding text, no need to parse errors or line numbers
+
+proc doClickOnLink { w coord } {
+    global filenames
+    
+    set first "$coord linestart"
+    set last "$coord lineend"
+    set linkptr [$w tag prevrange hyperlink $coord]
+    set link1 [lindex $linkptr 0]
+    set link2 [lindex $linkptr 1]
+    set linedata [$w get $link1 $link2]
+    #puts "doClickOnLink $w $coord"
+    #puts "first=|$first|"
+    #puts "linkptr=|$linkptr|"
+    #puts "linedata=|$linedata|"
+
+    set fname "$linedata"
+    set line ""
+    if { $fname != "" } {
+	set startdir $filenames([.p.nb select])
+	if { $startdir != "" } {
+	    set startdir [file dirname $startdir]
+	} else {
+	    set startdir [file normalize "."]
+	}
+	set fname [findFileOnPath $fname $startdir]
+	set w [loadSourceFile $fname ]
+	if { $w == "" } {
+	    return
+	}
+	set t $w.txt
+	$t tag config hilite -background yellow
+	# remove hilight
+	foreach {from to} [$t tag ranges hilite] {
+	    $t tag remove hilite $from $to
+	}
+	$t tag config hilite -background yellow
+	if { $line != "" } {
+	    $t see $line.0
+	    $t tag add hilite $line.0 $line.end
+	}
+    }    
+}
+
 #
 # set up syntax highlighting for a given ctext widget
 #
@@ -976,7 +1023,7 @@ proc setHighlightingForFile {w fname} {
 	    }
 	}
     }
-    setHyperLinkResponse $w
+    setHyperLinkResponse $w doClickOnLink
     setHighlightingIncludes $w
 }
 
@@ -1324,16 +1371,17 @@ if {[tk windowingsystem]=="aqua"} {
     bind . <3> "tk_popup .popup1 %X %Y"
 }
 
-proc setHyperLinkResponse { w } {
-
+proc setHyperLinkResponse { w func } {
     set textcurs [::ttk::cursor text]
     set linkcurs [::ttk::cursor link]
+    set funcargs { %W "[%W index @%x,%y]"}
+    
     $w tag bind hyperlink <Enter> "$w configure -cursor $linkcurs"
     $w tag bind hyperlink <Leave> "$w configure -cursor $textcurs"
-    $w tag bind hyperlink <ButtonPress> { doClickOnError %W "[%W index @%x,%y]" }
+    $w tag bind hyperlink <ButtonPress> "$func $funcargs"
 }
 
-setHyperLinkResponse .p.bot.txt
+setHyperLinkResponse .p.bot.txt doClockOnError
 
 wm protocol . WM_DELETE_WINDOW {
     exitProgram
