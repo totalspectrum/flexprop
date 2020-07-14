@@ -1,4 +1,10 @@
 ''
+'' 800x600 VGA sample
+'' as-is this is set up for an 8x15 font, but that's easily
+'' changed in the settings below
+''
+
+''
 '' clock frequency settings
 '' for 800x600 we use a 40 MHz pixel clock
 '' which x4 gives a 160 MHz system clock
@@ -21,7 +27,7 @@ DAT
 '
 	long
 fontdata
-	file "unscii-16.fnt"
+	file "unscii-16.bin"
 
 VAR
     long params[40]

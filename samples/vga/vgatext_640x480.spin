@@ -1,9 +1,15 @@
+'
+' simple 640x480 text demo
+' as set up, this uses a 16x32 font, but see below for how to
+' change it to 8x16 (or 8x8)
+'
 CON
   pixel_clock_freq = 25_000_000
 
-  COLS = 80
-  ROWS = 30
-  FONT_HEIGHT = 16
+  COLS = 40	   ' or 80, if you use the 8x16 unscii font
+  ROWS = 15	   ' or 30, if you use the 8x16 unscii font
+  FONT_WIDTH = 16  ' or 8, if you use the 8x16 unscii font
+  FONT_HEIGHT = 32  ' or 16 you have probably guessed the pattern by now!
   CELL_SIZE = 8  ' bytes per character: use 4 for 8bpp colors, 8 for 24bpp colors
 	
 DAT
@@ -12,6 +18,7 @@ DAT
 '
 	long
 fontdata
+	file "spleen-16x32.bin"
 	file "unscii-16.bin"
 '	file "unscii-8-fantasy.bin"
 
@@ -20,7 +27,7 @@ VAR
     long screen_buffer[COLS*ROWS*(CELL_SIZE/4)]
     
 OBJ
-    vga: "vga_tile_driver.spin2"
+    vga: "vga_tile_driver.spin"
 
 PUB start(pinbase) | i, pclkscale, pclk, sysclk, x
   ' calculate clock frequency
@@ -36,7 +43,7 @@ PUB start(pinbase) | i, pclkscale, pclk, sysclk, x
   params[i++] := COLS           ' screen columns
   params[i++] := ROWS           ' screen rows
   params[i++] := @fontdata	' font data
-  params[i++] := 8		' font width
+  params[i++] := FONT_WIDTH	' font width
   params[i++] := FONT_HEIGHT    ' font height
   params[i++] := pclkscale 'fset           ' pixel clock scaling value
   params[i++] := 16             ' horizontal front porch
@@ -56,4 +63,4 @@ PUB stop
   vga.stop
   
 #include "vga_text_routines.spinh"
-#include "std_text_routines.spinh"
+#include "spin/std_text_routines.spinh"
