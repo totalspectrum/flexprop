@@ -466,7 +466,7 @@ set SpinTypes {
 }
 
 set BinTypes {
-    {{Binary files}   {.binary .bin} }
+    {{Binary files}   {.binary .bin .bin2} }
     {{All files}    *}
 }
 
@@ -682,9 +682,16 @@ proc loadSourceFile { filename } {
 	.p.nb select $w
     } else {
 	set w [.p.nb select]
-    
-	if { $w eq "" || $filenames($w) ne ""} {
+
+	if { $w eq "" } {
 	    set w [createNewTab]
+	} elseif { $filenames($w) ne "" } {
+	    set w [createNewTab]
+	} else {
+	    # check for any data in the window
+	    if { [$w.txt edit modified]==1 } {
+		set w [createNewTab]
+	    }
 	}
 	checkChanges $w
     
