@@ -18,6 +18,7 @@ CON
 
   COLS = 100   ' (8*100 == 800)
   ROWS = 40    ' (40*15 == 600)
+  FONT_WIDTH = 8
   FONT_HEIGHT = 15
   CELL_SIZE = 4  ' bytes per character: use 1 for monochrome, 2 for 4 bit color, 4 for 8bpp colors, 8 for 24bpp colors
 
@@ -53,8 +54,8 @@ PUB start(pinbase) | i, pclkscale, pclk, sysclk, x, fontptr
   params[i++] := @screen_buffer	' screen buffer
   params[i++] := COLS           ' screen columns
   params[i++] := ROWS           ' screen rows
-  params[i++] := fontptr	' font data: skip first row
-  params[i++] := 8		' font width
+  params[i++] := fontptr	' font data: skip first row for 8x15
+  params[i++] := FONT_WIDTH	' font width
   params[i++] := FONT_HEIGHT    ' font height
   params[i++] := pclkscale 'fset           ' pixel clock scaling value
   params[i++] := 40           ' horizontal front porch
