@@ -1388,7 +1388,7 @@ proc setHyperLinkResponse { w func } {
     $w tag bind hyperlink <ButtonPress> "$func $funcargs"
 }
 
-setHyperLinkResponse .p.bot.txt doClockOnError
+setHyperLinkResponse .p.bot.txt doClickOnError
 
 wm protocol . WM_DELETE_WINDOW {
     exitProgram
