@@ -1,6 +1,8 @@
 Version 4.2.5
 - Added menu options for changing warning level
 - Fixed clicking on links (filenames) containing colons in the editor
+- Fixed some issues with auto-indent and made the indent level match
+  the selected tab stops
 
 Version 4.2.4
 - No GUI changes

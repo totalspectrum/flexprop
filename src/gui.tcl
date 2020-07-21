@@ -67,7 +67,7 @@ set config(lastdir) [pwd]
 set config(font) "TkFixedFont"
 set config(botfont) "courier 10"
 set config(sash) ""
-set config(tabwidth) 8
+set config(tabwidth) 4
 set config(autoreload) 0
 set COMPORT " "
 set OPT "-O1"
@@ -1864,18 +1864,18 @@ proc doRunOptions {} {
     wm title .runopts "Executable Paths"
 }
 
-proc do_indent {w {extra "    "}} {
+proc do_indent {w} {
     global config
-
+    set extra [string repeat " " $config(tabwidth)]
     if { $config(autoindent) } {
 	set lineno [expr {int([$w index insert])}]
-	set line [$w get $lineno.0 $lineno.end]
+	set line [$w get $lineno.0 insert]
 	regexp {^(\s*)} $line -> prefix
 	if {[string index $line end] eq "\{"} {
 	    tk::TextInsert $w "\n$prefix$extra"
 	} elseif { [string index $line end] eq "\}" } {
 	    set exlen [string length $extra]
-	    if { $line eq "$prefix\}" && [string length $prefix] > 0 } {
+	    if { $line eq "$prefix\}" && [string length $line] > $exlen } {
 		$w delete insert-[expr $exlen+1]c insert-1c
 		tk::TextInsert $w "\n[string range $prefix 0 end-$exlen]"
 	    } else {
