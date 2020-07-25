@@ -67,11 +67,12 @@ set config(lastdir) [pwd]
 set config(font) "TkFixedFont"
 set config(botfont) "courier 10"
 set config(sash) ""
-set config(tabwidth) 8
+set config(tabwidth) 4
 set config(autoreload) 0
 set COMPORT " "
 set OPT "-O1"
 set COMPRESS "-z0"
+set WARNFLAGS "-Wnone"
 set PROP_VERSION ""
 set OPENFILES ""
 set config(showlinenumbers) 1
@@ -220,6 +221,7 @@ proc config_open {} {
     global CONFIG_FILE
     global OPT
     global COMPRESS
+    global WARNFLAGS
     global COMPORT
     global OPENFILES
     
@@ -248,6 +250,10 @@ proc config_open {} {
 	    compress {
 		# set compression level
 		set COMPRESS [lindex $data 1]
+	    }
+	    warnflags {
+		# set warning flags
+		set WARNFLAGS [lindex $data 1]
 	    }
 	    comport {
 		# set optimize level
@@ -282,6 +288,7 @@ proc config_save {} {
     global CONFIG_FILE
     global OPT
     global COMPRESS
+    global WARNFLAGS
     global COMPORT
     global OPENFILES
     
@@ -295,6 +302,7 @@ proc config_save {} {
     puts $fp "compress\t\{$COMPRESS\}"
     puts $fp "comport\t\{$COMPORT\}"
     puts $fp "openfiles\t\{$OPENFILES\}"
+    puts $fp "warnflags\t\{$WARNFLAGS\}"
     foreach i [array names config] {
 	if {$i != ""} {
 	    puts $fp "$i\t\{$config($i)\}"
@@ -458,7 +466,7 @@ set SpinTypes {
 }
 
 set BinTypes {
-    {{Binary files}   {.binary .bin} }
+    {{Binary files}   {.binary .bin .bin2} }
     {{All files}    *}
 }
 
@@ -674,9 +682,16 @@ proc loadSourceFile { filename } {
 	.p.nb select $w
     } else {
 	set w [.p.nb select]
-    
-	if { $w eq "" || $filenames($w) ne ""} {
+
+	if { $w eq "" } {
 	    set w [createNewTab]
+	} elseif { $filenames($w) ne "" } {
+	    set w [createNewTab]
+	} else {
+	    # check for any data in the window
+	    if { [$w.txt edit modified]==1 } {
+		set w [createNewTab]
+	    }
 	}
 	checkChanges $w
     
@@ -877,6 +892,7 @@ proc doSpecial {name extraargs} {
 }
 
 #
+# click on an error message and find the corresponding line
 # parameter is text coordinates like 2.72
 #
 proc doClickOnError { w coord } {
@@ -929,6 +945,52 @@ proc doClickOnError { w coord } {
     }
 }
 
+# simpler click function for clicking on a hyperlink in text
+# this one can just use the file name we already picked out of
+# the surrounding text, no need to parse errors or line numbers
+
+proc doClickOnLink { w coord } {
+    global filenames
+    
+    set first "$coord linestart"
+    set last "$coord lineend"
+    set linkptr [$w tag prevrange hyperlink $coord]
+    set link1 [lindex $linkptr 0]
+    set link2 [lindex $linkptr 1]
+    set linedata [$w get $link1 $link2]
+    #puts "doClickOnLink $w $coord"
+    #puts "first=|$first|"
+    #puts "linkptr=|$linkptr|"
+    #puts "linedata=|$linedata|"
+
+    set fname "$linedata"
+    set line ""
+    if { $fname != "" } {
+	set startdir $filenames([.p.nb select])
+	if { $startdir != "" } {
+	    set startdir [file dirname $startdir]
+	} else {
+	    set startdir [file normalize "."]
+	}
+	set fname [findFileOnPath $fname $startdir]
+	set w [loadSourceFile $fname ]
+	if { $w == "" } {
+	    return
+	}
+	set t $w.txt
+	$t tag config hilite -background yellow
+	# remove hilight
+	foreach {from to} [$t tag ranges hilite] {
+	    $t tag remove hilite $from $to
+	}
+	$t tag config hilite -background yellow
+	if { $line != "" } {
+	    $t see $line.0
+	    $t tag add hilite $line.0 $line.end
+	}
+    }    
+}
+
 #
 # set up syntax highlighting for a given ctext widget
 #
@@ -968,7 +1030,7 @@ proc setHighlightingForFile {w fname} {
 	    }
 	}
     }
-    setHyperLinkResponse $w
+    setHyperLinkResponse $w doClickOnLink
     setHighlightingIncludes $w
 }
 
@@ -1202,6 +1264,9 @@ menu .mbar.help -tearoff 0
 .mbar.options add radiobutton -label "No Optimization" -variable OPT -value "-O0"
 .mbar.options add radiobutton -label "Default Optimization" -variable OPT -value "-O1"
 .mbar.options add radiobutton -label "Full Optimization" -variable OPT -value "-O2"
+.mbar.options add separator
+.mbar.options add radiobutton -label "No extra warnings" -variable WARNFLAGS -value "-Wnone"
+.mbar.options add radiobutton -label "Enable compatibility warnings" -variable WARNFLAGS -value "-Wall"
 #.mbar.options add separator
 #.mbar.options add radiobutton -label "No Compression" -variable COMPRESS -value "-z0"
 #.mbar.options add radiobutton -label "Compress Code" -variable COMPRESS -value "-z1"
@@ -1313,16 +1378,17 @@ if {[tk windowingsystem]=="aqua"} {
     bind . <3> "tk_popup .popup1 %X %Y"
 }
 
-proc setHyperLinkResponse { w } {
-
+proc setHyperLinkResponse { w func } {
     set textcurs [::ttk::cursor text]
     set linkcurs [::ttk::cursor link]
+    set funcargs { %W "[%W index @%x,%y]"}
+    
     $w tag bind hyperlink <Enter> "$w configure -cursor $linkcurs"
     $w tag bind hyperlink <Leave> "$w configure -cursor $textcurs"
-    $w tag bind hyperlink <ButtonPress> { doClickOnError %W "[%W index @%x,%y]" }
+    $w tag bind hyperlink <ButtonPress> "$func $funcargs"
 }
 
-setHyperLinkResponse .p.bot.txt
+setHyperLinkResponse .p.bot.txt doClickOnError
 
 wm protocol . WM_DELETE_WINDOW {
     exitProgram
@@ -1496,12 +1562,17 @@ proc mapPercent {str} {
     global BINFILE
     global ROOTDIR
     global OPT
+    global WARNFLAGS
     global COMPRESS
     global COMPORT
     global config
 
-#    set fulloptions "$OPT $COMPRESS"
-    set fulloptions "$OPT"
+    set ourwarn $WARNFLAGS
+    if { "$ourwarn" eq "-Wnone" } {
+	set ourwarn ""
+    }
+#    set fulloptions "$OPT $ourwarn $COMPRESS"
+    set fulloptions "$OPT $ourwarn"
     if { $COMPORT ne " " } {
 	set fullcomport "$COMPORT"
     } else {
@@ -1793,18 +1864,18 @@ proc doRunOptions {} {
     wm title .runopts "Executable Paths"
 }
 
-proc do_indent {w {extra "    "}} {
+proc do_indent {w} {
     global config
-
+    set extra [string repeat " " $config(tabwidth)]
     if { $config(autoindent) } {
 	set lineno [expr {int([$w index insert])}]
-	set line [$w get $lineno.0 $lineno.end]
+	set line [$w get $lineno.0 insert]
 	regexp {^(\s*)} $line -> prefix
 	if {[string index $line end] eq "\{"} {
 	    tk::TextInsert $w "\n$prefix$extra"
 	} elseif { [string index $line end] eq "\}" } {
 	    set exlen [string length $extra]
-	    if { $line eq "$prefix\}" && [string length $prefix] > 0 } {
+	    if { $line eq "$prefix\}" && [string length $line] > $exlen } {
 		$w delete insert-[expr $exlen+1]c insert-1c
 		tk::TextInsert $w "\n[string range $prefix 0 end-$exlen]"
 	    } else {

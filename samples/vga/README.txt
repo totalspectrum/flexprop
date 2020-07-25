@@ -41,10 +41,11 @@ Operation
 ---------
 Tiles must always be either 8 or 16 pixels wide. Theoretically they can be any
 height, but the demos use 16 pixels (15 for the 800x600, which is
-achieved by just ignoring the first row of an 8x16 font). The code has are
+achieved by just ignoring the first row of an 8x16 font). The code has
 been tested with 8x8 and 16x32 font. The font data must be laid out as
 an image that is FONT_WIDTH*256 pixels wide and FONT_HEIGHT pixels
-high.
+high. (This is somewhat unusual; many other programs assume a layout
+that's FONT_WIDTH wide and FONT_HEIGHT*256 high.)
 
 The character data is ROWS*COLS*CELL_SIZE bytes long. CELL_SIZE is
 the number of bytes each character takes, and may be either 1, 2, 4 or 8.
@@ -139,4 +140,33 @@ CREDITS
 The VGA code itself is heavily based on earlier P2 work by Rayman and
 Cluso99, and of course Chip's original VGA driver.
 
-The unscii font is from http://pelulamu.net/unscii/
+The unscii 8x16 font is from http://pelulamu.net/unscii/. It is in the
+public domain.
+
+The spleen 16x32 font is from https://github.com/fcambus/spleen/, and
+is distributed under the BSD license:
+
+Copyright (c) 2018-2020, Frederic Cambus
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+  * Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+  * Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.

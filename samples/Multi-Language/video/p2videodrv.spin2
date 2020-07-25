@@ -43,6 +43,7 @@
 '*  Revision history:                                                         *
 '*  -----------------                                                         *
 '*    0.8b  21 NOV 2019  rogloh       -initial BETA release-                  *
+'*    0.8c  20 JUL 2020  ersmith      minor tweaks for spin2 compatibility    *
 '*                                                                            *
 '******************************************************************************
 {
@@ -183,7 +184,7 @@ VAR
 'maxLineSize - size of each scanline in the line buffer
 'userTiming - when non-zero points to timing structure to be used to setup display
 
-PUB initDisplay(display, output, basePin, syncPin, flags, lineBuf, maxLineSize, userTiming) | syncFlags, pin, timing
+PUB initDisplay(display, output, basePin, syncPin, flags, lineBuf, maxLineSize, userTiming) : cogresult | syncFlags, pin, timing
     pin := basePin/4 & $f
     if output == VGA
         syncFlags := %0_0_000000
@@ -279,7 +280,7 @@ PUB initDisplay(display, output, basePin, syncPin, flags, lineBuf, maxLineSize, 
         long[display][12]:= CI_CVBS_SDTV
         long[display][13]:= CQ_CVBS_SDTV
 
-    return cognew(@videodriver, display)
+    return coginit(16, @videodriver, display)
 
 PUB initRegion(region, gfxMode, size, regionFlags, palette, font, fontSize, screenBuf, display)
 ' sets up a region
@@ -303,7 +304,7 @@ PUB initRegion(region, gfxMode, size, regionFlags, palette, font, fontSize, scre
     if display
         long[display][10] := region
 
-PUB getTiming(resolution)
+PUB getTiming(resolution) : ptrresult
     if (resolution == RES_640x350)
         return @ega_timing
     if (resolution == RES_800x600)
@@ -325,13 +326,13 @@ PUB shutdown(display) ' untested method
 ' video status methods
 '----------------------------------------------------------------------------------
 
-PUB getScanLine(display)
+PUB getScanLine(display) : r
     return (long[display] & $ffff)
 
-PUB getFieldCount(display)
+PUB getFieldCount(display) : r
     return byte[display][2]
 
-PUB getBlankingState(display)
+PUB getBlankingState(display) : r
     return byte[display][3]
 
 PUB waitForVsync(display)
@@ -349,13 +350,13 @@ PUB waitForBlanking(display)
 PUB setFlags(region, flags)
     byte[region][5] := flags 
 
-PUB getFlags(region)
+PUB getFlags(region) : r
     return byte[region][5]
 
 PUB setSize(region, size)
     word[region][3] := size
 
-PUB getSize(region)
+PUB getSize(region) : r
     return word[region][3]
 
 PUB setMode(region, mode)
@@ -365,7 +366,7 @@ PUB setMode(region, mode)
         byte[region][4] := mode
         byte[region][5] |= GRAPHICS_MODE
 
-PUB getMode(region)
+PUB getMode(region) : r
     if byte[region][5] & GRAPHICS_MODE
         return byte[region][4]
     else
@@ -374,13 +375,13 @@ PUB getMode(region)
 PUB setSource(region, buf)
     long[region][2] := buf
 
-PUB getSource(region)
+PUB getSource(region) : r
     return long[region][2]
 
 PUB setWrapSource(region, buf)
     long[region][3] := buf
 
-PUB getWrapSource(region)
+PUB getWrapSource(region) : r
     return long[region][3]
 
 PUB setWrap(region, firstwrap, rewrap)
@@ -389,7 +390,7 @@ PUB setWrap(region, firstwrap, rewrap)
 PUB setSkew(region, skew)
     long[region][11] := skew
 
-PUB getSkew(region)
+PUB getSkew(region) : r
     return long[region][11]
 
 PUB setFont(region, font, fontsize)
@@ -442,19 +443,19 @@ PUB setCursorFlags(region, cursid, flags)
     else
         byte[region][29] := flags
 
-PUB getCursorPos(region, cursid)
+PUB getCursorPos(region, cursid) : r
     if (cursid == 0)
         return word[region][13]
     else
         return word[region][15]
 
-PUB getCursorRow(region, cursid)
+PUB getCursorRow(region, cursid) : r
     if (cursId == 0)
         return byte[region][27]
     else
         return byte[region][31]
 
-PUB getCursorCol(region, cursid)
+PUB getCursorCol(region, cursid) : r
     if (cursid == 0)
         return byte[region][26]
     else
@@ -538,28 +539,28 @@ PUB setYIQ(display, cy, ci, cq)
 ' status/dimensioning related methods
 '----------------------------------------------------------------------------------
 
-PUB getActiveLines(display)
+PUB getActiveLines(display) : r
     return (long[long[display][1]][3] & $7ff)
 
-PUB getActivePixels(display)
+PUB getActivePixels(display) : r
     return ((long[long[display][1]][2] & $ff) << 3) 
 
-PUB getCurrentRows(region) | height
+PUB getCurrentRows(region) : r | height
     height := getFontHeight(region)
     if getFlags(region) & DOUBLE_HIGH
         height *= 2
     return (getSize(region) + height - 1) / height ' round up
 
-PUB getCurrentColumns(region, display) | size, width
+PUB getCurrentColumns(region, display) : r | size, width
     width := 8
     if getFlags(region) & DOUBLE_WIDE
         width *= 2
     return (getActivePixels(display) + width - 1) / width ' round up
 
-PUB getFontHeight(region)
+PUB getFontHeight(region) : r
     return byte[region][19]+1
 
-PUB getBitDepth(region)
+PUB getBitDepth(region) : r
     if byte[region][5] & GRAPHICS_MODE == 0
         return 4
     case byte[region][4]
@@ -570,10 +571,10 @@ PUB getBitDepth(region)
         7:  return 32
         OTHER:  return 8
         
-PUB getRegionStructSize
+PUB getRegionStructSize() : r
     return 12*4
 
-PUB getDisplayStructSize
+PUB getDisplayStructSize() : r
     return 14*4
 
 '----------------------------------------------------------------------------------
@@ -616,7 +617,7 @@ PUB printStr(str) | x
     repeat until byte[str][x] == 0
         out(byte[str][x++])
 
-PUB crlf
+PUB crlf()
     out(13)
     out(10)
 
