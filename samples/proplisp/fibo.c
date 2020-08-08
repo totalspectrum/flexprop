@@ -3,21 +3,18 @@
 #include "lisplib.h"
 #include "fibo.h"
 
-#include <propeller.h>
-#ifdef __P2__
-#define P2_TARGET_MHZ 160
-#include "sys/p2es_clock.h"
-#define ARENA_SIZE 32768
-#ifndef _BAUD
-#define _BAUD 230400
-#endif
+#ifdef __propeller2__
+# ifdef NEED_INLINES
+#  error inlines not done
+# else
+#  include <propeller2.h>
+# endif
 #else
-#ifndef _BAUD
-#define _BAUD 115200
-#endif
-#define ARENA_SIZE 12000
+#include <propeller.h>
 #endif
 
+
+#define ARENA_SIZE 12000
 
 int inchar() {
     return -1;
@@ -35,20 +32,22 @@ int peekchar() { return -1; }
 
 static intptr_t getcnt_fn()
 {
-    return CNT;
-}
-// wait for ms millisconds
-static intptr_t waitms_fn(intptr_t ms)
-{
 #ifdef __propeller2__
-    _waitms(ms);
+    return _cnt();
 #else    
-    usleep(ms * 1000);
+    return CNT;
 #endif    
-    return ms;
 }
 static intptr_t pinout_fn(intptr_t pin, intptr_t onoff)
 {
+#ifdef __propeller2__
+    if (onoff) {
+        _pinh(pin);
+    } else {
+        _pinl(pin);
+    }
+    return 0;
+#else    
     unsigned mask = 1<<pin;
     DIRA |= mask;
     if (onoff) {
@@ -57,20 +56,24 @@ static intptr_t pinout_fn(intptr_t pin, intptr_t onoff)
         OUTA &= ~mask;
     }
     return OUTA;
+#endif    
 }
 static intptr_t pinin_fn(intptr_t pin)
 {
+#ifdef __propeller2__
+    return _pinr(pin);
+#else    
     unsigned mask=1<<pin;
     DIRA &= ~mask;
     return (INA & mask) ? 1 : 0;
+#endif    
 }
 
 LispCFunction defs[] = {
     { "getcnt",    "n",   (GenericFunc)getcnt_fn },
     { "pinout",    "nnn", (GenericFunc)pinout_fn },
     { "pinin",     "nn",  (GenericFunc)pinin_fn },
-    { "waitms",    "nn", (GenericFunc)waitms_fn },
-    { NULL, NULL, NULL },
+    { NULL, NULL, (GenericFunc)0 },
 };
 
 char arena[ARENA_SIZE];
@@ -81,11 +84,6 @@ main(int argc, char **argv)
     Cell *err;
     int i;
 
-#ifdef __P2__
-    clkset(_SETFREQ, _CLOCKFREQ);
-    _setbaud(_BAUD);
-    _waitms(100);
-#endif
     outstr("proplisp recursive fibo test\n");
     err = Lisp_Init(arena, sizeof(arena));
     for (i = 0; err && defs[i].name; i++) {
@@ -95,6 +93,6 @@ main(int argc, char **argv)
         printf("Initialization of interpreter failed!\n");
         return 1;
     }
-    Lisp_Run(fibo_lsp, 0);
+    Lisp_Run((const char *)fibo_lsp, 0);
     return 0;
 }
