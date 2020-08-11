@@ -1,3 +1,6 @@
+Version 4.3.0
+- Fixed "Terminal only" special command
+
 Version 4.2.6
 - No GUI changes
 
