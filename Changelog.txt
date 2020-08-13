@@ -1,5 +1,6 @@
 Version 4.3.0
 - Fixed "Terminal only" special command
+- Added debug enable/disable to menu
 
 Version 4.2.6
 - No GUI changes
