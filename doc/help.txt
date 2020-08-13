@@ -50,6 +50,13 @@ consume more resources (including COG memory).
 "No extra warnings" means the compiler will only warn about serious
 problems.
 
+"Debug disabled" turns off all DEBUG messages in Spin2 files (this is
+the default). 
+
+"Debug enabled" turns on DEBUG, allowing the DEBUG() statements to be
+compiled and executed. Note that not all Spin2 DEBUG() commands are
+supported; see the general documentation for details.
+
 "Enable compatibility warnings" will cause the compiler to also warn
 about some differences between fastspin and the official Spin2
 compiler. Fixing these warnings will make porting your code to the
