@@ -40,6 +40,7 @@ proc ctext {win args} {
     set ar(-linemap_markable) 1
     set ar(-linemap_select_fg) black
     set ar(-linemap_select_bg) yellow
+    set ar(-commentstyle) c
     set ar(-highlight) 1
     set ar(win) $win
     set ar(modified) 0
@@ -49,6 +50,7 @@ proc ctext {win args} {
 
     set ar(ctextFlags) [list -yscrollcommand -linemap -linemapfg -linemapbg \
 			    -font -linemap_mark_command -highlight -linemap_markable \
+			    -commentstyle \
 			    -linemap_select_fg \
 			    -linemap_select_bg]
 
@@ -220,6 +222,11 @@ proc ctext::buildArgParseTable win {
 	break
     }
 
+    lappend argTable any -commentstyle {
+	set configAr(-commentstyle) $value
+	break
+    }
+
     lappend argTable any -linemap_select_fg {
 	if {[catch {winfo rgb $self $value} res]} {
 	    return -code error $res
@@ -261,8 +268,14 @@ proc ctext::highlightAfterIdle {win lineStart lineEnd} {
 }
 
 proc ctext::instanceCmd {self cmd args} {
+    ctext::getAr $self config configAr
+    
     #slightly different than the RE used in ctext::comments
-    set commentRE {\"|\\|'|\{}
+    if {"spin" eq $configAr(-commentstyle)} {
+	set commentRE {\"|\\|'|\{}
+    } else {
+	set commentRE {\"|\\|'|/|\*}
+    }
 
     switch -glob -- $cmd {
 	append {
@@ -644,23 +657,89 @@ proc ctext::matchQuote {win} {
 }
 
 proc ctext::enableComments {win} {
-    $win tag configure _cComment -foreground khaki
+    $win tag configure _cComment -foreground lightgrey
 }
 proc ctext::disableComments {win} {
     catch {$win tag delete _cComment}
 }
 
-proc ctext::comments {win {afterTriggered 0}} {
+proc ctext::comments { win {afterTriggered 0}} {
     if {[catch {$win tag cget _cComment -foreground}]} {
 	#C comments are disabled
 	return
     }
 
+    ctext::getAr $win config configAr
     if {$afterTriggered} {
-	ctext::getAr $win config configAr
 	set configAr(commentsAfterId) ""
     }
 
+    if { $configAr(-commentstyle) eq "spin" } {
+	ctext::commentSpin $win $afterTriggered
+    } else {
+	ctext::commentC $win $afterTriggered
+    }
+}
+
+proc ctext::commentC {win {afterTriggered 0}} {
+    set startIndex 1.0
+    set commentRE {\\\\|\"|\\\"|\\'|'|/\*|\*/}    
+    set commentStart 0
+    set isQuote 0
+    set isSingleQuote 0
+    set isComment 0
+    $win tag remove _cComment 1.0 end
+    while 1 {
+	set index [$win search -count length -regexp $commentRE $startIndex end]
+
+	if {$index == ""} {
+	    break
+	}
+
+	set endIndex [$win index "$index + $length chars"]
+	set str [$win get $index $endIndex]
+	set startIndex $endIndex
+
+	if {$str == "\\\\"} {
+	    continue
+	} elseif {$str == "\\\""} {
+	    continue
+	} elseif {$str == "\\'"} {
+	    continue
+	} elseif {$str == "\"" && $isComment == 0 && $isSingleQuote == 0} {
+	    if {$isQuote} {
+		set isQuote 0
+	    } else {
+		set isQuote 1
+	    }
+	} elseif {$str == "'" && $isComment == 0 && $isQuote == 0} {
+	    if {$isSingleQuote} {
+		set isSingleQuote 0
+	    } else {
+		set isSingleQuote 1
+	    }
+	} elseif {$str == "/*" && $isQuote == 0 && $isSingleQuote == 0} {
+	    if {$isComment} {
+		#comment in comment
+		break
+	    } else {
+		set isComment 1
+		set commentStart $index
+	    }
+	} elseif {$str == "*/" && $isQuote == 0 && $isSingleQuote == 0} {
+	    if {$isComment} {
+		set isComment 0
+		$win tag add _cComment $commentStart $endIndex
+		$win tag raise _cComment
+	    } else {
+		#comment end without beginning
+		break
+	    }
+	}
+    }
+}
+
+proc ctext::commentSpin {win {afterTriggered 0}} {
     set startIndex 1.0
     set commentRE {\\\\|\"|\\\"|\\'|'|\{|\}}
     set commentStart 0
@@ -699,17 +778,18 @@ proc ctext::comments {win {afterTriggered 0}} {
 	    }
 	} elseif {$str == "\{" && $isQuote == 0 && $isSingleQuote == 0} {
 	    if {$isComment} {
-		#comment in comment
-		break
+		set isComment [expr {$isComment + 1}]
 	    } else {
 		set isComment 1
 		set commentStart $index
 	    }
 	} elseif {$str == "\}" && $isQuote == 0 && $isSingleQuote == 0} {
 	    if {$isComment} {
-		set isComment 0
-		$win tag add _cComment $commentStart $endIndex
-		$win tag raise _cComment
+		set isComment [expr {$isComment - 1}]
+		if { $isComment == 0 } {
+		    $win tag add _cComment $commentStart $endIndex
+		    $win tag raise _cComment
+		}
 	    } else {
 		#comment end without beginning
 		break
@@ -975,9 +1055,11 @@ proc ctext::highlight {win start end {afterTriggered 0}} {
 	    set wordEnd [$twin index "$res + $length chars"]
 	    if { $mi != -1 } {
 		set wordStart [$twin index "$res + $mi chars"]
-		$twin tag add $tagClass $wordStart $wordEnd
-		$twin tag configure $tagClass -foreground $color
+	    } else {
+		set wordStart $res
 	    }
+	    $twin tag add $tagClass $wordStart $wordEnd
+	    $twin tag configure $tagClass -foreground $color
 	    set si $wordEnd
 
 	    incr numTimesLooped

@@ -16,11 +16,12 @@ typedef unsigned int uintptr_t;
 typedef int intptr_t;
 #endif
 
-#if defined(__propeller__) || defined(__zpu__)
+#if defined(__propeller__) || defined(__zpu__) || defined(__propeller2__)
 #define SMALL
 #endif
 
 #ifdef SMALL
+/*
 // a Cell is a 32 bit integer, holding
 // two 14 bit pointers (low bits assumed 0)
 // and a 4 bit tag
@@ -29,13 +30,14 @@ typedef int intptr_t;
 // extraction
 // the tag is further divided into a 3 bit type
 // and 1 used bit for garbage collection: gttt
-//
+*/
 
 typedef uint32_t Cell;
 typedef int32_t Num;
 typedef uint32_t UNum;
 
 #else
+/*
 // a Cell is a 64 bit integer, holding
 // two 30 bit pointers (low bits assumed 0)
 // and a 4 bit tag
@@ -43,7 +45,7 @@ typedef uint32_t UNum;
 // the tag is in the lowest 4 bits for ease of// extraction
 // the tag is further divided into a 3 bit type
 // and 1 used bit for garbage collection: gttt
-//
+*/
 
 typedef uint64_t Cell;
 typedef int64_t Num;
@@ -57,15 +59,15 @@ typedef uint64_t UNum;
 
 enum CellType {
     CELL_NUM = 0,
-    CELL_CFUNC = 1,  // tail is ptr to C function, head is ???
-    CELL_STRING = 2, // head is first char, tail points to rest of string
-    CELL_PAIR = 3,   // basic building block for lists and such
-    CELL_FUNC = 4,   // a lambda expression
+    CELL_CFUNC = 1,  /* tail is ptr to C function, head is ??? */
+    CELL_STRING = 2, /* head is first char, tail points to rest of string */
+    CELL_PAIR = 3,   /* basic building block for lists and such */
+    CELL_FUNC = 4,   /* a lambda expression */
 
-    CELL_REF = 5,    // a variable reference: head is var name, tail is value
-    CELL_SYMBOL = 6, // like a string, but will be dereferenced
+    CELL_REF = 5,    /* a variable reference: head is var name, tail is value */
+    CELL_SYMBOL = 6, /* like a string, but will be dereferenced */
 
-    CELL_NIL = -1,  // not actually stored
+    CELL_NIL = -1    /* not actually stored */
 };
 
 #ifdef LISPLIB_NEED_INTERNALS

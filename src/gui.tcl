@@ -67,13 +67,19 @@ set config(lastdir) [pwd]
 set config(font) "TkFixedFont"
 set config(botfont) "courier 10"
 set config(sash) ""
-set config(tabwidth) 8
+set config(tabwidth) 4
 set config(autoreload) 0
 set COMPORT " "
 set OPT "-O1"
 set COMPRESS "-z0"
+set WARNFLAGS "-Wnone"
+set DEBUG_OPT "-gnone"
 set PROP_VERSION ""
+set OPENFILES ""
 set config(showlinenumbers) 1
+set config(savesession) 1
+set config(syntaxhighlight) 1
+set config(autoindent) 1
 
 #
 # filenames($w) gives the file name in window $w, for all of the various tabs
@@ -103,7 +109,7 @@ proc setShadowP1Defaults {} {
     
     set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -D_BAUD=%r -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -r -t -k"
-    set shadow(flashprogram) ""
+    set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
     set shadow(baud) 115200
 }
@@ -205,6 +211,9 @@ proc setnbfonts { fnt } {
     foreach w $nbtablist {
 	setfont $w.txt $fnt
     }
+    if {[winfo exists .list]} {
+	setfont .list.f.txt $fnt
+    }
 }
 
 # configuration settings
@@ -213,7 +222,10 @@ proc config_open {} {
     global CONFIG_FILE
     global OPT
     global COMPRESS
+    global WARNFLAGS
+    global DEBUG_OPT
     global COMPORT
+    global OPENFILES
     
     if {[file exists $CONFIG_FILE]} {
 	set fp [open $CONFIG_FILE r]
@@ -241,9 +253,25 @@ proc config_open {} {
 		# set compression level
 		set COMPRESS [lindex $data 1]
 	    }
+	    warnflags {
+		# set warning flags
+		set WARNFLAGS [lindex $data 1]
+	    }
+	    debugopt {
+		# set warning flags
+		set DEBUG_OPT [lindex $data 1]
+	    }
 	    comport {
 		# set optimize level
 		set COMPORT [lindex $data 1]
+		# convert old COMPORT entries
+		if { $COMPORT ne " " && [string index "$COMPORT" 0] ne "-" } {
+		    set COMPORT "-p $COMPORT"
+		}
+	    }
+	    openfiles {
+		# record open files
+		set OPENFILES [lindex $data 1]
 	    }
 	    default {
 		set config([lindex $data 0]) [lindex $data 1]
@@ -257,6 +285,7 @@ proc config_open {} {
     if { "$config(font)" eq "" } {
 	set config(font) "TkFixedFont"
     }
+
     return 1
 }
 
@@ -265,9 +294,13 @@ proc config_save {} {
     global CONFIG_FILE
     global OPT
     global COMPRESS
+    global WARNFLAGS
+    global DEBUG_OPT
     global COMPORT
-
+    global OPENFILES
+    
     updateLibraryList
+    updateOpenFiles
     set config(sash) [.p sash coord 0]
     set fp [open $CONFIG_FILE w]
     puts $fp "# flexgui config info"
@@ -275,6 +308,9 @@ proc config_save {} {
     puts $fp "opt\t\{$OPT\}"
     puts $fp "compress\t\{$COMPRESS\}"
     puts $fp "comport\t\{$COMPORT\}"
+    puts $fp "openfiles\t\{$OPENFILES\}"
+    puts $fp "warnflags\t\{$WARNFLAGS\}"
+    puts $fp "debugopt\t\{$DEBUG_OPT\}"
     foreach i [array names config] {
 	if {$i != ""} {
 	    puts $fp "$i\t\{$config($i)\}"
@@ -314,6 +350,22 @@ proc exitProgram { } {
     exit
 }
 
+# set list of open files
+proc updateOpenFiles { } {
+    global OPENFILES
+    global filenames
+    set t [.p.nb tabs]
+    set i 0
+    set w [lindex $t $i]
+    set OPENFILES [list]
+    while { $w ne "" } {
+	set s $filenames($w)
+	lappend OPENFILES $s
+	set i [expr "$i + 1"]
+	set w [lindex $t $i]
+    }
+}
+
 # close tab
 proc closeTab { } {
     global filenames
@@ -335,6 +387,7 @@ proc loadFileToWindow { fname win } {
     $win edit modified false
     $win mark set insert 1.0
     set filetimes($fname) [file mtime $fname]
+    setHighlightingForFile $win $fname
     focus $win
 }
 
@@ -421,7 +474,7 @@ set SpinTypes {
 }
 
 set BinTypes {
-    {{Binary files}   {.binary .bin} }
+    {{Binary files}   {.binary .bin .bin2} }
     {{All files}    *}
 }
 
@@ -477,6 +530,7 @@ proc getLibrary {} {
 	raise .pb
     } else {
 	do_pb_create
+	wm title .pb "Library Paths"
     }
 }
 
@@ -536,7 +590,8 @@ proc setupFramedText {w} {
     grid columnconfigure $w $w.txt -weight 1
     bind $w.txt <$CTRL_PREFIX-f> $searchcmd
     bind $w.txt <$CTRL_PREFIX-k> $replacecmd
-
+    bind $w.txt <Return> {do_indent %W; break}
+    
     # for some reason on my linux system the selection doesn't show
     # up correctly
     if { [tk windowingsystem] == "x11" } {
@@ -561,6 +616,7 @@ proc loadListingFile {filename} {
 	grid rowconfigure .list 0 -weight 1
 	grid .list.f -sticky nsew
     }
+    setfont .list.f.txt $config(font)
     loadFileToWindow $filename .list.f.txt
     .list.f.txt yview moveto $viewpos
     wm title .list [file tail $filename]
@@ -587,7 +643,6 @@ proc loadFileToTab {w filename title} {
 	setHighlightingForFile $w.txt $filename
     }
 
-    
     setfont $w.txt $config(font)
     loadFileToWindow $filename $w.txt
     $w.txt highlight 1.0 end
@@ -622,6 +677,12 @@ proc findFileOnPath { filename startdir } {
 
 proc loadSourceFile { filename } {
     global filenames
+
+    # sanity check
+    if { ![file exists $filename] } {
+	tk_messageBox -icon error -type ok -message "$filename\nis not found"
+	return
+    }
     
     # fetch
     set w [getTabFor $filename]
@@ -629,9 +690,16 @@ proc loadSourceFile { filename } {
 	.p.nb select $w
     } else {
 	set w [.p.nb select]
-    
-	if { $w eq "" || $filenames($w) ne ""} {
+
+	if { $w eq "" } {
 	    set w [createNewTab]
+	} elseif { $filenames($w) ne "" } {
+	    set w [createNewTab]
+	} else {
+	    # check for any data in the window
+	    if { [$w.txt edit modified]==1 } {
+		set w [createNewTab]
+	    }
 	}
 	checkChanges $w
     
@@ -654,6 +722,18 @@ proc doOpenFile {} {
     set BINFILE ""
     
     return [loadSourceFile $filename]
+}
+
+proc openLastFiles {} {
+    global OPENFILES
+    set i 0
+    set t $OPENFILES
+    set w [lindex $t $i]
+    while { $w ne "" } {
+	loadSourceFile [file normalize $w]
+	set i [expr "$i + 1"]
+	set w [lindex $t $i]
+    }
 }
 
 proc pickFlashProgram {} {
@@ -820,6 +900,7 @@ proc doSpecial {name extraargs} {
 }
 
 #
+# click on an error message and find the corresponding line
 # parameter is text coordinates like 2.72
 #
 proc doClickOnError { w coord } {
@@ -847,7 +928,7 @@ proc doClickOnError { w coord } {
 	set line [string range $linedata [expr $colonptr + 1] end]
     }
     if { $fname != "" } {
-	set startdir [getWindowFile $w]
+	set startdir $filenames([.p.nb select])
 	if { $startdir != "" } {
 	    set startdir [file dirname $startdir]
 	} else {
@@ -855,6 +936,9 @@ proc doClickOnError { w coord } {
 	}
 	set fname [findFileOnPath $fname $startdir]
 	set w [loadSourceFile $fname ]
+	if { $w == "" } {
+	    return
+	}
 	set t $w.txt
 	$t tag config hilite -background yellow
 	# remove hilight
@@ -869,12 +953,92 @@ proc doClickOnError { w coord } {
     }
 }
 
+# simpler click function for clicking on a hyperlink in text
+# this one can just use the file name we already picked out of
+# the surrounding text, no need to parse errors or line numbers
+
+proc doClickOnLink { w coord } {
+    global filenames
+    
+    set first "$coord linestart"
+    set last "$coord lineend"
+    set linkptr [$w tag prevrange hyperlink $coord]
+    set link1 [lindex $linkptr 0]
+    set link2 [lindex $linkptr 1]
+    set linedata [$w get $link1 $link2]
+    #puts "doClickOnLink $w $coord"
+    #puts "first=|$first|"
+    #puts "linkptr=|$linkptr|"
+    #puts "linedata=|$linedata|"
+
+    set fname "$linedata"
+    set line ""
+    if { $fname != "" } {
+	set startdir $filenames([.p.nb select])
+	if { $startdir != "" } {
+	    set startdir [file dirname $startdir]
+	} else {
+	    set startdir [file normalize "."]
+	}
+	set fname [findFileOnPath $fname $startdir]
+	set w [loadSourceFile $fname ]
+	if { $w == "" } {
+	    return
+	}
+	set t $w.txt
+	$t tag config hilite -background yellow
+	# remove hilight
+	foreach {from to} [$t tag ranges hilite] {
+	    $t tag remove hilite $from $to
+	}
+	$t tag config hilite -background yellow
+	if { $line != "" } {
+	    $t see $line.0
+	    $t tag add hilite $line.0 $line.end
+	}
+    }    
+}
+
 #
 # set up syntax highlighting for a given ctext widget
 #
 
+set color(comments) grey
+set color(keywords) SlateBlue
+set color(brackets) green
+set color(braces) lawngreen
+set color(parens) darkgreen
+set color(numbers) DarkRed
+set color(operators) green
+set color(strings)  red
+set color(varnames) black
+set color(preprocessor) mediumslateblue
+set color(types) purple
+set color(hyperlink) blue
+		
 proc setHighlightingForFile {w fname} {
-    setHyperLinkResponse $w
+    global config
+    set ext [file extension $fname]
+    ctext::clearHighlightClasses $w
+    foreach t [$w tag names] {
+	$w tag delete $t
+    }
+    ctext::disableComments $w
+    if { $config(syntaxhighlight) } {
+	set check1 [lsearch -exact {".c" ".cpp" ".cc" ".h" ".hpp" ".C" ".H"} $ext]
+	#puts "fname=$fname ext=$ext check1 = $check1"
+	if { $check1 >= 0 } {
+	    setSyntaxHighlightingC $w
+	} else {
+	    set check1 [lsearch -exact {".bas" ".bi" ".BAS" ".Bas"} $ext]
+	    if { $check1 >= 0 } {
+		setSyntaxHighlightingBasic $w
+	    } else {
+		setSyntaxHighlightingSpin $w
+	    }
+	}
+    }
+    setHyperLinkResponse $w doClickOnLink
     setHighlightingIncludes $w
 }
 
@@ -882,7 +1046,7 @@ proc setHighlightingForFile {w fname} {
 # version that just highlights includes
 #
 proc setHighlightingIncludes {w} {
-    set color(hyperlink) blue
+    global color
     set include1RE {(?:#include\ [^<]*<)([^>]+)}
     set include2RE {(?:#include\ [^\"]*\")([^\"]+)}
     set using1RE {(?:__using\([^\"]*\")([^\"]+)}
@@ -895,17 +1059,40 @@ proc setHighlightingIncludes {w} {
 }
 
 #
+# C language highlighting
+#
+proc setSyntaxHighlightingC {w} {
+    global color
+
+    $w configure -commentstyle c
+    
+    ctext::addHighlightClassForSpecialChars $w brackets $color(brackets) {[]}
+    ctext::addHighlightClassForSpecialChars $w braces $color(keywords) {{}}
+    ctext::addHighlightClassForSpecialChars $w parentheses $color(parens) {()}
+    ctext::addHighlightClass $w control $color(keywords) [list namespace while for if else do switch case __asm __pasm typedef]
+		
+    ctext::addHighlightClass $w types $color(types) [list \
+						    int char uint8_t int8_t uint16_t int16_t uint32_t int32_t intptr_t long double float unsigned signed void]
+	
+    ctext::addHighlightClass $w macros $color(preprocessor) [list \
+							      #define #undef #if #ifdef #ifndef #endif #elseif #include #import #exclude]
+	
+    ctext::addHighlightClassForSpecialChars $w math $color(operators) {+=*-/&^%!|<>}
+    ctext::addHighlightClassForRegexp $w strings $color(strings) {\".[^\"]*\"}
+    ctext::addHighlightClassForRegexp $w numbers $color(numbers) {(?:[^a-zA-Z0-9_]+)([0-9][0-9a-fA-Fxb_]*)}
+
+    ctext::addHighlightClassForRegexp $w eolcomment $color(comments) {//[^\n\r]*}
+							     
+    ctext::enableComments $w
+    $w tag configure _cComment -foreground $color(comments)
+    $w tag raise _cComment
+}
+
+#
 # Spin language version
 #
-proc setHighlightingSpin {w} {
-    set color(comments) grey
-    set color(keywords) DarkBlue
-    set color(brackets) purple
-    set color(numbers) DeepPink
-    set color(operators) green
-    set color(strings)  red
-    set color(varnames) black
-    set color(preprocessor) cyan
+proc setSyntaxHighlightingSpin {w} {
+    global color
     set keywordsbase [list Con Obj Dat Var Pub Pri Quit Exit Repeat While Until If Then Else Return Abort Long Word Byte Asm Endasm String]
     foreach i $keywordsbase {
 	lappend keywordsupper [string toupper $i]
@@ -915,31 +1102,124 @@ proc setHighlightingSpin {w} {
     }
     set keywords [concat $keywordsbase $keywordsupper $keywordslower]
 
+    $w configure -commentstyle spin
+    
     ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \$ 
     ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \%
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 0
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 1
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 2
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 3
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 4
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 5
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 6
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 7
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 8
-    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 9
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 0
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 1
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 2
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 3
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 4
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 5
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 6
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 7
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 8
+    #ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) 9
 
     ctext::addHighlightClass $w keywords $color(keywords) $keywords
 
     ctext::addHighlightClassForSpecialChars $w brackets $color(brackets) {[]()}
     ctext::addHighlightClassForSpecialChars $w operators $color(operators) {+-=><!@~\*/&:|}
 
-    ctext::addHighlightClassForRegexp $w strings $color(strings) {"(\\"||^"])*"}
+    ctext::addHighlightClassForRegexp $w strings $color(strings) {\".[^\"]*\"}
     ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {^\#[a-z]+}
 
-    ctext::addHighlightClassForRegexp $w comments $color(comments) {\'[^\n\r]*}
+    ctext::addHighlightClassForRegexp $w numbers $color(numbers) {(?:[^a-zA-Z0-9_]+)([0-9][0-9_]*)}
+
+    ctext::addHighlightClassForRegexp $w eolcomments $color(comments) {\'[^\n]*}
     ctext::enableComments $w
     $w tag configure _cComment -foreground $color(comments)
     $w tag raise _cComment
+}
+
+proc setSyntaxHighlightingBasic {w} {
+    global color
+    set keywordslower [list as asm byref byval case catch class const continue data declare def defint defsng dim do end endif exit for function gosub goto if let next nil rem return select step sub then throw to try type until using var wend while with]
+    set opwordslower [list and andalso mod or orelse not shl shr xor]
+    set typewordslower [list any byte double integer long pointer ptr short single ubyte ulong ushort uword word]
+    
+    foreach i $keywordslower {
+	lappend keywordsupper [string toupper $i]
+    }
+    set keywords [concat $keywordsupper $keywordslower]
+    
+    foreach i $typewordslower {
+	lappend typewordsupper [string toupper $i]
+    }
+    set typewords [concat $typewordsupper $typewordslower]
+
+    foreach i $opwordslower {
+	lappend opwordsupper [string toupper $i]
+    }
+    set opwords [concat $opwordsupper $opwordslower]
+
+    
+    $w configure -commentstyle basic
+    
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \$ 
+    ctext::addHighlightClassWithOnlyCharStart $w numbers $color(numbers) \%
+
+    ctext::addHighlightClass $w keywords $color(keywords) $keywords
+    ctext::addHighlightClass $w operators $color(operators) $opwords
+    ctext::addHighlightClass $w types $color(types) $typewords
+
+    ctext::addHighlightClassForSpecialChars $w brackets $color(brackets) {[]()}
+    ctext::addHighlightClassForSpecialChars $w operators $color(operators) {+-=><!@~\*/&:|}
+
+    ctext::addHighlightClassForRegexp $w strings $color(strings) {\".[^\"]*\"}
+    ctext::addHighlightClassForRegexp $w preprocessor $color(preprocessor) {^\#[a-z]+}
+
+    ctext::addHighlightClassForRegexp $w numbers $color(numbers) {(?:[^a-zA-Z0-9_]+)([0-9][0-9a-fA-Fxb_]*)}
+
+    ctext::addHighlightClassForRegexp $w eolcomments $color(comments) {\'[^\n]*}
+    ctext::addHighlightClassForRegexp $w remcomments $color(comments) {(?:rem\ )([^\n]*)}
+}
+
+#
+# scan for ports
+#
+proc rescanPorts { } {
+    global comport_last
+    global PROP_VERSION
+    global EXE
+    
+    # search for serial ports using serial::listports (src/checkserial.tcl)
+    .mbar.comport delete $comport_last end
+    .mbar.comport add radiobutton -label "Find port automatically" -variable COMPORT -value " "
+    set serlist [serial::listports]
+    foreach v $serlist {
+	set comname [lrange [split $v "\\"] end end]
+	set portval [string map {\\ \\\\} "$v"]
+	.mbar.comport add radiobutton -label $comname -variable COMPORT -value "-p $portval"
+    }
+
+    # look for WIFI devices
+    if { $PROP_VERSION eq "P1" } {
+	set wifis [exec -ignorestderr bin/proploader$EXE -W]
+	set wifis [split $wifis "\n"]
+	foreach v $wifis {
+	    set comname "$v"
+	    set portval ""
+	    set ipstart [string first "IP:" "$v"]
+	    #puts "for \[$v\] ipstart=$ipstart"
+	    if { $ipstart != -1 } {
+		set ipstart [expr $ipstart + 4]
+		set ipstring [string range $v $ipstart end]
+		set ipend [string first "," "$ipstring"]
+		set ipend [expr $ipend - 1]
+		#puts "  for <$comname> ipend=<$ipend>"
+		if { $ipend >= 0 } {
+		    set ipstring [string range $ipstring 0 $ipend]
+		    set portval "-i $ipstring"
+		    #puts "  -> portval=$portval"
+		}
+	    }
+	    if { $portval ne "" } {
+		.mbar.comport add radiobutton -label $comname -variable COMPORT -value "$portval"
+	    }
+	}
+    }
 }
 
 menu .popup1 -tearoff 0
@@ -992,6 +1272,12 @@ menu .mbar.help -tearoff 0
 .mbar.options add radiobutton -label "No Optimization" -variable OPT -value "-O0"
 .mbar.options add radiobutton -label "Default Optimization" -variable OPT -value "-O1"
 .mbar.options add radiobutton -label "Full Optimization" -variable OPT -value "-O2"
+.mbar.options add separator
+.mbar.options add radiobutton -label "No extra warnings" -variable WARNFLAGS -value "-Wnone"
+.mbar.options add radiobutton -label "Enable compatibility warnings" -variable WARNFLAGS -value "-Wall"
+.mbar.options add separator
+.mbar.options add radiobutton -label "Debug disabled" -variable DEBUG_OPT -value "-gnone"
+.mbar.options add radiobutton -label "Debug enabled" -variable DEBUG_OPT -value "-g"
 #.mbar.options add separator
 #.mbar.options add radiobutton -label "No Compression" -variable COMPRESS -value "-z0"
 #.mbar.options add radiobutton -label "Compress Code" -variable COMPRESS -value "-z1"
@@ -1010,21 +1296,16 @@ menu .mbar.help -tearoff 0
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
 .mbar.run add command -label "Choose P2 flash program..." -command { pickFlashProgram }
 
-.mbar add cascade -menu .mbar.comport -label Serial
+.mbar add cascade -menu .mbar.comport -label Ports
 .mbar.comport add radiobutton -label "115200 baud" -variable config(baud) -value 115200
 .mbar.comport add radiobutton -label "230400 baud" -variable config(baud) -value 230400
 .mbar.comport add radiobutton -label "921600 baud" -variable config(baud) -value 921600
 .mbar.comport add radiobutton -label "2000000 baud" -variable config(baud) -value 2000000
 .mbar.comport add separator
+.mbar.comport add command -label "Scan for ports" -command rescanPorts
+.mbar.comport add separator
 .mbar.comport add radiobutton -label "Find port automatically" -variable COMPORT -value " "
-
-# search for serial ports using serial::listports (src/checkserial.tcl)
-set serlist [serial::listports]
-foreach v $serlist {
-    set comname [lrange [split $v "\\"] end end]
-    set portval [string map {\\ \\\\} "$v"]
-    .mbar.comport add radiobutton -label $comname -variable COMPORT -value $portval
-}
+set comport_last [.mbar.comport index end]
 
 .mbar add cascade -menu .mbar.special -label Special
 .mbar.special add separator
@@ -1038,10 +1319,11 @@ foreach v $serlist {
 .mbar.special add command -label "Load current buffer into proplisp on P2" -command { doSpecial "samples/proplisp/lisp.binary" [scriptSendCurFile] }
 .mbar.special add separator
 .mbar.special add command -label "Enter P2 ROM monitor" -command { doSpecial "-xDEBUG" "" }
-.mbar.special add command -label "Terminal only" -command { doSpecial "-n" "" }
+.mbar.special add command -label "Terminal only" -command { doSpecial "-n" "-t" }
 
 .mbar add cascade -menu .mbar.help -label Help
 .mbar.help add command -label "GUI" -command { doHelp "$ROOTDIR/doc/help.txt" "Help" }
+.mbar.help add command -label "General compiler documentation" -command { launchBrowser "file://$ROOTDIR/doc/general.html" }
 .mbar.help add command -label "BASIC Language" -command { launchBrowser "file://$ROOTDIR/doc/basic.html" }
 .mbar.help add command -label "C Language" -command { launchBrowser "file://$ROOTDIR/doc/c.html" }
 .mbar.help add command -label "Spin Language" -command { launchBrowser "file://$ROOTDIR/doc/spin.html" }
@@ -1107,16 +1389,17 @@ if {[tk windowingsystem]=="aqua"} {
     bind . <3> "tk_popup .popup1 %X %Y"
 }
 
-proc setHyperLinkResponse { w } {
-
+proc setHyperLinkResponse { w func } {
     set textcurs [::ttk::cursor text]
     set linkcurs [::ttk::cursor link]
+    set funcargs { %W "[%W index @%x,%y]"}
+    
     $w tag bind hyperlink <Enter> "$w configure -cursor $linkcurs"
     $w tag bind hyperlink <Leave> "$w configure -cursor $textcurs"
-    $w tag bind hyperlink <ButtonPress> { doClickOnError %W "[%W index @%x,%y]" }
+    $w tag bind hyperlink <ButtonPress> "$func $funcargs"
 }
 
-setHyperLinkResponse .p.bot.txt
+setHyperLinkResponse .p.bot.txt doClickOnError
 
 wm protocol . WM_DELETE_WINDOW {
     exitProgram
@@ -1191,6 +1474,17 @@ proc doShowLinenumbers {} {
     }
 }
 
+proc resetHighlight {} {
+    global config
+    global filenames
+    set tablist [.p.nb tabs]
+    foreach w $tablist {
+	set fname [getWindowFile $w]
+	setHighlightingForFile $w.txt $fname
+	$w.txt highlight 1.0 end
+    }
+}
+
 proc doneAppearance {} {
     global config
 
@@ -1228,7 +1522,10 @@ proc doEditorOptions {} {
     label .editopts.font.lb -text " Text font " -font $config(font)
     ttk::button .editopts.font.change -text " Change... " -command doSelectFont
     checkbutton .editopts.font.linenums -text "Show Linenumbers" -variable config(showlinenumbers) -command doShowLinenumbers
-    checkbutton .editopts.font.autoreload -text "Automatically Reload Files if changed externally" -variable config(autoreload)
+    checkbutton .editopts.font.syntax -text "Syntax Highlighting" -variable config(syntaxhighlight) -command resetHighlight
+    checkbutton .editopts.font.autoindent -text "Automatic indenting" -variable config(autoindent)
+    checkbutton .editopts.font.autoreload -text "Auto Reload Files if changed externally" -variable config(autoreload)
+    checkbutton .editopts.font.savewindows -text "Save session on exit" -variable config(savesession)
     ttk::button .editopts.end.ok -text " OK " -command doneAppearance
 
     label .editopts.bot.lb -text "Compiler output font " -font $config(botfont)
@@ -1247,7 +1544,10 @@ proc doEditorOptions {} {
     grid .editopts.font.tab
     grid .editopts.font.tab .editopts.font.lb .editopts.font.change
     grid .editopts.font.linenums
+    grid .editopts.font.syntax
+    grid .editopts.font.autoindent
     grid .editopts.font.autoreload
+    grid .editopts.font.savewindows
     grid .editopts.bot.lb .editopts.bot.change
     
     grid .editopts.end.ok -sticky nsew
@@ -1273,19 +1573,34 @@ proc mapPercent {str} {
     global BINFILE
     global ROOTDIR
     global OPT
+    global WARNFLAGS
+    global DEBUG_OPT
     global COMPRESS
     global COMPORT
     global config
 
-#    set fulloptions "$OPT $COMPRESS"
-    set fulloptions "$OPT"
+    set ourwarn $WARNFLAGS
+    set ourdebug $DEBUG_OPT
+    if { "$ourwarn" eq "-Wnone" } {
+	set ourwarn ""
+    }
+    if { "$ourdebug" eq "-gnone" } {
+	set ourdebug ""
+    }
+#    set fulloptions "$OPT $ourwarn $COMPRESS"
+    set fulloptions "$OPT $ourwarn $ourdebug"
     if { $COMPORT ne " " } {
-	set fullcomport "-p $COMPORT"
+	set fullcomport "$COMPORT"
     } else {
 	set fullcomport ""
     }
     set bindir [file dirname $BINFILE]
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $filenames([.p.nb select]) "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT "%F" $config(flashprogram) "%r" $config(baud)]
+    if { [.p.nb select] ne "" } {
+	set srcfile $filenames([.p.nb select])
+    } else {
+	set srcfile "undefined"
+    }
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT "%F" $config(flashprogram) "%r" $config(baud)]
     set result [string map $percentmap $str]
     return $result
 }
@@ -1510,12 +1825,11 @@ proc doRunOptions {} {
     
     set shadow(compilecmd) $config(compilecmd)
     set shadow(runcmd) $config(runcmd)
-    
+    set shadow(flashcmd) $config(flashcmd)
+
     if {[winfo exists .runopts]} {
 	if {![winfo viewable .runopts]} {
 	    wm deiconify .runopts
-	    set shadow(compilecmd) $config(compilecmd)
-	    set shadow(runcmd) $config(runcmd)
 	}
 	raise .runopts
 	return
@@ -1566,6 +1880,31 @@ proc doRunOptions {} {
     wm title .runopts "Executable Paths"
 }
 
+proc do_indent {w} {
+    global config
+    set extra [string repeat " " $config(tabwidth)]
+    if { $config(autoindent) } {
+	set lineno [expr {int([$w index insert])}]
+	set line [$w get $lineno.0 insert]
+	regexp {^(\s*)} $line -> prefix
+	if {[string index $line end] eq "\{"} {
+	    tk::TextInsert $w "\n$prefix$extra"
+	} elseif { [string index $line end] eq "\}" } {
+	    set exlen [string length $extra]
+	    if { $line eq "$prefix\}" && [string length $line] > $exlen } {
+		$w delete insert-[expr $exlen+1]c insert-1c
+		tk::TextInsert $w "\n[string range $prefix 0 end-$exlen]"
+	    } else {
+		tk::TextInsert $w "\n$prefix"
+	    }
+	} else {
+	    tk::TextInsert $w "\n$prefix"
+	}
+    } else {
+	tk::TextInsert $w "\n"
+    }
+}
+
 #
 # simple search and replace widget by Richard Suchenwirth, from wiki.tcl.tk
 #
@@ -1597,6 +1936,7 @@ proc searchrep {t {replace 1}} {
    } else {
        raise $w.f
        focus $w
+       $w.f icursor end
    }
 }
 
@@ -1659,11 +1999,23 @@ bind .p.bot.txt <Expose> +setSash
 # needs to be initialized
 set BINFILE ""
 
+# mac os x special code
+if { [tk windowingsystem] == "aqua" } {
+    proc ::tk::mac::Quit {} {
+        exitProgram
+    }
+}
+
 # main code
 if { $::argc > 0 } {
     foreach argx $argv {
         loadSourceFile [file normalize $argx]
     }
+} elseif { $config(savesession) && [llength $OPENFILES] } {
+    openLastFiles
 } else {
     createNewTab
 }
+
+rescanPorts
+

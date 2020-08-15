@@ -1,6 +1,10 @@
 ''
 '' program to test multiply on P2
 ''
+#ifndef __propeller2__
+#error this code only works on the P2
+#endif
+
 CON
   _clkfreq = 160_000_000
   

@@ -1,4 +1,4 @@
-' blink_pasm.spin2
+' blink_pasm.spin
 ' assembly language blink program
 
 con

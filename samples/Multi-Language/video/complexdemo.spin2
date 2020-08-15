@@ -1,0 +1,540 @@
+
+CON
+
+  CLK108MHz   = %1_000100_0000011010_1111_10_00 '(20MHz/5) * 27/1 = 108   MHz
+
+  _clkmode = CLK108MHz ' setup a default clock
+  _clkfreq = 108_000_000
+
+' adjust pins accordingly
+	VGA_BASE_PIN       = 48
+	VGA_VSYNC_PIN      = VGA_BASE_PIN+4
+	DVI_BASE_PIN       = 24
+	SVIDEO_BASE_PIN    = 8
+	COMPONENT_BASE_PIN = 8
+
+	LINEBUFSIZE = 1920 * 4 ' enough room for a scanline at full colour bit depth
+
+VAR
+	long first[13]
+	long second[13]
+	long third[13]
+	long fourth[13]
+	long display1[14]
+	long display2[14]
+
+OBJ
+ 	vid: "p2videodrv.spin2"
+
+PUB start
+	coginit(cogid, demo, @stack)
+
+PUB demo | w, x, y, z, timing
+
+        clkset(_clkmode, _clkfreq) ' setup default startup clock
+
+	repeat y from 0 to 49
+	   repeat x from 0 to 79
+		word[@screenbuf1][y*80 + x] := x + (x&$f)<<8 | ((y<<1)&$f)<<12
+		word[@screenbuf2][y*80 + x] := x + (((x&$f)<<8) | ((y<<1)&$f)<<12)
+
+
+	' obtain the VGA's timing for a given resolution
+ 	'timing := vid.getTiming(VID#RES_1024x768) 
+ 	'timing := vid.getTiming(VID#RES_800x600) 
+ 	timing := vid.getTiming(VID#RES_640x480) 
+
+	' create a VGA display
+	vid.initDisplay(@display1, VID#VGA, VGA_BASE_PIN, VGA_VSYNC_PIN, VID#RGBHV, @lineBuffer1, LINEBUFSIZE, timing)
+
+	' or turn one of these other video outputs...
+	'vid.initDisplay(@display1, VID#COMPONENT_SDTV, COMPONENT_BASE_PIN, 0, VID#PROGRESSIVE+VID#PAL, @lineBuffer1, LINEBUFSIZE, 0)	
+	'vid.initDisplay(@display1, VID#COMPONENT_HDTV, COMPONENT_BASE_PIN, 0, VID#PROGRESSIVE, @lineBuffer1, LINEBUFSIZE, 0)	
+	'vid.initDisplay(@display1, VID#SVIDEO_CVBS, SVIDEO_BASE_PIN, 0, VID#INTERLACED+VID#NTSC, @lineBuffer1, LINEBUFSIZE, 0)
+	'vid.initDisplay(@display1, VID#CVBS, SVIDEO_BASE_PIN+2, 0, VID#INTERLACED+VID#NTSC, @lineBuffer1, LINEBUFSIZE, 0)
+	'vid.initDisplay(@display1, VID#SVIDEO, SVIDEO_BASE_PIN, 0, VID#PROGRESSIVE+VID#NTSC, @lineBuffer1, LINEBUFSIZE, 0)
+	'vid.initDisplay(@display1, VID#DVI, DVI_BASE_PIN, 0, VID#DVI_NORMAL, @lineBuffer2, LINEBUFSIZE, 0)	' create a VGA display over DVI
+	
+	' setup some regions
+	vid.initRegion(@first,  VID#TEXT,  64, VID#FLASH_TEXT, @vgapalette, @fontcga8, 8, @screenbuf1, 0)
+'	vid.initRegion(@first,  VID#TEXT,  100, VID#FLASH_TEXT+VID#DOUBLE_WIDE, @vgapalette, @fontvga16, 16, @screenbuf1, 0)
+	vid.initRegion(@second, VID#RGB16, 200,                0, @vgapalette, @fontcga8, 8, @framebuf1, 0)
+	vid.initRegion(@third,  VID#TEXT,  96,                0, @vgapalette, @fontvga16, 16,  @screenbuf2, 0)
+	vid.initRegion(@fourth, VID#RGBI,    0,                0, @vgapalette, @fontcga8,  8,  @framebuf2, 0)
+
+	' chain together
+	vid.linkRegion(@first, @second)	
+	vid.linkRegion(@second, @third)
+	vid.linkRegion(@third, @fourth)
+
+	'vid.setSkew(@second, 1280-1600)
+	
+	' setup optional border
+	vid.setDisplayBorderSizes(@display1, 15, 15, 16) 					
+	vid.setDisplayBorderColour(@display1, $AA_00_00)
+
+	' setup a local region mouse
+	vid.setRegionMouse(@first, 120, 30)
+	vid.setMouseImage(@first, @mouse4bpp, 0, 0)  ' choose right mouse sprite type for region depth!
+	vid.showMouse(@first, 1) 
+
+	'vid.setTextFontStart(@second, 4)
+	vid.setCursorColour(@first, 0, 15)
+	vid.setCursorFlags(@first, 0, VID#CURS_ENABLE)   
+	vid.setCursorColour(@third, 0, 15)
+	vid.setCursorFlags(@third, 0, VID#CURS_ENABLE)   
+
+	'enable display list
+	vid.setDisplayRegions(@display1, @first)
+
+	vid.setTextContext(@display1, @third, $1F) '!!!!! MUST SET THIS BEFORE ANY TEXT PRINTING STARTS OR IT COULD HANG !!!!
+
+	vid.printStr(@features)
+
+	vid.setCursorFlags(@third, 0, 0)
+
+	vid.setTextContext(@display1, @first, $8A) '!!!!! MUST SET THIS BEFORE ANY TEXT PRINTING STARTS OR IT CAN CRASH !!!!
+
+	vid.printStr(@msg)
+	'vid.dec(vid.getFontHeight(@first))
+	'vid.crlf
+	'vid.dec(vid.getCurrentRows(@first))
+	'vid.crlf
+	'vid.dec(vid.getCurrentColumns(@first, @display1))	
+
+	x:=0
+	y:=1
+	z:=0
+        w:=0
+	repeat 
+		vid.waitForVsync(@display1)
+		
+		vid.setCursorPos(@first, 0, 0, 70)
+		vid.setTextContext(@display1, @first, x)
+		vid.hex(vid.getFieldCount(@display1), 2)
+
+		if w < 2000
+			z:=z+y
+		else
+			vid.setTextContext(@display1, @third, $1F)
+			vid.out(byte[@features][w-2000])
+
+		if z == 16
+			z:= 0
+			vid.setSource(@third, vid.getSource(@third) + y*80*2)
+		if z == -1
+			z:= 15
+			vid.setSource(@third, vid.getSource(@third) + y*80*2)
+		vid.setTextScanStart(@third, z)
+		vid.setSource(@second, vid.getSource(@second) + 4)
+		vid.setSource(@fourth, vid.getSource(@fourth) - 4)
+		vid.setRegionMouse(@first, x, 30)
+		if (w < 2000)
+			x+=y
+			if (x > 300) 
+				y:= -1
+ 			if (x == 0)
+				y:= 1
+		'	vid.setDisplayBorderSizes(@display1, x, x, 16) ' enable to go crazy
+		vid.setDisplayBorderColour(@display1, x*$0111)
+		w++
+		if w // 1000 == 0
+			vid.setMode(@fourth, (vid.getMode(@fourth) + 1) & $f)
+		if w == 1000
+			vid.setFlags(@first, VID#DOUBLE_WIDE+VID#FLASH_TEXT)
+		if w == 2000
+			vid.setFlags(@first, VID#DOUBLE_HIGH+VID#FLASH_TEXT)
+		if w == 3000
+			vid.setFlags(@first, VID#DOUBLE_HIGH + VID#DOUBLE_WIDE+VID#FLASH_TEXT)
+		if w == 4000
+			vid.setFlags(@first, VID#FLASH_TEXT)
+			vid.setSize(@second, vid.getSize(@second)-112)
+			vid.setSize(@third, vid.getSize(@third)+112)
+		if w == 5670
+			vid.setSize(@second, vid.getSize(@second)+112)
+			vid.setSize(@third, vid.getSize(@third)-112)
+			w:=0
+DAT
+	orgh
+
+stack 		long 0[300]
+msg	byte	" Hello World! ", 13, 10, 0
+
+vgapalette
+            long    $00_00_00_00   ' 0 = black          
+            long    $00_00_AA_00   ' 1 = dark blue
+            long    $00_AA_00_00   ' 2 = dark green
+            long    $00_AA_AA_00   ' 3 = dark cyan
+            long    $AA_00_00_00   ' 4 = dark red
+            long    $AA_00_AA_00   ' 5 = dark magenta
+            long    $AA_55_00_00   ' 6 = brown
+            long    $AA_AA_AA_00   ' 7 = light grey
+            long    $55_55_55_00   ' 8 = dark grey
+            long    $55_55_FF_00   ' 9 = light blue
+            long    $55_FF_55_00   '10 = light green
+            long    $55_FF_FF_00   '11 = light cyan
+            long    $FF_55_55_00   '12 = light red
+            long    $FF_55_FF_00   '13 = light magenta
+            long    $FF_FF_55_00   '14 = yellow
+            long    $FF_FF_FF_00   '15 = white
+
+            long    $000000_00
+            long    $00005f_00
+            long    $000087_00
+            long    $0000af_00
+            long    $0000d7_00
+            long    $0000ff_00
+            long    $005f00_00
+            long    $005f5f_00
+            long    $005f87_00
+            long    $005faf_00
+            long    $005fd7_00
+            long    $005fff_00
+            long    $008700_00
+            long    $00875f_00
+            long    $008787_00
+            long    $0087af_00
+            long    $0087d7_00
+            long    $0087ff_00
+            long    $00af00_00
+            long    $00af5f_00
+            long    $00af87_00
+            long    $00afaf_00
+            long    $00afd7_00
+            long    $00afff_00
+            long    $00d700_00
+            long    $00d75f_00
+            long    $00d787_00
+            long    $00d7af_00
+            long    $00d7d7_00
+            long    $00d7ff_00
+            long    $00ff00_00
+            long    $00ff5f_00
+            long    $00ff87_00
+            long    $00ffaf_00
+            long    $00ffd7_00
+            long    $00ffff_00
+            long    $5f0000_00
+            long    $5f005f_00
+            long    $5f0087_00
+            long    $5f00af_00
+            long    $5f00d7_00
+            long    $5f00ff_00
+            long    $5f5f00_00
+            long    $5f5f5f_00
+            long    $5f5f87_00
+            long    $5f5faf_00
+            long    $5f5fd7_00
+            long    $5f5fff_00
+            long    $5f8700_00
+            long    $5f875f_00
+            long    $5f8787_00
+            long    $5f87af_00
+            long    $5f87d7_00
+            long    $5f87ff_00
+            long    $5faf00_00
+            long    $5faf5f_00
+            long    $5faf87_00
+            long    $5fafaf_00
+            long    $5fafd7_00
+            long    $5fafff_00
+            long    $5fd700_00
+            long    $5fd75f_00
+            long    $5fd787_00
+            long    $5fd7af_00
+            long    $5fd7d7_00
+            long    $5fd7ff_00
+            long    $5fff00_00
+            long    $5fff5f_00
+            long    $5fff87_00
+            long    $5fffaf_00
+            long    $5fffd7_00
+            long    $5fffff_00
+            long    $870000_00
+            long    $87005f_00
+            long    $870087_00
+            long    $8700af_00
+            long    $8700d7_00
+            long    $8700ff_00
+            long    $875f00_00
+            long    $875f5f_00
+            long    $875f87_00
+            long    $875faf_00
+            long    $875fd7_00
+            long    $875fff_00
+            long    $878700_00
+            long    $87875f_00
+            long    $878787_00
+            long    $8787af_00
+            long    $8787d7_00
+            long    $8787ff_00
+            long    $87af00_00
+            long    $87af5f_00
+            long    $87af87_00
+            long    $87afaf_00
+            long    $87afd7_00
+            long    $87afff_00
+            long    $87d700_00
+            long    $87d75f_00
+            long    $87d787_00
+            long    $87d7af_00
+            long    $87d7d7_00
+            long    $87d7ff_00
+            long    $87ff00_00
+            long    $87ff5f_00
+            long    $87ff87_00
+            long    $87ffaf_00
+            long    $87ffd7_00
+            long    $87ffff_00
+            long    $af0000_00
+            long    $af005f_00
+            long    $af0087_00
+            long    $af00af_00
+            long    $af00d7_00
+            long    $af00ff_00
+            long    $af5f00_00
+            long    $af5f5f_00
+            long    $af5f87_00
+            long    $af5faf_00
+            long    $af5fd7_00
+            long    $af5fff_00
+            long    $af8700_00
+            long    $af875f_00
+            long    $af8787_00
+            long    $af87af_00
+            long    $af87d7_00
+            long    $af87ff_00
+            long    $afaf00_00
+            long    $afaf5f_00
+            long    $afaf87_00
+            long    $afafaf_00
+            long    $afafd7_00
+            long    $afafff_00
+            long    $afd700_00
+            long    $afd75f_00
+            long    $afd787_00
+            long    $afd7af_00
+            long    $afd7d7_00
+            long    $afd7ff_00
+            long    $afff00_00
+            long    $afff5f_00
+            long    $afff87_00
+            long    $afffaf_00
+            long    $afffd7_00
+            long    $afffff_00
+            long    $d70000_00
+            long    $d7005f_00
+            long    $d70087_00
+            long    $d700af_00
+            long    $d700d7_00
+            long    $d700ff_00
+            long    $d75f00_00
+            long    $d75f5f_00
+            long    $d75f87_00
+            long    $d75faf_00
+            long    $d75fd7_00
+            long    $d75fff_00
+            long    $d78700_00
+            long    $d7875f_00
+            long    $d78787_00
+            long    $d787af_00
+            long    $d787d7_00
+            long    $d787ff_00
+            long    $d7af00_00
+            long    $d7af5f_00
+            long    $d7af87_00
+            long    $d7afaf_00
+            long    $d7afd7_00
+            long    $d7afff_00
+            long    $d7d700_00
+            long    $d7d75f_00
+            long    $d7d787_00
+            long    $d7d7af_00
+            long    $d7d7d7_00
+            long    $d7d7ff_00
+            long    $d7ff00_00
+            long    $d7ff5f_00
+            long    $d7ff87_00
+            long    $d7ffaf_00
+            long    $d7ffd7_00
+            long    $d7ffff_00
+            long    $ff0000_00
+            long    $ff005f_00
+            long    $ff0087_00
+            long    $ff00af_00
+            long    $ff00d7_00
+            long    $ff00ff_00
+            long    $ff5f00_00
+            long    $ff5f5f_00
+            long    $ff5f87_00
+            long    $ff5faf_00
+            long    $ff5fd7_00
+            long    $ff5fff_00
+            long    $ff8700_00
+            long    $ff875f_00
+            long    $ff8787_00
+            long    $ff87af_00
+            long    $ff87d7_00
+            long    $ff87ff_00
+            long    $ffaf00_00
+            long    $ffaf5f_00
+            long    $ffaf87_00
+            long    $ffafaf_00
+            long    $ffafd7_00
+            long    $ffafff_00
+            long    $ffd700_00
+            long    $ffd75f_00
+            long    $ffd787_00
+            long    $ffd7af_00
+            long    $ffd7d7_00
+            long    $ffd7ff_00
+            long    $ffff00_00
+            long    $ffff5f_00
+            long    $ffff87_00
+            long    $ffffaf_00
+            long    $ffffd7_00
+            long    $ffffff_00
+            long    $080808_00
+            long    $121212_00
+            long    $1c1c1c_00
+            long    $262626_00
+            long    $303030_00
+            long    $3a3a3a_00
+            long    $444444_00
+            long    $4e4e4e_00
+            long    $585858_00
+            long    $626262_00
+            long    $6c6c6c_00
+            long    $767676_00
+            long    $808080_00
+            long    $8a8a8a_00
+            long    $949494_00
+            long    $9e9e9e_00
+            long    $a8a8a8_00
+            long    $b2b2b2_00
+            long    $bcbcbc_00
+            long    $c6c6c6_00
+            long    $d0d0d0_00
+            long    $dadada_00
+            long    $e4e4e4_00
+            long    $eeeeee_00
+
+mouse1bpp   long    %0000_0000_0011_0000, $ffff
+            long    %0000_0000_0100_1000, $ffff
+            long    %0000_0000_0100_1000, $ffff
+            long    %0000_0001_1100_1000, $ffff
+            long    %0000_1110_0100_1000, $ffff
+            long    %0011_0010_0100_1011, $ffff
+            long    %0101_0010_0100_1101, $ffff
+            long    %1001_0000_0000_1010, $ffff
+            long    %1000_0000_0000_1010, $ffff
+            long    %1000_0000_0000_0100, $ffff
+            long    %1000_0000_0000_0100, $ffff
+            long    %0100_0000_0000_1000, $ffff
+            long    %0100_0000_0000_1000, $ffff
+            long    %0100_0000_0001_0000, $ffff
+            long    %0010_0000_0001_0000, $ffff
+            long    %0011_1111_1111_0000, $ffff
+
+mouse2bpp   long    %0000_0000_0011_0000, %%0000000000330000
+            long    %0000_0000_0111_1000, %%0000000003003000
+            long    %0000_0000_0111_1000, %%0000000003003000
+            long    %0000_0001_1111_1000, %%0000000333003000
+            long    %0000_1111_1111_1000, %%0000333003003000
+            long    %0011_1111_1111_1011, %%0033003003003033
+            long    %0111_1111_1111_1111, %%0303003003003303
+            long    %1111_1111_1111_1110, %%3003000000003030
+            long    %1111_1111_1111_1110, %%3000000000003030
+            long    %1111_1111_1111_1100, %%3000000000000300
+            long    %1111_1111_1111_1100, %%3000000000000300
+            long    %0111_1111_1111_1000, %%0300000000003000
+            long    %0111_1111_1111_1000, %%0300000000003000
+            long    %0111_1111_1111_0000, %%0300000000030000
+            long    %0011_1111_1111_0000, %%0030000000030000
+            long    %0011_1111_1111_0000, %%0033333333330000
+
+mouse4bpp   long    %0000_0000_0001_0000, $000f0000, $00000000
+            long    %0000_0000_0011_1000, $00f0f000, $00000000
+            long    %0000_0000_0111_1000, $0f00f000, $00000000
+            long    %0000_0001_1111_1000, $ff00f000, $0000000f
+            long    %0000_1111_1111_1000, $0f00f000, $0000fff0
+            long    %0011_1111_1111_1011, $0f00f0ff, $00ff00f0
+            long    %0111_1111_1111_1111, $0f00ff0f, $0f0f00f0
+            long    %1111_1111_1111_1110, $0000f0f0, $f00f0000
+            long    %1111_1111_1111_1110, $0000f0f0, $f0000000
+            long    %1111_1111_1111_1100, $00000f00, $f0000000
+            long    %1111_1111_1111_1100, $00000f00, $f0000000
+            long    %0111_1111_1111_1000, $0000f000, $0f000000
+            long    %0111_1111_1111_1000, $0000f000, $0f000000
+            long    %0111_1111_1111_0000, $000f0000, $0f000000
+            long    %0011_1111_1111_0000, $000f0000, $00f00000
+            long    %0011_1111_1111_0000, $ffff0000, $00ffffff
+
+mouse8bpp   long    %0000_0000_0000_0001, $000000ff, $00000000, $00000000, $00000000 
+            long    %0000_0000_0000_0011, $0000ffff, $00000000, $00000000, $00000000 
+            long    %0000_0000_0000_0111, $00ff00ff, $00000000, $00000000, $00000000 
+            long    %0000_0000_0000_1111, $ff0000ff, $00000000, $00000000, $00000000 
+            long    %0000_0000_0001_1111, $000000ff, $000000ff, $00000000, $00000000 
+            long    %0000_0000_0011_1111, $000000ff, $0000ff00, $00000000, $00000000 
+            long    %0000_0000_0111_1111, $000000ff, $00ff0000, $00000000, $00000000 
+            long    %0000_0000_1111_1111, $000000ff, $ff000000, $00000000, $00000000 
+            long    %0000_0001_1111_1111, $000000ff, $00000000, $000000ff, $00000000 
+            long    %0000_0011_1111_1111, $000000ff, $00000000, $0000ff00, $00000000 
+            long    %0000_0111_1111_1111, $000000ff, $00000000, $00ff0000, $00000000 
+            long    %0000_0011_1111_1111, $000000ff, $ffffff00, $0000ffff, $00000000 
+            long    %0000_0000_0001_1111, $000000ff, $000000ff, $00000000, $00000000 
+            long    %0000_0000_0000_1111, $ff0000ff, $00000000, $00000000, $00000000 
+            long    %0000_0000_0000_0111, $00ff00ff, $00000000, $00000000, $00000000 
+            long    %0000_0000_0000_0010, $0000ff00, $00000000, $00000000, $00000000 
+
+mouse16bpp  long    %0000_0000_0000_0001, $0000ffff, $00000000, $00000000, $00000000, $0, $0, $0, $0
+            long    %0000_0000_0000_0011, $ffffffff, $00000000, $00000000, $00000000, $0, $0, $0, $0
+            long    %0000_0000_0000_0111, $0000ffff, $0000ffff, $00000000, $00000000, $0, $0, $0, $0
+            long    %0000_0000_0000_1111, $0000ffff, $ffff0000, $00000000, $00000000, $0, $0, $0, $0
+            long    %0000_0000_0001_1111, $0000ffff, $00000000, $0000ffff, $00000000, $0, $0, $0, $0 
+            long    %0000_0000_0011_1111, $0000ffff, $00000000, $ffff0000, $00000000, $0, $0, $0, $0
+            long    %0000_0000_0111_1111, $0000fff1, $00000000, $00000000, $0000ffff, $0, $0, $0, $0
+            long    %0000_0000_1111_1111, $0000ffff, $00000000, $00000000, $ffff0000, $0, $0, $0, $0
+            long    %0000_0001_1111_1111, $0000ffff, $00000000, $00000000, $00000000, $0000ffff, $0, $0, $0
+            long    %0000_0011_1111_1111, $0000ffff, $00000000, $00000000, $00000000, $ffff0000, $0, $0, $0
+            long    %0000_0111_1111_1111, $0000ffff, $00000000, $00000000, $00000000, $00000000, $0000ffff, $0, $0
+            long    %0000_0011_1111_1111, $0000ffff, $00000000, $ffff0000, $ffffffff, $ffffffff, $0, $0, $0
+            long    %0000_0000_0001_1111, $0000ffff, $00000000, $0000ffff, $00000000, $0, $0, $0, $0
+            long    %0000_0000_0000_1111, $0000ffff, $ffff0000, $00000000, $00000000, $0, $0, $0, $0
+            long    %0000_0000_0000_0111, $0000ffff, $0000ffff, $00000000, $00000000, $0, $0, $0, $0
+            long    %0000_0000_0000_0010, $ffff0000, $00000000, $00000000, $00000000, $0, $0, $0, $0
+
+mouse32bpp  long    %0000_0000_0000_0001, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            long    %0000_0000_0000_0011, -1,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            long    %0000_0000_0000_0111, -1, 0,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            long    %0000_0000_0000_1111, -1, 0, 0,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            long    %0000_0000_0001_1111, -1, 0, 0, 0,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            long    %0000_0000_0011_1111, -1, 0, 0, 0, 0,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            long    %0000_0000_0111_1111, -1, 0, 0, 0, 0, 0,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            long    %0000_0000_1111_1111, -1, 0, 0, 0, 0, 0, 0,-1, 0, 0, 0, 0, 0, 0, 0, 0
+            long    %0000_0001_1111_1111, -1, 0, 0, 0, 0, 0, 0, 0,-1, 0, 0, 0, 0, 0, 0, 0
+            long    %0000_0011_1111_1111, -1, 0, 0, 0, 0, 0, 0, 0, 0,-1, 0, 0, 0, 0, 0, 0
+            long    %0000_0111_1111_1111, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0,-1, 0, 0, 0, 0, 0
+            long    %0000_0011_1111_1111, -1, 0, 0, 0, 0,-1,-1,-1,-1,-1, 0, 0, 0, 0, 0, 0
+            long    %0000_0000_0001_1111, -1, 0, 0, 0,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            long    %0000_0000_0000_1111, -1, 0, 0,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            long    %0000_0000_0000_0111, -1, 0,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            long    %0000_0000_0000_0010,  0,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+
+fontvga16   file    "fontvga16"     
+fontcga8    file    "fontcga8"
+'fontega14   file    "fontega14"
+'font6       file    "font6"
+
+linebuffer1 long    0[3840]
+linebuffer2 long    0[3840]
+
+features	
+            file    "features.txt"
+	    long    0
+screenbuf1  word    0[4000]
+screenbuf2  word    0[4000]
+
+framebuf1
+framebuf2
+	    file   "birds.bmp"

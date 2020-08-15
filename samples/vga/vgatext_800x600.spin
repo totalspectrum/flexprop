@@ -1,4 +1,10 @@
 ''
+'' 800x600 VGA sample
+'' as-is this is set up for an 8x15 font, but that's easily
+'' changed in the settings below
+''
+
+''
 '' clock frequency settings
 '' for 800x600 we use a 40 MHz pixel clock
 '' which x4 gives a 160 MHz system clock
@@ -12,6 +18,7 @@ CON
 
   COLS = 100   ' (8*100 == 800)
   ROWS = 40    ' (40*15 == 600)
+  FONT_WIDTH = 8
   FONT_HEIGHT = 15
   CELL_SIZE = 4  ' bytes per character: use 1 for monochrome, 2 for 4 bit color, 4 for 8bpp colors, 8 for 24bpp colors
 
@@ -21,14 +28,14 @@ DAT
 '
 	long
 fontdata
-	file "unscii-16.fnt"
+	file "unscii-16.bin"
 
 VAR
     long params[40]
     byte screen_buffer[COLS*ROWS*CELL_SIZE]
 
 OBJ
-    vga: "vga_tile_driver.spin2"
+    vga: "vga_tile_driver.spin"
 
 PUB start(pinbase) | i, pclkscale, pclk, sysclk, x, fontptr
   ' calculate clock frequency
@@ -47,8 +54,8 @@ PUB start(pinbase) | i, pclkscale, pclk, sysclk, x, fontptr
   params[i++] := @screen_buffer	' screen buffer
   params[i++] := COLS           ' screen columns
   params[i++] := ROWS           ' screen rows
-  params[i++] := fontptr	' font data: skip first row
-  params[i++] := 8		' font width
+  params[i++] := fontptr	' font data: skip first row for 8x15
+  params[i++] := FONT_WIDTH	' font width
   params[i++] := FONT_HEIGHT    ' font height
   params[i++] := pclkscale 'fset           ' pixel clock scaling value
   params[i++] := 40           ' horizontal front porch

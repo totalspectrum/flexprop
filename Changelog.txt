@@ -1,3 +1,68 @@
+Version 4.3.1
+- Updated fastspin to include bug fixes
+
+Version 4.3.0
+- Fixed "Terminal only" special command
+- Added debug enable/disable to menu
+
+Version 4.2.6
+- No GUI changes
+
+Version 4.2.5
+- Added menu options for changing warning level
+- Fixed clicking on links (filenames) containing colons in the editor
+- Fixed some issues with auto-indent and made the indent level match
+  the selected tab stops
+
+Version 4.2.4
+- No GUI changes
+
+Version 4.2.3
+- Fixed autoindent behavior when } is at start of line
+
+Version 4.2.2
+- Added an automatic indentation option.
+- Improved syntax highlighting of numbers.
+- Made listing window use preferred font.
+
+Version 4.2.0
+- Added general compiler documentation.
+
+Version 4.1.11
+- Fixed a problem with P1 PropLoader startup timing
+
+Version 4.1.10
+- Fixed "Run binary on device" when no tabs open
+- Added option to rescan ports, and to look for WiFi devices for P1
+
+Version 4.1.9
+- Added syntax coloring for BASIC
+- Turned on syntax coloring by default
+
+Version 4.1.8
+- Preliminary (and not very satisfying) implementation of syntax coloring.
+
+Version 4.1.7
+- Fixed a problem with finding include files in error messages
+
+Version 4.1.6
+- Fixed packaging problem that included flexgui.exe twice
+- Fixed P1 flash command not showing correctly in dialog
+
+Version 4.1.5
+- Minor change to find dialog box to put the cursor at the end
+- Fixed a bug with startup code trying to open a renamed file
+- Fixed title on library directory dialog box
+
+Version 4.1.4b
+- Fixed startup code OPENFILES error
+
+Version 4.1.4
+- Added option to save session (so open files are reloaded at startup)
+
+Version 4.1.3
+- Fixed packaging of PropLoader
+
 Version 4.1.2
 - Added links for loading include files
 

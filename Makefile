@@ -55,14 +55,14 @@ endif
 # binaries to make
 #
 
-EXEBINFILES=bin/fastspin.exe bin/loadp2.exe bin/fastspin.mac bin/loadp2.mac bin/mac_terminal.sh
+EXEBINFILES=bin/fastspin.exe bin/loadp2.exe bin/fastspin.mac bin/loadp2.mac bin/mac_terminal.sh 
 EXEFILES=flexgui.exe $(EXEBINFILES)
 
 ifdef OPENSPIN
-WIN_BINARIES=$(EXEFILES) bin/proploader.exe
+WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe bin/proploader.mac
 NATIVE_BINARIES=bin/fastspin bin/loadp2 bin/proploader
 else
-WIN_BINARIES=$(EXEFILES)
+WIN_BINARIES=$(EXEBINFILES)
 NATIVE_BINARIES=bin/fastspin bin/loadp2
 endif
 
@@ -97,8 +97,8 @@ WINTK_LIBS = $(TCLROOT)/tk/win/libtk87.a $(TCLROOT)/tk/win/libtkstub87.a $(TCLRO
 VPATH=.:spin2cpp/doc
 
 ifdef PANDOC_EXISTS
-PDFFILES=spin2cpp/Fastspin.pdf spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
-HTMLFILES=spin2cpp/Fastspin.html spin2cpp/doc/basic.html spin2cpp/doc/c.html spin2cpp/doc/spin.html
+PDFFILES=spin2cpp/Fastspin.pdf spin2cpp/doc/general.pdf spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
+HTMLFILES=spin2cpp/Fastspin.html spin2cpp/doc/general.html spin2cpp/doc/basic.html spin2cpp/doc/c.html spin2cpp/doc/spin.html
 endif
 
 #
@@ -115,9 +115,9 @@ BOARDFILES=board/P2ES_flashloader.bin board/P2ES_flashloader.spin2 board/P2ES_sd
 
 SIGN ?= ./spin2cpp/sign.dummy.sh
 
-flexgui.zip: flexgui_base $(WIN_BINARIES)
+flexgui.zip: flexgui_base flexgui.exe $(WIN_BINARIES)
 	cp -r flexgui.exe flexgui/
-	cp -r $(EXEBINFILES) flexgui/bin
+	cp -r $(WIN_BINARIES) flexgui/bin
 	rm -f flexgui.zip
 	zip -r flexgui.zip flexgui
 
@@ -145,6 +145,9 @@ clean:
 	rm -rf loadp2/board/*.bin
 	rm -rf samples/*.elf samples/*.binary samples/*~
 	rm -rf samples/*.lst samples/*.pasm samples/*.p2asm
+# NOTE: we cannot delete samples/*/*.binary because we need
+# some of them
+	rm -rf samples/*/*.elf samples/*/*~
 	rm -rf samples/*/*.lst samples/*/*.pasm samples/*/*.p2asm
 	rm -rf samples/$(SUBSAMPLES)/*.binary
 	rm -rf $(RESOBJ)
@@ -217,6 +220,10 @@ bin/proploader.exe: proploader-msys-build/bin/proploader.exe
 	mkdir -p bin
 	cp $< $@
 
+bin/proploader.mac: proploader-macosx-build/bin/proploader
+	mkdir -p bin
+	cp $< $@
+
 bin/loadp2.exe: loadp2/build-win32/loadp2.exe
 	mkdir -p bin
 	cp $< $@
@@ -226,11 +233,20 @@ bin/loadp2.exe: loadp2/build-win32/loadp2.exe
 spin2cpp/build-win32/fastspin.exe:
 	make -C spin2cpp CROSS=win32
 
+ifneq ($(OS),msys)
 proploader-msys-build/bin/proploader.exe:
 	make -C PropLoader CROSS=win32
+endif
 
+ifneq ($(OS),macosx)
+proploader-macosx-build/bin/proploader:
+	make -C PropLoader CROSS=macosx
+endif
+
+ifneq ($(OS),msys)
 loadp2/build-win32/loadp2.exe:
 	make -C loadp2 CROSS=win32
+endif
 
 $(RESOBJ): $(RES_RC)
 	$(WINRC) -o $@ --define STATIC_BUILD --include "$(TCLROOT)/tk/generic" --include "$(TCLROOT)/tcl/generic" --include "$(RESDIR)" "$<"

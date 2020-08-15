@@ -42,8 +42,25 @@ bugs (if the program works with no optimization but fails with
 optimization enabled, then either there's a timing issue or a compiler
 bug).
 
-"Full Optimization" may produce faster code, but it will typically
+"Default optimization" is the normal level of optimization.
+
+"Full Optimization" will often produce faster code, but it will typically
 consume more resources (including COG memory).
+
+"No extra warnings" means the compiler will only warn about serious
+problems.
+
+"Debug disabled" turns off all DEBUG messages in Spin2 files (this is
+the default). 
+
+"Debug enabled" turns on DEBUG, allowing the DEBUG() statements to be
+compiled and executed. Note that not all Spin2 DEBUG() commands are
+supported; see the general documentation for details.
+
+"Enable compatibility warnings" will cause the compiler to also warn
+about some differences between fastspin and the official Spin2
+compiler. Fixing these warnings will make porting your code to the
+Parallax compiler easier (although there still may be issues!)
 
 The "Editor Options..." dialog allows you to change the way the source
 code editor looks, e.g. changing the font used for the text, or the
@@ -51,6 +68,9 @@ tab settings. It also lets you change the font used for the compiler
 output window, and has an option to automatically load files changed
 by external programs (normally flexgui will prompt you to reload if
 it notices a change).
+
+The "Save session on exit" option, if enabled, causes the editor to reload any
+previously open files each time it is started.
 
 ### Commands
 
@@ -70,7 +90,7 @@ use for flashing may be selected with the "Choose P2 flash program..."
 menu. For example, choosing "P2ES_sdcard.bin" will cause the binary
 to be placed on an SD card instead of in the SPI flash.
 
-### Serial
+### Ports
 
 Presents a menu of serial port speeds and ports that may be selected.
 The default is to tell the loader program (loadp2 or proploader) to
