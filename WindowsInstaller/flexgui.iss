@@ -132,6 +132,7 @@ UninstallDisplayName={#PRODNAME}
 PrivilegesRequired=admin
 
 [Components]
+Name: "docs";           Description: "Install Documentation";                    Types: full custom
 Name: "samples";        Description: "Install Sample Code in {#DATADIR} folder"; Types: full custom
 
 [InstallDelete]
@@ -150,23 +151,23 @@ Name:     "{#DATADIR}"
 ; be added to the InstallDelete section.
 
 Source:   "flexgui.exe";                DestDir: "{app}";                             Flags: ignoreversion;
-Source:   "flexgui.tcl";                DestDir: "{app}";
- Source:   "src\*";                      DestDir: "{app}\src";                         Flags: ignoreversion recursesubdirs;
-Source:   "License.txt";                DestDir: "{app}";
-Source:   "README.md";                  DestDir: "{app}";
+Source:   "flexgui.tcl";                DestDir: "{app}";                             Flags: ignoreversion;
+Source:   "src\*";                      DestDir: "{app}\src";                         Flags: ignoreversion recursesubdirs;
+Source:   "License.txt";                DestDir: "{app}";                             Flags: ignoreversion;
+Source:   "README.md";                  DestDir: "{app}";                             Flags: ignoreversion;
 
 Source:   "bin\fastspin.exe";           DestDir: "{app}\bin";                         Flags: ignoreversion
 Source:   "bin\loadp2.exe";             DestDir: "{app}\bin";                         Flags: ignoreversion; 
 Source:   "bin\proploader.exe";         DestDir: "{app}\bin";                         Flags: ignoreversion; 
 
- Source:   "board\*";                    DestDir: "{app}\board";                       Flags: ignoreversion recursesubdirs; 
+Source:   "board\*";                    DestDir: "{app}\board";                       Flags: ignoreversion recursesubdirs; 
 
- Source:   "doc\*";                      DestDir: "{app}\doc";                         Flags: ignoreversion recursesubdirs;
+Source:   "doc\*";                      DestDir: "{app}\doc";                         Flags: ignoreversion recursesubdirs; Components: docs
 
- Source:   "include\*";                  DestDir: "{app}\include";                     Flags: ignoreversion recursesubdirs;
+Source:   "include\*";                  DestDir: "{app}\include";                     Flags: ignoreversion recursesubdirs;
 
 ; Samples will not be erased at uninstall time, in case the user made changes
- Source:   "samples\*";                  DestDir: "{#DATADIR}\samples";                Flags: ignoreversion recursesubdirs uninsneveruninstall; Components: samples
+Source:   "samples\*";                  DestDir: "{#DATADIR}\samples";                Flags: ignoreversion recursesubdirs uninsneveruninstall; Components: samples
 
 [Icons]
 Name:     "{group}\{#PRODNAME}";        Filename: "{app}\flexgui.exe"; WorkingDir: "{#DATADIR}";
@@ -180,3 +181,49 @@ Type: files; Name: "{%USERPROFILE}\.flexgui.config"
 [Run]
 Filename: {app}\flexgui.exe;            Description: "Launch {#SHORTPROD} after installation"; Flags: nowait postinstall skipifsilent
 
+[Code]
+
+{
+  This procedure changes the location of the configuration file from the
+  install directory ($ROOTDIR) which is read-only, to the user's home
+  directory ($::env(HOME)).
+}
+procedure ChangeConfigLocation(FileName: string);
+var
+  S: string;
+  LineCount: Integer;
+  SectionLine: Integer;    
+  Lines: TArrayOfString;
+begin
+  if LoadStringsFromFile(FileName, Lines) then
+  begin
+    Log('Changing file: ' + FileName);
+    LineCount := GetArrayLength(Lines);
+    for SectionLine := 0 to LineCount - 1 do
+    begin
+      S := Lines[SectionLine];
+
+      if (Copy(S, 1, 16) = 'set CONFIG_FILE ') then
+      begin
+        Log('CONFIG location found: ' + S);
+        StringChangeEx(Lines[SectionLine], '$ROOTDIR', '$::env(HOME)', False);
+        Log('Replaced by: ' + Lines[SectionLine]);
+        Break;
+      end;
+    end;
+    SaveStringsToFile(FileName, Lines, False);
+  end;
+end;
+
+{
+  Override for built-in procedure that gets called at the beginning of each
+  installer step. The override is needed so we can change the configuration
+  file location.
+}
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if (CurStep = ssPostInstall) then
+  begin
+    ChangeConfigLocation(ExpandConstant('{app}\src\gui.tcl'));
+  end;
+end;
