@@ -1,7 +1,7 @@
-//
+/*
 // Copyright 2016-2019 Total Spectrum Software Inc.
 // MIT Licensed; see LICENSE for exact terms
-//
+*/
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -12,15 +12,22 @@
 #include <ctype.h>
 
 #ifdef __propeller__
+#ifndef NO_SETJMP
+#define USE_SETJMP
+#endif
+#endif
+
+#ifdef USE_SETJMP
 #include <setjmp.h>
 #endif
 
-// define this to do some brain-dead optimization on
+/* define this to do some brain-dead optimization on
 // lambda bodies (basically just looking up variables ahead
 // of time)
 //#define OPTIMIZE_LAMBDA 1
+*/
 
-#ifdef __propeller__
+#ifdef USE_SETJMP
 jmp_buf break_buf;
 #endif
 
@@ -30,19 +37,19 @@ static Cell *doLookup(Cell *name, Cell *env, int stopOnBoundary);
 
 /* our context */
 static struct LispContext {
-    Cell *globalEnv;  // the root environment for definitions
-    Cell *globalTrue; // the default "true" value
-    Cell *globalQuote; // the quote function
+    Cell *globalEnv;  /* the root environment for definitions */
+    Cell *globalTrue; /* the default "true" value */
+    Cell *globalQuote; /* the quote function */
 
-    Cell *freeList;   // list of free nodes
-    Cell *base;        // base of memory
-    size_t totalCells; // number of cells in memory
-    size_t freeCells;  // number of free cells
+    Cell *freeList;    /* list of free nodes */
+    Cell *base;        /* base of memory */
+    size_t totalCells; /* number of cells in memory */
+    size_t freeCells;  /* number of free cells */
 
     uintptr_t *stackTop;
 } *lc;
 
-// mark all cells free, pending sweep for used cells
+/* mark all cells free, pending sweep for used cells */
 static void MarkFree(void) {
     size_t i, n;
     Cell *ptr = lc->base;
@@ -53,8 +60,8 @@ static void MarkFree(void) {
     }
 }
 
-// collect all free cells into our free list
-// and clear the "used" bit on others
+/* collect all free cells into our free list */
+/* and clear the "used" bit on others */
 static void CollectFree(void) {
     size_t i, n;
     Cell *ptr = lc->base;
@@ -78,8 +85,8 @@ static void CollectFree(void) {
 
 static void InitGC(void *base, size_t size) {
     lc->base = base;
-    lc->totalCells = (size / sizeof(Cell)) - 1; // reserve one for free list
-    lc->stackTop = (uintptr_t *)&size;  // for garbage collection
+    lc->totalCells = (size / sizeof(Cell)) - 1; /* reserve one for free list */
+    lc->stackTop = (uintptr_t *)&size;  /* for garbage collection */
     MarkFree();
     CollectFree();
 }
@@ -87,7 +94,7 @@ static void InitGC(void *base, size_t size) {
 static void MarkUsed(Cell *ptr) {
     int typ;
     if (!ptr) return;
-    if (GetUsed(ptr)) return; // already visited
+    if (GetUsed(ptr)) return; /* already visited */
     SetUsed(ptr);
     typ = GetType(ptr);
     switch (typ) {
@@ -127,20 +134,22 @@ static void markStack(uintptr_t *low, uintptr_t *high)
 static void doGC() {
     uintptr_t i;
 
-    // mark everything as free
+    /* mark everything as free */
     MarkFree();
 
-    // mark the ones used in our environment
+    /* mark the ones used in our environment */
     MarkUsed(lc->globalEnv);
 
+    /*
     // now see if anything on the stack looks like
     // it might be a pointer into our arena;
     // if so, mark it used
+    */
     markStack(&i, lc->stackTop);
     CollectFree();
 }
 
-// allocate 1 cell
+/* allocate 1 cell */
 
 Cell *GCAlloc(void) {
     Cell *r;
@@ -170,7 +179,7 @@ Cell *AllocPair(int typ, Cell *head, Cell *tail)
     return AllocRawPair(typ, FromPtr(head), FromPtr(tail));
 }
 
-// cons two cells
+/* cons two cells */
 Cell *Cons(Cell *head, Cell *tail)
 {
     Cell *r;
@@ -345,10 +354,10 @@ static void PrintSymbol(Cell *str) {
     }
 }
 
-//
+/*
 // print a cell
 // always returns NULL
-//
+*/
 
 static Cell *PrintList(Cell *str) {
     while (str) {
@@ -375,7 +384,7 @@ static Cell *PrintList(Cell *str) {
 Cell *Lisp_Print(Cell *str) {
     int typ;
 
-//    printcstr("[");
+/*   printcstr("["); */
     typ = GetType(str);
     switch (typ) {
     case CELL_NUM:
@@ -399,7 +408,7 @@ Cell *Lisp_Print(Cell *str) {
         PrintList(str);
         printchar(')');
     }
-//    printcstr("]");
+/*    printcstr("]"); */
     return lc->globalTrue;
 }
 
@@ -412,13 +421,13 @@ static Cell *undefSymbol(Cell *name)
 }
 
 
-// quote
+/* quote */
 Cell *Quote(Cell *a)
 {
     return a;
 }
 
-// head of list
+/* head of list */
 Cell *Head(Cell *x)
 {
     if (IsPair(x)) {
@@ -434,17 +443,19 @@ Cell *Tail(Cell *x)
     return NULL;
 }
 
+/*
 // define a new value, or redefine an existing one
 // in the current environment
 // returns the value defined
+*/
 static Cell *doDefine(Cell *name, Cell *val, Cell *env)
 {
     Cell *holder;
     Cell *x;
     Cell *envtail;
 
-    // look for it in the current environment
-    x = doLookup(name, env, 1); // stop at environment boundaries
+    /* look for it in the current environment */
+    x = doLookup(name, env, 1); /* stop at environment boundaries */
     if (x && GetType(x) == CELL_REF) {
         SetTail(x, val);
         return val;
@@ -457,7 +468,7 @@ static Cell *doDefine(Cell *name, Cell *val, Cell *env)
     return val;
 }
 
-// check for string equality
+/* check for string equality */
 int
 stringCmp(Cell *a, Cell *b)
 {
@@ -471,10 +482,12 @@ stringCmp(Cell *a, Cell *b)
         a = GetTail(a);
         b = GetTail(b);
     }
+    /*
     // at this point there are 3 cases:
     // a and b both NULL -> success
     // a is non-NULL, b is NULL -> a is longer, so return positive
     // b is non-NULL, a is NULL -> b is longer, return negative
+    */
     if (a) {
         return 1;
     }
@@ -484,11 +497,13 @@ stringCmp(Cell *a, Cell *b)
     return 0;
 }
 
+/*
 // check to see if two cells are equal
 // numbers and functions are equal if they have the same values
 // strings are equal if they match character for character
 // otherwise they cells must be the same
 // returns globalTrue if true, NULL if false
+*/
 
 static Cell *doMatch(Cell *a, Cell *b, Cell *trueval, Cell *falseval)
 {
@@ -521,14 +536,14 @@ Cell *NoMatch(Cell *a, Cell *b)
     return doMatch(a, b, NULL, lc->globalTrue);
 }
 
-// find a symbol ref
+/* find a symbol ref */
 static Cell *doLookup(Cell *name, Cell *env, int stopOnBoundary)
 {
     Cell *holder = NULL;
     Cell *hname = NULL;
 
     if (GetType(name) == CELL_REF) {
-        return name; // already a reference
+        return name; /* already a reference */
     }
     env = Tail(env);
     while (env) {
@@ -550,7 +565,7 @@ static Cell *doLookup(Cell *name, Cell *env, int stopOnBoundary)
 
 Cell *Lookup(Cell *name, Cell *env)
 {
-    return doLookup(name, env, 0);  // never stop at an environment boundary
+    return doLookup(name, env, 0);  /* never stop at an environment boundary */
 }
 
 Cell *ReadListFromString(const char **str_p);
@@ -563,7 +578,7 @@ Cell *ReadQuotedString(const char **str_p) {
         c = *str++;
         if (!c) break;
         if (c == '"') {
-            // two quotes in a row stands for one quote
+            /* two quotes in a row stands for one quote */
             if (*str == '"') {
                 str++;
             } else {
@@ -597,26 +612,26 @@ again:
         c = *str++;
     } while (isspace(c));
     if (c == ';') {
-        // skip to end of line
+        /* skip to end of line */
         do {
             c = *str++;
         } while (c && c != '\n');
         if (c) goto again;
     }
     *str_p = str;
-    // collect the next token
+    /* collect the next token */
     if (startoflist(c)) {
         return ReadListFromString(str_p);
     }
     if (endoflist(c)) {
-        *str_p = str - 1; // put back the delimiter
+        *str_p = str - 1; /* put back the delimiter */
         return NULL;
     }
     if (c == '"') {
         return ReadQuotedString(str_p);
     }
     if (c == '\'') {
-        // quoted item
+        /* quoted item */
         result = ReadItemFromString(str_p);
         return Cons(lc->globalQuote, Cons(result, NULL));
     }
@@ -631,12 +646,12 @@ again:
     } while (c != 0 && !isspace(c) && !endoflist(c));
 
     if (!endoflist(c)) {
-        // skip delimiter
+        /* skip delimiter */
         *str_p = str;
     } else {
         *str_p = str-1;
     }
-    // test here for numbers, symbols, etc.
+    /* test here for numbers, symbols, etc. */
     if (alldigits) {
         return StringToNum(result);
     }
@@ -654,13 +669,13 @@ Cell *ReadListFromString(const char **str_p)
     for(;;) {
         x = ReadItemFromString(str_p);
         if (!x) {
-            // is there more stuff in the string?
+            /* is there more stuff in the string? */
             str = *str_p;
             c = *str;
             if (endoflist(c)) {
                 if (c) str++;
                 *str_p = str;
-                // nope, no more stuff
+                /* nope, no more stuff */
                 break;
             }
         }
@@ -687,30 +702,34 @@ Cell *Contains(Cell *list, Cell *target) {
 }
 #endif
 
-// helper function for Lambda: lookup references when we can
+/* helper function for Lambda: lookup references when we can */
 static Cell *Compile(Cell *body, Cell *exclude, Cell *env) {
 #ifdef OPTIMIZE_LAMBDA
+    /*
     // we need to avoid capture of arguments
     // FIXME: what about defines within the body!?
     //        avoid that by just making define global
+    */
     Cell *r, *t, *h;
     if (!body) {
         return NULL;
     }
     if (GetType(body) == CELL_SYMBOL) {
-        // avoid arg capture
+        /* avoid arg capture */
         if (exclude && Contains(exclude, body)) {
             return body;
         }
-        // OK, see if it's in the parent environment
+        /* OK, see if it's in the parent environment */
         r = Lookup(body, env);
         if (r) {
+            /*
             // note that this won't work if
             // the user has defined a local variable that shadows r
             // but is not a parameter; we work around this
             // by just disallowing it (let expands to a lambda,
             // so it's a parameter, and we've made define work
             // on the top level environment only)
+            */
             return r;
         }
     }
@@ -725,10 +744,10 @@ static Cell *Compile(Cell *body, Cell *exclude, Cell *env) {
     return body;
 }
 
-//
+/*
 // lambda creates a function as follows:
 // ( (args, env) body )
-//
+*/
 
 Cell *Lambda(Cell *args, Cell *body, Cell *env)
 {
@@ -737,19 +756,19 @@ Cell *Lambda(Cell *args, Cell *body, Cell *env)
     Cell *newenv = Cons(NULL, oldenv);
     Cell *r;
 
-    // fixme some sanity checking here would be nice!
+    /* fixme some sanity checking here would be nice! */
     descrip = Cons(args, newenv);
-    // do any optimization we can
+    /* do any optimization we can */
     body = Compile(body, args, newenv);
-    // now create the pair
+    /* now create the pair */
     r = AllocPair(CELL_FUNC, descrip, body);
     return r;
 }
 
-Cell *Eval(Cell *expr, Cell *env); // forward declaration
+Cell *Eval(Cell *expr, Cell *env); /* forward declaration */
 
-// evaluate each member of a list
-// return a new list containing the evaluated values
+/* evaluate each member of a list */
+/* return a new list containing the evaluated values */
 Cell *EvalList(Cell *list, Cell *env)
 {
     Cell *result;
@@ -796,7 +815,7 @@ static Cell *applyCfunc(Cell *fn, Cell *args, Cell *env)
     B = GetTail(fn);
     argstr = B->args;
     rettype = *argstr++;
-    // now extract arguments
+    /* now extract arguments */
     i = 0;
     while ( 0 != (c = *argstr++) && i < MAX_C_ARGS) {
         if (c == 'e') {
@@ -806,7 +825,7 @@ static Cell *applyCfunc(Cell *fn, Cell *args, Cell *env)
         if (c == 'v') {
             argv[i++] = EvalList(args, env);
             args = NULL;
-            continue;  // there may be an 'e' specification
+            continue;  /* there may be an 'e' specification */
         }
         argv[i] = args ? GetHead(args) : 0;
         if (islower(c)) {
@@ -835,7 +854,7 @@ static Cell *applyCfunc(Cell *fn, Cell *args, Cell *env)
 
 static Cell *DefineOneArg(Cell *name, Cell *val, Cell *newenv, Cell *origenv)
 {
-    // special case: 'X means X gets the arg unevaluated
+    /* special case: 'X means X gets the arg unevaluated */
     if (Head(name) == lc->globalQuote) {
         name = Head(Tail(name));
     } else {
@@ -871,17 +890,17 @@ static Cell *applyLambda(Cell *fn, Cell *args, Cell *env)
     newenv = GetTail(newenv);
     newenv = AllocPair(CELL_PAIR, 0, GetTail(newenv));
 
-    // now define arguments if we need to
+    /* now define arguments if we need to */
     if (IsPair(argdescrip)) {
         if (Head(argdescrip) == lc->globalQuote) {
-            // this one argument gets the whole list, unevaluated
+            /* this one argument gets the whole list, unevaluated */
             argdescrip = Tail(argdescrip);
             doDefine(Head(argdescrip), args, newenv);
         } else if (!DefineArgs(argdescrip, args, newenv, env)) {
             return NULL;
         }
     } else {
-        // this argument gets the whole list, evaluated
+        /* this argument gets the whole list, evaluated */
         doDefine(argdescrip, EvalList(args, env), newenv);
     }
     return Eval(body, newenv);
@@ -911,11 +930,11 @@ Cell *Eval(Cell *expr, Cell *env)
     Cell *r;
     Cell *f, *args;
 
-#ifdef __propeller__
+#ifdef USE_SETJMP
     int c = peekchar();
-    // the test below checks for either ^B or ^C
+    /* the test below checks for either ^B or ^C */
     if ( (c & 0xfe) == 2 ) {
-        // break
+        /* break */
         longjmp(break_buf, 1);
     }
 #endif
@@ -995,10 +1014,10 @@ Cell *Ge(int x, int y) { return (x >= y) ? lc->globalTrue : NULL; }
 Cell *Define(Cell *name, Cell *val) { return doDefine(name, val, lc->globalEnv); }
 
 LispCFunction cdefs[] = {
-    // quote must come first
+    /* quote must come first */
     { "quote", "ccc", (GenericFunc)Quote },
 
-    // remember: return val, then args in the C string
+    /* remember: return val, then args in the C string */
     { "lambda", "cCCe", (GenericFunc)Lambda },
     { "gcfree", "n", (GenericFunc)GCFree },
     { "eval", "cce", (GenericFunc)Eval },
@@ -1024,7 +1043,7 @@ LispCFunction cdefs[] = {
     { "*", "nnn", (GenericFunc)Times },
     { "-", "nnn", (GenericFunc)Minus },
     { "+", "nnn", (GenericFunc)Plus },
-    { NULL, NULL, NULL }
+    { NULL, NULL, (GenericFunc)0 }
 };
 
 Cell *Lisp_DefineCFunc(LispCFunction *f)
@@ -1042,7 +1061,7 @@ Lisp_Init(void *arena, size_t arenasize)
     LispCFunction *f;
 
     if (arenasize <= (4*sizeof(*lc))) {
-        return NULL; // not nearly enough memory to be useful
+        return NULL; /* not nearly enough memory to be useful */
     }
     lc = (struct LispContext *)arena;
     memset(lc, 0, sizeof(*lc));
@@ -1066,17 +1085,17 @@ Lisp_Init(void *arena, size_t arenasize)
 }
 
 #ifndef __propeller__
-// useful for calling from gdb, so only for debugging
+/* useful for calling from gdb, so only for debugging */
 void debug(Cell *x) {
     Lisp_Print(x);
     printf("\n");
 }
 #endif
 
-//
+/*
 // run a lisp script
 // (series of lisp expressions
-//
+*/
 
 Cell *Lisp_Eval(Cell *x) {
     return Eval(x, lc->globalEnv);
@@ -1086,7 +1105,7 @@ Cell *Lisp_Run(const char *buffer, int printIt)
 {
     Cell *r = NULL;
 
-#ifdef __propeller__
+#ifdef USE_SETJMP
     if (setjmp(break_buf) != 0) {
         outstr("\r\nbreak");
         return NULL;
@@ -1101,7 +1120,7 @@ Cell *Lisp_Run(const char *buffer, int printIt)
             Lisp_Print(r);
             printchar('\n');
         }
-        // ignore spurious close parens
+        /* ignore spurious close parens */
         while (*buffer == ')') buffer++;
     }
     return r;

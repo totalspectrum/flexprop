@@ -73,6 +73,7 @@ set COMPORT " "
 set OPT "-O1"
 set COMPRESS "-z0"
 set WARNFLAGS "-Wnone"
+set DEBUG_OPT "-gnone"
 set PROP_VERSION ""
 set OPENFILES ""
 set config(showlinenumbers) 1
@@ -222,6 +223,7 @@ proc config_open {} {
     global OPT
     global COMPRESS
     global WARNFLAGS
+    global DEBUG_OPT
     global COMPORT
     global OPENFILES
     
@@ -254,6 +256,10 @@ proc config_open {} {
 	    warnflags {
 		# set warning flags
 		set WARNFLAGS [lindex $data 1]
+	    }
+	    debugopt {
+		# set warning flags
+		set DEBUG_OPT [lindex $data 1]
 	    }
 	    comport {
 		# set optimize level
@@ -289,6 +295,7 @@ proc config_save {} {
     global OPT
     global COMPRESS
     global WARNFLAGS
+    global DEBUG_OPT
     global COMPORT
     global OPENFILES
     
@@ -303,6 +310,7 @@ proc config_save {} {
     puts $fp "comport\t\{$COMPORT\}"
     puts $fp "openfiles\t\{$OPENFILES\}"
     puts $fp "warnflags\t\{$WARNFLAGS\}"
+    puts $fp "debugopt\t\{$DEBUG_OPT\}"
     foreach i [array names config] {
 	if {$i != ""} {
 	    puts $fp "$i\t\{$config($i)\}"
@@ -1267,6 +1275,9 @@ menu .mbar.help -tearoff 0
 .mbar.options add separator
 .mbar.options add radiobutton -label "No extra warnings" -variable WARNFLAGS -value "-Wnone"
 .mbar.options add radiobutton -label "Enable compatibility warnings" -variable WARNFLAGS -value "-Wall"
+.mbar.options add separator
+.mbar.options add radiobutton -label "Debug disabled" -variable DEBUG_OPT -value "-gnone"
+.mbar.options add radiobutton -label "Debug enabled" -variable DEBUG_OPT -value "-g"
 #.mbar.options add separator
 #.mbar.options add radiobutton -label "No Compression" -variable COMPRESS -value "-z0"
 #.mbar.options add radiobutton -label "Compress Code" -variable COMPRESS -value "-z1"
@@ -1308,7 +1319,7 @@ set comport_last [.mbar.comport index end]
 .mbar.special add command -label "Load current buffer into proplisp on P2" -command { doSpecial "samples/proplisp/lisp.binary" [scriptSendCurFile] }
 .mbar.special add separator
 .mbar.special add command -label "Enter P2 ROM monitor" -command { doSpecial "-xDEBUG" "" }
-.mbar.special add command -label "Terminal only" -command { doSpecial "-n" "" }
+.mbar.special add command -label "Terminal only" -command { doSpecial "-n" "-t" }
 
 .mbar add cascade -menu .mbar.help -label Help
 .mbar.help add command -label "GUI" -command { doHelp "$ROOTDIR/doc/help.txt" "Help" }
@@ -1563,16 +1574,21 @@ proc mapPercent {str} {
     global ROOTDIR
     global OPT
     global WARNFLAGS
+    global DEBUG_OPT
     global COMPRESS
     global COMPORT
     global config
 
     set ourwarn $WARNFLAGS
+    set ourdebug $DEBUG_OPT
     if { "$ourwarn" eq "-Wnone" } {
 	set ourwarn ""
     }
+    if { "$ourdebug" eq "-gnone" } {
+	set ourdebug ""
+    }
 #    set fulloptions "$OPT $ourwarn $COMPRESS"
-    set fulloptions "$OPT $ourwarn"
+    set fulloptions "$OPT $ourwarn $ourdebug"
     if { $COMPORT ne " " } {
 	set fullcomport "$COMPORT"
     } else {

@@ -4,7 +4,7 @@ most will work on a Propeller1 board as well. Generally the samples
 use #ifdef __P2__ to determine whether they are on a P2 or a P1.
 
 blink1.bas:     BASIC program to blink an LED
-blink1.spin:    Same but for Spin (Only works on P2)
+blink1.spin2:   Same but for Spin (Only works on P2)
 blink2.bas:     BASIC program using 2 COGs to blink 2 LEDs
 blink3.spin:    Spin program to blink 3 LEDs using Spin method
 blink_all_cogs.spin: blink 8 LEDs using 8 COGs
