@@ -623,6 +623,32 @@ proc loadListingFile {filename} {
 }
 
 #
+# load a file into a toplevel window .help
+#
+proc loadHelpFile {filename title} {
+    global config
+    set viewpos 0
+    if {[winfo exists .help]} {
+	raise .help
+	set viewpos [.help.f.txt yview]
+	set viewpos [lindex $viewpos 0]
+	.help.f.txt configure -state enabled
+    } else {
+	toplevel .help
+	setupFramedText .help.f
+	grid columnconfigure .help 0 -weight 1
+	grid rowconfigure .help 0 -weight 1
+	grid .help.f -sticky nsew
+    }
+    setfont .help.f.txt $config(font)
+    loadFileToWindow $filename .help.f.txt
+    .help.f.txt yview moveto $viewpos
+    wm title .help [file tail $filename]
+    .help.f.txt configure -state disabled
+    .help.f.txt configure -linemap 0
+}
+
+#
 # load a file into a tab
 # the tab name is w
 # its title is title
@@ -875,9 +901,7 @@ proc doAbout {} {
 proc doHelp { file title } {
     global ROOTDIR
     
-    #loadFileToTab .p.nb.help "$ROOTDIR/doc/help.txt" "Help"
-    loadFileToTab .p.nb.help $file $title
-    makeReadOnly .p.nb.help.txt
+    loadHelpFile $file $title
 }
 
 proc doSpecial {name extraargs} {
@@ -1706,7 +1730,7 @@ proc doListing {} {
 	set LSTFILE [file rootname $filenames($w)]
 	set LSTFILE "$LSTFILE.lst"
 	loadListingFile $LSTFILE
-	makeReadOnly .list.f.txt
+	# makeReadOnly .list.f.txt # too much trouble
     }
 }
 
