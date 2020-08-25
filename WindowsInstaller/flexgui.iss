@@ -171,6 +171,7 @@ Source:   "samples\*";                  DestDir: "{#DATADIR}\samples";          
 
 [Icons]
 Name:     "{group}\{#PRODNAME}";        Filename: "{app}\flexgui.exe"; WorkingDir: "{#DATADIR}";
+Name:     "{group}\Documentation";      Filename: "{app}\doc";         WorkingDir: "{app}\doc"; Components: docs
 
 [UninstallDelete]
 ; Files that should go in here are files that weren't installed by the
