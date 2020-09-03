@@ -48,10 +48,10 @@ if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/fastspin.mac"] 
 # prefix for starting a command in a window
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start \"Propeller Output %p\""
-} elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
-    set WINPREFIX "/etc/alternatives/x-terminal-emulator -T \"Propeller Output %p\" -fs 14 -e"
 } elseif { [tk windowingsystem] == "aqua" } {
     set WINPREFIX $ROOTDIR/bin/mac_terminal.sh
+} elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
+    set WINPREFIX "/etc/alternatives/x-terminal-emulator -T \"Propeller Output %p\" -e"
 } else {
     set WINPREFIX "xterm -fs 14 -T \"Propeller Output %p\" -e"
 }
