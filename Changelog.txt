@@ -1,6 +1,7 @@
 Version 4.3.2
 - Changed help window to be separate rather than a tab
 - Made listing window editable
+- Removed "-fs 14" from terminal-emulator command line
 
 Version 4.3.1
 - Updated fastspin to include bug fixes
