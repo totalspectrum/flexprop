@@ -1,4 +1,4 @@
-Version 4.3.2
+Version 4.4.0
 - Changed help window to be separate rather than a tab
 - Made listing window editable
 - Removed "-fs 14" from terminal-emulator command line
