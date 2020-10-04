@@ -28,7 +28,7 @@ set tcl_nonwordchars {[^[:alnum:]_]}
 #
 
 # config file name
-set CONFIG_FILE "$::env(HOME)/.flexgui.config"
+set CONFIG_FILE "$ROOTDIR/.flexgui.config"
 
 # prefix for shortcut keys (Command on Mac, Control elsewhere)
 if { [tk windowingsystem] == "aqua" } {
