@@ -1,3 +1,7 @@
+Version 4.5.0
+- Renamed to FlexProp
+- Added C time sample
+
 Version 4.4.0
 - Changed help window to be separate rather than a tab
 - Made listing window editable
