@@ -1,19 +1,19 @@
 #
-# Makefile for flexgui
+# Makefile for flexprop
 #
 # Options:
 # make install INSTALL=dir
 #    Makes for Linux or Mac; requires Tcl/Tk to already be installed
 # make zip SIGN=sign_script
 #    Makes for Windows, linking against prebuild Tcl/Tk libraries in $(TCLROOT)
-#    Final output is in flexgui.zip
+#    Final output is in flexprop.zip
 #
 
 default: errmessage
-zip: flexgui.zip
+zip: flexprop.zip
 
 # where to install: default is $(HOME)/flexgui
-INSTALL ?= $(HOME)/flexgui
+INSTALL ?= $(HOME)/flexprop
 
 # detect OS
 ifndef OS
@@ -39,15 +39,15 @@ errmessage:
 	@echo "  make install"
 	@echo "  make zip SIGN=signscript"
 	@echo
-	@echo "make install copies flexgui to the INSTALL directory (default is $(HOME)/flexgui)"
-	@echo "for example to install in /opt/flexgui do:"
-	@echo "    make install INSTALL=/opt/flexgui"
+	@echo "make install copies flexprop to the INSTALL directory (default is $(HOME)/flexprop)"
+	@echo "for example to install in /opt/flexprop do:"
+	@echo "    make install INSTALL=/opt/flexprop"
 	@echo
-	@echo "make zip creates a flexgui.zip for Windows"
+	@echo "make zip creates a flexprop.zip for Windows"
 	@echo "    This requires cross tools and is probably not what you want"
 	@echo
 ifndef OPENSPIN
-	@echo "Note that the P1 version of flexgui depends on openspin being installed; if it is not,"
+	@echo "Note that the P1 version of flexprop depends on openspin being installed; if it is not,"
 	@echo "  then only P2 support is enabled"
 endif
 
@@ -56,7 +56,7 @@ endif
 #
 
 EXEBINFILES=bin/fastspin.exe bin/loadp2.exe bin/fastspin.mac bin/loadp2.mac bin/mac_terminal.sh 
-EXEFILES=flexgui.exe $(EXEBINFILES)
+EXEFILES=flexprop.exe $(EXEBINFILES)
 
 ifdef OPENSPIN
 WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe bin/proploader.mac
@@ -66,12 +66,12 @@ WIN_BINARIES=$(EXEBINFILES)
 NATIVE_BINARIES=bin/fastspin bin/loadp2
 endif
 
-install: flexgui_base $(NATIVE_BINARIES)
+install: flexprop_base $(NATIVE_BINARIES)
 	mkdir -p $(INSTALL)
-	mkdir -p flexgui/bin
-	cp -r $(NATIVE_BINARIES) flexgui/bin
-	cp -r mac_scripts/* flexgui/bin
-	cp -r flexgui/* $(INSTALL)
+	mkdir -p flexprop/bin
+	cp -r $(NATIVE_BINARIES) flexprop/bin
+	cp -r mac_scripts/* flexprop/bin
+	cp -r flexprop/* $(INSTALL)
 
 # where the Tcl and Tk source code are checked out (side by side)
 TCLROOT ?= /home/ersmith/src/Tcl
@@ -115,16 +115,16 @@ BOARDFILES=board/P2ES_flashloader.bin board/P2ES_flashloader.spin2 board/P2ES_sd
 
 SIGN ?= ./spin2cpp/sign.dummy.sh
 
-flexgui.zip: flexgui_base flexgui.exe $(WIN_BINARIES)
-	cp -r flexgui.exe flexgui/
-	cp -r $(WIN_BINARIES) flexgui/bin
-	rm -f flexgui.zip
-	zip -r flexgui.zip flexgui
+flexprop.zip: flexprop_base flexprop.exe $(WIN_BINARIES)
+	cp -r flexprop.exe flexprop/
+	cp -r $(WIN_BINARIES) flexprop/bin
+	rm -f flexprop.zip
+	zip -r flexprop.zip flexprop
 
-flexgui.exe: src/flexgui.c $(RESOBJ)
-	$(WINGCC) $(WINCFLAGS) -o flexgui.exe src/flexgui.c $(WINTK_INC) $(WINTK_LIBS)
-	$(SIGN) flexgui
-	mv flexgui.signed.exe flexgui.exe
+flexprop.exe: src/flexprop.c $(RESOBJ)
+	$(WINGCC) $(WINCFLAGS) -o flexprop.exe src/flexprop.c $(WINTK_INC) $(WINTK_LIBS)
+	$(SIGN) flexprop
+	mv flexprop.signed.exe flexprop.exe
 
 #
 # be careful to leave samples/upython/upython.binary during make clean
@@ -134,7 +134,7 @@ flexgui.exe: src/flexgui.c $(RESOBJ)
 SUBSAMPLES={LED_Matrix}
 
 clean:
-	rm -rf flexgui
+	rm -rf flexprop
 	rm -rf *.exe *.zip
 	rm -rf bin
 	rm -rf board
@@ -153,25 +153,25 @@ clean:
 	rm -rf $(RESOBJ)
 	rm -rf pandoc.yml
 
-flexgui_base: src/version.tcl src/makepandoc.tcl $(BOARDFILES) $(PDFFILES) $(HTMLFILES)
-	mkdir -p flexgui/bin
-	mkdir -p flexgui/doc
-	mkdir -p flexgui/board
-	cp -r README.md License.txt samples src flexgui
+flexprop_base: src/version.tcl src/makepandoc.tcl $(BOARDFILES) $(PDFFILES) $(HTMLFILES)
+	mkdir -p flexprop/bin
+	mkdir -p flexprop/doc
+	mkdir -p flexprop/board
+	cp -r README.md License.txt samples src flexprop
 ifdef PANDOC_EXISTS
-	cp -r $(PDFFILES) flexgui/doc
-	cp -r $(HTMLFILES) flexgui/doc
+	cp -r $(PDFFILES) flexprop/doc
+	cp -r $(HTMLFILES) flexprop/doc
 endif
-	cp -r spin2cpp/doc/* flexgui/doc
-	cp -r loadp2/README.md flexgui/doc/loadp2.md
-	cp -r loadp2/LICENSE flexgui/doc/loadp2.LICENSE.txt
-	cp -r spin2cpp/COPYING.LIB flexgui/doc/COPYING.LIB
-	cp -r spin2cpp/include flexgui/
-	cp -r doc/*.txt flexgui/doc
-	cp -r board/* flexgui/board
-	cp -r flexgui.tcl flexgui/
+	cp -r spin2cpp/doc/* flexprop/doc
+	cp -r loadp2/README.md flexprop/doc/loadp2.md
+	cp -r loadp2/LICENSE flexprop/doc/loadp2.LICENSE.txt
+	cp -r spin2cpp/COPYING.LIB flexprop/doc/COPYING.LIB
+	cp -r spin2cpp/include flexprop/
+	cp -r doc/*.txt flexprop/doc
+	cp -r board/* flexprop/board
+	cp -r flexprop.tcl flexprop/
 
-.PHONY: flexgui_base
+.PHONY: flexprop_base
 
 # rules for building PDF files
 
@@ -278,7 +278,7 @@ src/version.tcl: version.inp spin2cpp/version.h
 docs: $(PDFFILES) $(HTMLFILES)
 
 docker:
-	docker build -t flexguibuilder .
+	docker build -t flexpropbuilder .
 
 board/P2ES_flashloader.bin: bin/fastspin board/P2ES_flashloader.spin2
 	bin/fastspin -2 -o $@ board/P2ES_flashloader.spin2

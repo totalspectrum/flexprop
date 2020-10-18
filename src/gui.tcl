@@ -7,7 +7,7 @@
 # The guts of the IDE GUI
 #
 set aboutMsg "
-GUI tool for fastspin
+GUI tool for FlexProp
 Version $spin2gui_version
 Copyright 2018-2020 Total Spectrum Software Inc.
 ------
@@ -28,7 +28,7 @@ set tcl_nonwordchars {[^[:alnum:]_]}
 #
 
 # config file name
-set CONFIG_FILE "$ROOTDIR/.flexgui.config"
+set CONFIG_FILE "$ROOTDIR/.flexprop.config"
 
 # prefix for shortcut keys (Command on Mac, Control elsewhere)
 if { [tk windowingsystem] == "aqua" } {
@@ -303,7 +303,7 @@ proc config_save {} {
     updateOpenFiles
     set config(sash) [.p sash coord 0]
     set fp [open $CONFIG_FILE w]
-    puts $fp "# flexgui config info"
+    puts $fp "# flexprop config info"
     puts $fp "geometry\t[winfo geometry [winfo toplevel .]]"
     puts $fp "opt\t\{$OPT\}"
     puts $fp "compress\t\{$COMPRESS\}"
@@ -895,7 +895,7 @@ proc scriptSendCurFile {} {
 # show the about message
 proc doAbout {} {
     global aboutMsg
-    tk_messageBox -icon info -type ok -message "FlexGUI" -detail $aboutMsg
+    tk_messageBox -icon info -type ok -message "FlexProp" -detail $aboutMsg
 }
 
 proc doHelp { file title } {
@@ -1354,7 +1354,7 @@ set comport_last [.mbar.comport index end]
 .mbar.help add separator
 .mbar.help add command -label "About..." -command { doAbout }
 
-wm title . "FlexGUI"
+wm title . "FlexProp"
 
 panedwindow .p -orient vertical
 
@@ -1827,7 +1827,7 @@ set cmddialoghelptext {
   Some special % escapes:
     %B = Replace with current binary file name
     %b = Replace with directory containing current binary file
-    %D = Replace with directory of flexgui executable
+    %D = Replace with directory of flexprop executable
     %F = Replace with currently selected flash program (sd/flash)
     %I = Replace with all library/include directories
     %O = Replace with optimization level
