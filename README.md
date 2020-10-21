@@ -1,8 +1,8 @@
 # Introduction
 
-FlexPropGUI is a simple GUI for creating applications on the Parallax Propeller 2 (or 1), using assembler, Spin, BASIC or C. It consists of a very plain front end IDE, the fastspin compiler, and Dave Hein's loadp2 program loader. The default configuration is for the Prop2, but I've also included David Betz's proploader.exe, which allows flexpropgui to work on Propeller 1 systems as well.
+FlexProp is a simple GUI for creating applications on the Parallax Propeller 2 (or 1), using assembler, Spin, BASIC or C. It consists of a very plain front end IDE, the fastspin compiler, and Dave Hein's loadp2 program loader. The default configuration is for the Prop2, but I've also included David Betz's proploader.exe, which allows flexprop to work on Propeller 1 systems as well.
 
-FlexPropGUI is distributed under the MIT license; see the file License.txt for details.
+FlexProp is distributed under the MIT license; see the file License.txt for details.
 
 ## Features
 
@@ -10,7 +10,7 @@ FlexPropGUI is distributed under the MIT license; see the file License.txt for d
 * Supports PASM, Spin, BASIC, and C
 * View output PASM code
 * Built in terminal emulator
-* GUI checks files for external changes, so you may use any editor and compile in FlexPropGUI
+* GUI checks files for external changes, so you may use any editor and compile in FlexProp
 * Options for interacting directly with P2 ROM monitor and ROM TAQOZ
 * Micropython for P2 sample included
 
@@ -69,9 +69,9 @@ fastspin supports a C dialect called FlexC, which is intended to be C99 compatib
 
 ## Installation on Windows
 
-To install, download the flexpropgui.zip file from the releases. The latest release is always located at:
+To install, download the flexprop.zip file from the releases. The latest release is always located at:
 
-   https://github.com/totalspectrum/flexpropgui/releases/latest
+   https://github.com/totalspectrum/flexprop/releases/latest
    
 Create a directory called "flexprop" (or whatever you'd like) and unpack the .zip file into that directory. Make sure the directory you create is writable, so do not unpack into a system directory like "Program Files". Use your desktop or a folder directly under "C:" instead.
 
