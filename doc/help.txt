@@ -1,4 +1,4 @@
-FlexPropGUI help
+FlexProp help
 =============
 
 Menus
@@ -58,7 +58,7 @@ compiled and executed. Note that not all Spin2 DEBUG() commands are
 supported; see the general documentation for details.
 
 "Enable compatibility warnings" will cause the compiler to also warn
-about some differences between fastspin and the official Spin2
+about some differences between flexspin and the official Spin2
 compiler. Fixing these warnings will make porting your code to the
 Parallax compiler easier (although there still may be issues!)
 
@@ -66,7 +66,7 @@ The "Editor Options..." dialog allows you to change the way the source
 code editor looks, e.g. changing the font used for the text, or the
 tab settings. It also lets you change the font used for the compiler
 output window, and has an option to automatically load files changed
-by external programs (normally flexpropgui will prompt you to reload if
+by external programs (normally flexprop will prompt you to reload if
 it notices a change).
 
 The "Save session on exit" option, if enabled, causes the editor to reload any
@@ -156,7 +156,7 @@ Configuring Commands
 
 You can change the commands used for compiling and running
 programs. Since the commands are flexible, you can acutally use
-flexpropgui for compiling and running programs on the P1. The "P1
+flexprop for compiling and running programs on the P1. The "P1
 defaults" button sets the commands for this (you will need to supply
 propeller-load.exe yourself). "P2b defaults" restores the settings to
 the original Prop2 development. Use "P2a defaults" if you have an
@@ -164,8 +164,8 @@ old (revision A) board.
 
 Config File
 -----------
-Settings for flexpropgui are saved in a file called
-".flexpropgui.config" in the directory where flexpropgui.exe is
+Settings for flexprop are saved in a file called
+".flexprop.config" in the directory where flexprop.exe is
 installed. If something gets really messed up, deleting that
 file will restore flexprop to its default state.
 

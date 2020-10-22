@@ -41,7 +41,7 @@ if { [tk windowingsystem] == "aqua" } {
 # have to explicitly specify it
 
 set EXE ""
-if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/fastspin.mac"] && [file exists "$ROOTDIR/bin/loadp2.mac"] } {
+if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/flexspin.mac"] && [file exists "$ROOTDIR/bin/loadp2.mac"] } {
     set EXE ".mac"
 }
 
@@ -107,7 +107,7 @@ proc setShadowP1Defaults {} {
     global ROOTDIR
     global EXE
     
-    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -D_BAUD=%r -l %O %I \"%S\""
+    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -D_BAUD=%r -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -r -t -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
@@ -119,7 +119,7 @@ proc setShadowP2aDefaults {} {
     global ROOTDIR
     global EXE
     
-    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2a -l -D_BAUD=%r %O %I \"%S\""
+    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2a -l -D_BAUD=%r %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
@@ -131,7 +131,7 @@ proc setShadowP2bDefaults {} {
     global ROOTDIR
     global EXE
     
-    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2 -l -D_BAUD=%r %O %I \"%S\""
+    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l -D_BAUD=%r %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
@@ -467,7 +467,7 @@ proc tagerrors { w } {
 }
 
 set SpinTypes {
-    {{FastSpin files}   {.bas .bi .c .cc .cpp .h .spin2 .spin .spinh} }
+    {{FlexSpin files}   {.bas .bi .c .cc .cpp .h .spin2 .spin .spinh} }
     {{Interpreter files}   {.py .lsp .fth} }
     {{C/C++ files}   {.c .cpp .cxx .cc .h .hh .hpp} }
     {{All files}    *}

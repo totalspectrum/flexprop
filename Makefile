@@ -55,15 +55,15 @@ endif
 # binaries to make
 #
 
-EXEBINFILES=bin/fastspin.exe bin/loadp2.exe bin/fastspin.mac bin/loadp2.mac bin/mac_terminal.sh 
+EXEBINFILES=bin/flexspin.exe bin/loadp2.exe bin/flexspin.mac bin/loadp2.mac bin/mac_terminal.sh 
 EXEFILES=flexprop.exe $(EXEBINFILES)
 
 ifdef OPENSPIN
 WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe bin/proploader.mac
-NATIVE_BINARIES=bin/fastspin bin/loadp2 bin/proploader
+NATIVE_BINARIES=bin/flexspin bin/loadp2 bin/proploader
 else
 WIN_BINARIES=$(EXEBINFILES)
-NATIVE_BINARIES=bin/fastspin bin/loadp2
+NATIVE_BINARIES=bin/flexspin bin/loadp2
 endif
 
 install: flexprop_base $(NATIVE_BINARIES)
@@ -97,8 +97,8 @@ WINTK_LIBS = $(TCLROOT)/tk/win/libtk87.a $(TCLROOT)/tk/win/libtkstub87.a $(TCLRO
 VPATH=.:spin2cpp/doc
 
 ifdef PANDOC_EXISTS
-PDFFILES=spin2cpp/Fastspin.pdf spin2cpp/doc/general.pdf spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
-HTMLFILES=spin2cpp/Fastspin.html spin2cpp/doc/general.html spin2cpp/doc/basic.html spin2cpp/doc/c.html spin2cpp/doc/spin.html
+PDFFILES=spin2cpp/Flexspin.pdf spin2cpp/doc/general.pdf spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
+HTMLFILES=spin2cpp/Flexspin.html spin2cpp/doc/general.html spin2cpp/doc/basic.html spin2cpp/doc/c.html spin2cpp/doc/spin.html
 endif
 
 #
@@ -187,7 +187,7 @@ endif
 
 # rules for native binaries
 
-bin/fastspin: spin2cpp/build/fastspin
+bin/flexspin: spin2cpp/build/flexspin
 	mkdir -p bin
 	cp $< $@
 
@@ -199,22 +199,22 @@ bin/loadp2: loadp2/build/loadp2
 	mkdir -p bin
 	cp $< $@
 
-spin2cpp/build/fastspin:
+spin2cpp/build/flexspin:
 	make -C spin2cpp
 
-proploader-$(OS)-build/bin/proploader: bin/fastspin
+proploader-$(OS)-build/bin/proploader: bin/flexspin
 	make -C PropLoader OS=$(OS) SPINCMP=$(OPENSPIN)
 
-loadp2/build/loadp2: bin/fastspin
-	make -C loadp2 P2ASM="`pwd`/bin/fastspin -2 -I`pwd`/spin2cpp/include"
+loadp2/build/loadp2: bin/flexspin
+	make -C loadp2 P2ASM="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include"
 
 # rules for Win32 binaries
 
-bin/fastspin.exe: spin2cpp/build-win32/fastspin.exe
+bin/flexspin.exe: spin2cpp/build-win32/flexspin.exe
 	mkdir -p bin
 	cp $< $@
-	$(SIGN) bin/fastspin
-	mv bin/fastspin.signed.exe bin/fastspin.exe
+	$(SIGN) bin/flexspin
+	mv bin/flexspin.signed.exe bin/flexspin.exe
 
 bin/proploader.exe: proploader-msys-build/bin/proploader.exe
 	mkdir -p bin
@@ -230,7 +230,7 @@ bin/loadp2.exe: loadp2/build-win32/loadp2.exe
 	$(SIGN) bin/loadp2
 	mv bin/loadp2.signed.exe bin/loadp2.exe
 
-spin2cpp/build-win32/fastspin.exe:
+spin2cpp/build-win32/flexspin.exe:
 	make -C spin2cpp CROSS=win32
 
 ifneq ($(OS),msys)
@@ -260,11 +260,11 @@ bin/loadp2.mac: loadp2/build-macosx/loadp2
 	mkdir -p bin
 	cp $< $@
 
-bin/fastspin.mac: spin2cpp/build-macosx/fastspin
+bin/flexspin.mac: spin2cpp/build-macosx/flexspin
 	mkdir -p bin
 	cp $< $@
 
-spin2cpp/build-macosx/fastspin:
+spin2cpp/build-macosx/flexspin:
 	make -C spin2cpp CROSS=macosx
 
 loadp2/build-macosx/loadp2:
@@ -280,14 +280,14 @@ docs: $(PDFFILES) $(HTMLFILES)
 docker:
 	docker build -t flexpropbuilder .
 
-board/P2ES_flashloader.bin: bin/fastspin board/P2ES_flashloader.spin2
-	bin/fastspin -2 -o $@ board/P2ES_flashloader.spin2
+board/P2ES_flashloader.bin: bin/flexspin board/P2ES_flashloader.spin2
+	bin/flexspin -2 -o $@ board/P2ES_flashloader.spin2
 
 board/P2ES_sdcard.bin: board/sdcard/sdboot.binary
 	mv board/sdcard/sdboot.binary board/P2ES_sdcard.bin
 
-board/sdcard/sdboot.binary: bin/fastspin board/sdcard
-	(make -C board/sdcard P2CC="`pwd`/bin/fastspin -2 -I`pwd`/spin2cpp/include")
+board/sdcard/sdboot.binary: bin/flexspin board/sdcard
+	(make -C board/sdcard P2CC="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include")
 	rm -f board/sdcard/*.p2asm
 
 board/P2ES_flashloader.spin2: loadp2/board/P2ES_flashloader.spin2
