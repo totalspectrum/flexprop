@@ -7,7 +7,7 @@
 # The guts of the IDE GUI
 #
 set aboutMsg "
-GUI tool for fastspin
+GUI tool for FlexProp
 Version $spin2gui_version
 Copyright 2018-2020 Total Spectrum Software Inc.
 ------
@@ -28,7 +28,7 @@ set tcl_nonwordchars {[^[:alnum:]_]}
 #
 
 # config file name
-set CONFIG_FILE "$ROOTDIR/.flexgui.config"
+set CONFIG_FILE "$ROOTDIR/.flexprop.config"
 
 # prefix for shortcut keys (Command on Mac, Control elsewhere)
 if { [tk windowingsystem] == "aqua" } {
@@ -41,17 +41,17 @@ if { [tk windowingsystem] == "aqua" } {
 # have to explicitly specify it
 
 set EXE ""
-if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/fastspin.mac"] && [file exists "$ROOTDIR/bin/loadp2.mac"] } {
+if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/flexspin.mac"] && [file exists "$ROOTDIR/bin/loadp2.mac"] } {
     set EXE ".mac"
 }
 
 # prefix for starting a command in a window
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start \"Propeller Output %p\""
-} elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
-    set WINPREFIX "/etc/alternatives/x-terminal-emulator -T \"Propeller Output %p\" -fs 14 -e"
 } elseif { [tk windowingsystem] == "aqua" } {
     set WINPREFIX $ROOTDIR/bin/mac_terminal.sh
+} elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
+    set WINPREFIX "/etc/alternatives/x-terminal-emulator -T \"Propeller Output %p\" -e"
 } else {
     set WINPREFIX "xterm -fs 14 -T \"Propeller Output %p\" -e"
 }
@@ -107,7 +107,7 @@ proc setShadowP1Defaults {} {
     global ROOTDIR
     global EXE
     
-    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -D_BAUD=%r -l %O %I \"%S\""
+    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -D_BAUD=%r -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -r -t -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
@@ -119,7 +119,7 @@ proc setShadowP2aDefaults {} {
     global ROOTDIR
     global EXE
     
-    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2a -l -D_BAUD=%r %O %I \"%S\""
+    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2a -l -D_BAUD=%r %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
@@ -131,7 +131,7 @@ proc setShadowP2bDefaults {} {
     global ROOTDIR
     global EXE
     
-    set shadow(compilecmd) "\"%D/bin/fastspin$EXE\" -2 -l -D_BAUD=%r %O %I \"%S\""
+    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l -D_BAUD=%r %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
@@ -303,7 +303,7 @@ proc config_save {} {
     updateOpenFiles
     set config(sash) [.p sash coord 0]
     set fp [open $CONFIG_FILE w]
-    puts $fp "# flexgui config info"
+    puts $fp "# flexprop config info"
     puts $fp "geometry\t[winfo geometry [winfo toplevel .]]"
     puts $fp "opt\t\{$OPT\}"
     puts $fp "compress\t\{$COMPRESS\}"
@@ -467,7 +467,7 @@ proc tagerrors { w } {
 }
 
 set SpinTypes {
-    {{FastSpin files}   {.bas .bi .c .cc .cpp .h .spin2 .spin .spinh} }
+    {{FlexSpin files}   {.bas .bi .c .cc .cpp .h .spin2 .spin .spinh} }
     {{Interpreter files}   {.py .lsp .fth} }
     {{C/C++ files}   {.c .cpp .cxx .cc .h .hh .hpp} }
     {{All files}    *}
@@ -620,6 +620,32 @@ proc loadListingFile {filename} {
     loadFileToWindow $filename .list.f.txt
     .list.f.txt yview moveto $viewpos
     wm title .list [file tail $filename]
+}
+
+#
+# load a file into a toplevel window .help
+#
+proc loadHelpFile {filename title} {
+    global config
+    set viewpos 0
+    if {[winfo exists .help]} {
+	raise .help
+	set viewpos [.help.f.txt yview]
+	set viewpos [lindex $viewpos 0]
+	.help.f.txt configure -state enabled
+    } else {
+	toplevel .help
+	setupFramedText .help.f
+	grid columnconfigure .help 0 -weight 1
+	grid rowconfigure .help 0 -weight 1
+	grid .help.f -sticky nsew
+    }
+    setfont .help.f.txt $config(font)
+    loadFileToWindow $filename .help.f.txt
+    .help.f.txt yview moveto $viewpos
+    wm title .help [file tail $filename]
+    .help.f.txt configure -state disabled
+    .help.f.txt configure -linemap 0
 }
 
 #
@@ -869,15 +895,13 @@ proc scriptSendCurFile {} {
 # show the about message
 proc doAbout {} {
     global aboutMsg
-    tk_messageBox -icon info -type ok -message "FlexGUI" -detail $aboutMsg
+    tk_messageBox -icon info -type ok -message "FlexProp" -detail $aboutMsg
 }
 
 proc doHelp { file title } {
     global ROOTDIR
     
-    #loadFileToTab .p.nb.help "$ROOTDIR/doc/help.txt" "Help"
-    loadFileToTab .p.nb.help $file $title
-    makeReadOnly .p.nb.help.txt
+    loadHelpFile $file $title
 }
 
 proc doSpecial {name extraargs} {
@@ -1330,7 +1354,7 @@ set comport_last [.mbar.comport index end]
 .mbar.help add separator
 .mbar.help add command -label "About..." -command { doAbout }
 
-wm title . "FlexGUI"
+wm title . "FlexProp"
 
 panedwindow .p -orient vertical
 
@@ -1706,7 +1730,7 @@ proc doListing {} {
 	set LSTFILE [file rootname $filenames($w)]
 	set LSTFILE "$LSTFILE.lst"
 	loadListingFile $LSTFILE
-	makeReadOnly .list.f.txt
+	# makeReadOnly .list.f.txt # too much trouble
     }
 }
 
@@ -1803,7 +1827,7 @@ set cmddialoghelptext {
   Some special % escapes:
     %B = Replace with current binary file name
     %b = Replace with directory containing current binary file
-    %D = Replace with directory of flexgui executable
+    %D = Replace with directory of flexprop executable
     %F = Replace with currently selected flash program (sd/flash)
     %I = Replace with all library/include directories
     %O = Replace with optimization level

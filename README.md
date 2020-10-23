@@ -1,8 +1,8 @@
 # Introduction
 
-FlexGUI is a simple GUI for creating applications on the Parallax Propeller 2 (or 1), using assembler, Spin, BASIC or C. It consists of a very plain front end IDE, the fastspin compiler, and Dave Hein's loadp2 program loader. The default configuration is for the Prop2, but I've also included David Betz's proploader.exe, which allows flexgui to work on Propeller 1 systems as well.
+FlexProp is a simple GUI for creating applications on the Parallax Propeller 2 (or 1), using assembler, Spin, BASIC or C. It consists of a very plain front end IDE, the flexspin compiler, and Dave Hein's loadp2 program loader. The default configuration is for the Prop2, but I've also included David Betz's proploader.exe, which allows flexprop to work on Propeller 1 systems as well.
 
-FlexGUI is distributed under the MIT license; see the file License.txt for details.
+FlexProp is distributed under the MIT license; see the file License.txt for details.
 
 ## Features
 
@@ -10,7 +10,7 @@ FlexGUI is distributed under the MIT license; see the file License.txt for detai
 * Supports PASM, Spin, BASIC, and C
 * View output PASM code
 * Built in terminal emulator
-* GUI checks files for external changes, so you may use any editor and compile in FlexGUI
+* GUI checks files for external changes, so you may use any editor and compile in FlexProp
 * Options for interacting directly with P2 ROM monitor and ROM TAQOZ
 * Micropython for P2 sample included
 
@@ -43,7 +43,7 @@ See `doc/spin.md` for more details.
 
 ### BASIC Language
 
-fastspin supports a fairly complete version of BASIC, based on traditional Microsoft BASICs. Please see `doc/basic.md` for details. Notable features are:
+flexspin supports a fairly complete version of BASIC, based on traditional Microsoft BASICs. Please see `doc/basic.md` for details. Notable features are:
 
 * Structured programming features
 * Line numbers are optional
@@ -56,7 +56,7 @@ fastspin supports a fairly complete version of BASIC, based on traditional Micro
 
 ### C Language
 
-fastspin supports a C dialect called FlexC, which is intended to be C99 compatible with some C++ extensions. It is not yet complete. Notable enhancements are:
+flexspin supports a C dialect called FlexC, which is intended to be C99 compatible with some C++ extensions. It is not yet complete. Notable enhancements are:
 
 * Inline assembly (similar to MSVC)
 * Simple classes, including using Spin and BASIC objects as C classes
@@ -69,22 +69,22 @@ fastspin supports a C dialect called FlexC, which is intended to be C99 compatib
 
 ## Installation on Windows
 
-To install, download the flexgui.zip file from the releases. The latest release is always located at:
+To install, download the flexprop.zip file from the releases. The latest release is always located at:
 
-   https://github.com/totalspectrum/flexgui/releases/latest
+   https://github.com/totalspectrum/flexprop/releases/latest
    
-Create a directory called "flexgui" (or whatever you'd like) and unpack the .zip file into that directory. Make sure the directory you create is writable, so do not unpack into a system directory like "Program Files". Use your desktop or a folder directly under "C:" instead.
+Create a directory called "flexprop" (or whatever you'd like) and unpack the .zip file into that directory. Make sure the directory you create is writable, so do not unpack into a system directory like "Program Files". Use your desktop or a folder directly under "C:" instead.
 
 
 ## Running on Windows
 
-Run flexgui.exe. Use the `File` menu to open a Spin or BASIC file. You may open multiple files. The one that is currently selected will be treated as the top level project if you try to compile and/or run. The commands used for compiling or running are settable from the `Commands > Configure Commands...` menu item. Compiling and running on Prop2 is the main focus, but you can configure for virtually any situation where just one file is compiled. So for example it should be feasible to use this GUI for `p2gcc` with a bit of tweaking.
+Run flexprop.exe. Use the `File` menu to open a Spin or BASIC file. You may open multiple files. The one that is currently selected will be treated as the top level project if you try to compile and/or run. The commands used for compiling or running are settable from the `Commands > Configure Commands...` menu item. Compiling and running on Prop2 is the main focus, but you can configure for virtually any situation where just one file is compiled. So for example it should be feasible to use this GUI for `p2gcc` with a bit of tweaking.
 
 Also under the `File` menu is an option for viewing the listing file. This will only be useful after a program is compiled.
 
 To change between P1 and P2 development use `Configure Commands...` and select the appropriate default.
 
-Your changes to commands, library directories, and other configuration information is saved in a file called .flexgui.config in the directory where flexgui.exe is located.
+Your changes to commands, library directories, and other configuration information is saved in a file called .flexprop.config in the directory where flexprop.exe is located.
 
 ### Library Directories
 
@@ -92,28 +92,28 @@ Under the `File` menu is an option to set library directories. The compiler will
 
 ### Listing files
 
-Under the `File` menu is an option for viewing the listing file, which shows the PASM and binary generated by fastspin from your high level language. This file may only be opened after the first compilation is done; if you try to open before doing any compile you may get an "Error: could not read" dialog box.
+Under the `File` menu is an option for viewing the listing file, which shows the PASM and binary generated by flexspin from your high level language. This file may only be opened after the first compilation is done; if you try to open before doing any compile you may get an "Error: could not read" dialog box.
 
 
 ## Other platforms
 
-Only a Windows binary is provided. For other platforms, run the `flexgui.tcl` script. You will need Tcl/Tk installed, but it is available for most versions of Unix (including Mac OS X). For linux, you'll also need to get binary versions of `fastspin` and `loadp2` for your platform, and copy them into the `bin` folder. For Windows and Mac OS X these binaries are already provided in the standard binary distribution of flexgui.
+Only a Windows binary is provided. For other platforms, run the `flexprop.tcl` script. You will need Tcl/Tk installed, but it is available for most versions of Unix (including Mac OS X). For linux, you'll also need to get binary versions of `flexspin` and `loadp2` for your platform, and copy them into the `bin` folder. For Windows and Mac OS X these binaries are already provided in the standard binary distribution of flexprop.
 
 ## High level languages
 
-The main advantage of flexgui over PNut (the "official" development tool for the Prop2) is that PNut supports only Spin 2, whereas flexgui supports Spin 1, Spin 2, BASIC, and C. You can basically write ordinary Spin code, with Prop2 assembly code in the DAT section (instead of Prop1 assembly code). This makes prototyping your applications much easier.
+The main advantage of FlexProp over PNut (the "official" development tool for the Prop2) is that PNut supports only Spin 2, whereas FlexProp supports Spin 1, Spin 2, BASIC, and C. You can basically write ordinary Spin code, with Prop2 assembly code in the DAT section (instead of Prop1 assembly code). This makes prototyping your applications much easier.
 
-The code is compiled to P2 assembler by fastspin. This is somewhat different from the way Spin traditionally worked on the Prop1, where Spin code is typically compiled to bytecode and interpreted. (Note that fastspin does work for Prop1, and compiles to P1 assembler in that case.)
+The code is compiled to P2 assembler by flexspin. This is somewhat different from the way Spin traditionally worked on the Prop1, where Spin code is typically compiled to bytecode and interpreted. (Note that flexspin does work for Prop1, and compiles to P1 assembler in that case.)
 
-Documentation for the various languages supported is in the `doc` folder of the unpacked flexgui. BASIC is the best documented. The Spin documentation assumes familiarity with the original (Propeller1) Spin manual, and outlines the differences in the language fastspin accepts. The C documentation is a placeholder for now and mostly covers the fastspin specific extensions to C.
+Documentation for the various languages supported is in the `doc` folder of the unpacked flexprop. BASIC is the best documented. The Spin documentation assumes familiarity with the original (Propeller1) Spin manual, and outlines the differences in the language flexspin accepts. The C documentation is a placeholder for now and mostly covers the flexspin specific extensions to C.
 
 # Modifying the GUI
 
-The scripts used are in the `src` subdirectory, so you can customize them to your heart's content. The main `flexgui.exe` program is basically just the Tcl/Tk interpreter (from the standard Tk distribution) with a tiny startup script that reads `src/gui.tcl`.
+The scripts used are in the `src` subdirectory, so you can customize them to your heart's content. The main `flexprop.exe` program is basically just the Tcl/Tk interpreter (from the standard Tk distribution) with a tiny startup script that reads `src/gui.tcl`.
 
-# Supporting FlexGUI development
+# Supporting FlexPropGUI development
 
-If you find FlexGUI useful, please contribute to support its development. Contributions of code, documentation, and other suggestions are welcome. Monetary donations are also very welcome. The generous donations of our supporters on Patreon have enabled us to provide a signed Windows binary.
+If you find FlexPropGUI useful, please contribute to support its development. Contributions of code, documentation, and other suggestions are welcome. Monetary donations are also very welcome. The generous donations of our supporters on Patreon have enabled us to provide a signed Windows binary.
 
-To support FlexGUI on Patreon: https://patreon.com/totalspectrum
-To support FlexGUI on Paypal:  https://paypal.me/totalspectrum
+To support FlexProp on Patreon: https://patreon.com/totalspectrum
+To support FlexProp on Paypal:  https://paypal.me/totalspectrum

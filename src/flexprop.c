@@ -474,7 +474,7 @@ int fixup_argv(int *argc, TCHAR ***argv)
 
     //_tprintf(_T("fixup_argv called\n"));
     
-    // get where the flexgui.exe executable is
+    // get where the flexprop.exe executable is
     r = GetModuleFileName(NULL, namebuffer, MAX_PATH);
     //_tprintf(_T("fixup_argv: namebuffer=%s\n"), namebuffer);
     if (r >= MY_MAXPATH-1) {
@@ -490,7 +490,7 @@ int fixup_argv(int *argc, TCHAR ***argv)
     my_argv = malloc( (my_argc+2) * sizeof(TCHAR *) );
     my_argv[0] = (*argv)[0];
     //_tprintf(_T("copying my_argv[1]\n"));
-    my_argv[1] =  dyn_strcat(namebuffer, TEXT("/flexgui.tcl"));
+    my_argv[1] =  dyn_strcat(namebuffer, TEXT("/flexprop.tcl"));
     //_tprintf(_T("copying remaining argv\n"));
     for (i = 2; i <= my_argc; i++) {
         my_argv[i] = (*argv)[i-1];

@@ -28,6 +28,6 @@ if { $filebase eq "basic.md" } {
 } elseif { $filebase eq "spin.md" } {
     set title "FlexSpin Language Reference"
 } else {
-    set title "FastSpin Reference"
+    set title "FlexProp Reference"
 }
 makepandoc
