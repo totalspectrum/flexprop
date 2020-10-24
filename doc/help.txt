@@ -50,17 +50,26 @@ consume more resources (including COG memory).
 "No extra warnings" means the compiler will only warn about serious
 problems.
 
+"Enable compatibility warnings" will cause the compiler to also warn
+about some differences between flexspin and the official Spin2
+compiler. Fixing these warnings will make porting your code to the
+Parallax compiler easier (although there still may be issues!)
+
+"Use IEEE floating point" is the default; the compiler uses IEEE
+format binary floating point for floating point values in all languages.
+
+"Use 16.16 fixed point in place of floats" causes the compiler to use
+16.16 fixed point values where it previously would use IEEE floating
+point. This means that floating point values are severely restricted
+in range, but it is much faster than true floating point. Use this
+option with some care, it is still experimental.
+
 "Debug disabled" turns off all DEBUG messages in Spin2 files (this is
 the default). 
 
 "Debug enabled" turns on DEBUG, allowing the DEBUG() statements to be
 compiled and executed. Note that not all Spin2 DEBUG() commands are
 supported; see the general documentation for details.
-
-"Enable compatibility warnings" will cause the compiler to also warn
-about some differences between flexspin and the official Spin2
-compiler. Fixing these warnings will make porting your code to the
-Parallax compiler easier (although there still may be issues!)
 
 The "Editor Options..." dialog allows you to change the way the source
 code editor looks, e.g. changing the font used for the text, or the

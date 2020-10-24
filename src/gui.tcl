@@ -73,6 +73,7 @@ set COMPORT " "
 set OPT "-O1"
 set COMPRESS "-z0"
 set WARNFLAGS "-Wnone"
+set FIXEDREAL "--floatreal"
 set DEBUG_OPT "-gnone"
 set PROP_VERSION ""
 set OPENFILES ""
@@ -223,6 +224,7 @@ proc config_open {} {
     global OPT
     global COMPRESS
     global WARNFLAGS
+    global FIXEDREAL
     global DEBUG_OPT
     global COMPORT
     global OPENFILES
@@ -256,6 +258,10 @@ proc config_open {} {
 	    warnflags {
 		# set warning flags
 		set WARNFLAGS [lindex $data 1]
+	    }
+	    fixedreal {
+		# set warning flags
+		set FIXEDREAL [lindex $data 1]
 	    }
 	    debugopt {
 		# set warning flags
@@ -295,6 +301,7 @@ proc config_save {} {
     global OPT
     global COMPRESS
     global WARNFLAGS
+    global FIXEDREAL
     global DEBUG_OPT
     global COMPORT
     global OPENFILES
@@ -310,6 +317,7 @@ proc config_save {} {
     puts $fp "comport\t\{$COMPORT\}"
     puts $fp "openfiles\t\{$OPENFILES\}"
     puts $fp "warnflags\t\{$WARNFLAGS\}"
+    puts $fp "fixedreal\t\{$FIXEDREAL\}"
     puts $fp "debugopt\t\{$DEBUG_OPT\}"
     foreach i [array names config] {
 	if {$i != ""} {
@@ -1300,6 +1308,9 @@ menu .mbar.help -tearoff 0
 .mbar.options add radiobutton -label "No extra warnings" -variable WARNFLAGS -value "-Wnone"
 .mbar.options add radiobutton -label "Enable compatibility warnings" -variable WARNFLAGS -value "-Wall"
 .mbar.options add separator
+.mbar.options add radiobutton -label "Use IEEE floating point" -variable FIXEDREAL -value "--floatreal"
+.mbar.options add radiobutton -label "Use 16.16 fixed point in place of floats" -variable FIXEDREAL -value "--fixedreal"
+.mbar.options add separator
 .mbar.options add radiobutton -label "Debug disabled" -variable DEBUG_OPT -value "-gnone"
 .mbar.options add radiobutton -label "Debug enabled" -variable DEBUG_OPT -value "-g"
 #.mbar.options add separator
@@ -1598,6 +1609,7 @@ proc mapPercent {str} {
     global ROOTDIR
     global OPT
     global WARNFLAGS
+    global FIXEDREAL
     global DEBUG_OPT
     global COMPRESS
     global COMPORT
@@ -1605,14 +1617,18 @@ proc mapPercent {str} {
 
     set ourwarn $WARNFLAGS
     set ourdebug $DEBUG_OPT
+    set ourfixed $FIXEDREAL
     if { "$ourwarn" eq "-Wnone" } {
 	set ourwarn ""
     }
     if { "$ourdebug" eq "-gnone" } {
 	set ourdebug ""
     }
+    if { "$ourfixed" eq "--floatreal" } {
+	set ourfixed ""
+    }
 #    set fulloptions "$OPT $ourwarn $COMPRESS"
-    set fulloptions "$OPT $ourwarn $ourdebug"
+    set fulloptions "$OPT $ourwarn $ourdebug $ourfixed"
     if { $COMPORT ne " " } {
 	set fullcomport "$COMPORT"
     } else {
