@@ -42,6 +42,9 @@ proplisp: Lisp interpreter written in C
   lisp.c: Interactive interpreter
   fibo.c: Recursive fibonacci in Lisp
 
+simpletools: Some samples using the Parallax simpletools library
+  (Thanks to Roy Eltham for the port)
+  
 upython: MicroPython interpreter for P2
   This is a binary-only package, which may be run using the `Special`
   menu or the `Run Binary` button. See the README for some information
