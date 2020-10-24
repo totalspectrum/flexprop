@@ -55,15 +55,15 @@ endif
 # binaries to make
 #
 
-EXEBINFILES=bin/flexspin.exe bin/loadp2.exe bin/flexspin.mac bin/loadp2.mac bin/mac_terminal.sh 
+EXEBINFILES=bin/flexspin.exe bin/flexcc.exe bin/loadp2.exe bin/flexspin.mac bin/flexcc.mac bin/loadp2.mac bin/mac_terminal.sh 
 EXEFILES=flexprop.exe $(EXEBINFILES)
 
 ifdef OPENSPIN
 WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe bin/proploader.mac
-NATIVE_BINARIES=bin/flexspin bin/loadp2 bin/proploader
+NATIVE_BINARIES=bin/flexspin bin/flexcc bin/loadp2 bin/proploader
 else
 WIN_BINARIES=$(EXEBINFILES)
-NATIVE_BINARIES=bin/flexspin bin/loadp2
+NATIVE_BINARIES=bin/flexspin bin/flexcc bin/loadp2
 endif
 
 install: flexprop_base $(NATIVE_BINARIES)
@@ -190,6 +190,9 @@ endif
 bin/flexspin: spin2cpp/build/flexspin
 	mkdir -p bin
 	cp $< $@
+bin/flexcc: spin2cpp/build/flexcc
+	mkdir -p bin
+	cp $< $@
 
 bin/proploader: proploader-$(OS)-build/bin/proploader
 	mkdir -p bin
@@ -200,6 +203,8 @@ bin/loadp2: loadp2/build/loadp2
 	cp $< $@
 
 spin2cpp/build/flexspin:
+	make -C spin2cpp
+spin2cpp/build/flexcc:
 	make -C spin2cpp
 
 proploader-$(OS)-build/bin/proploader: bin/flexspin
@@ -215,6 +220,11 @@ bin/flexspin.exe: spin2cpp/build-win32/flexspin.exe
 	cp $< $@
 	$(SIGN) bin/flexspin
 	mv bin/flexspin.signed.exe bin/flexspin.exe
+bin/flexcc.exe: spin2cpp/build-win32/flexcc.exe
+	mkdir -p bin
+	cp $< $@
+	$(SIGN) bin/flexcc
+	mv bin/flexcc.signed.exe bin/flexcc.exe
 
 bin/proploader.exe: proploader-msys-build/bin/proploader.exe
 	mkdir -p bin
@@ -231,6 +241,8 @@ bin/loadp2.exe: loadp2/build-win32/loadp2.exe
 	mv bin/loadp2.signed.exe bin/loadp2.exe
 
 spin2cpp/build-win32/flexspin.exe:
+	make -C spin2cpp CROSS=win32
+spin2cpp/build-win32/flexcc.exe:
 	make -C spin2cpp CROSS=win32
 
 ifneq ($(OS),msys)
@@ -263,8 +275,13 @@ bin/loadp2.mac: loadp2/build-macosx/loadp2
 bin/flexspin.mac: spin2cpp/build-macosx/flexspin
 	mkdir -p bin
 	cp $< $@
+bin/flexcc.mac: spin2cpp/build-macosx/flexcc
+	mkdir -p bin
+	cp $< $@
 
 spin2cpp/build-macosx/flexspin:
+	make -C spin2cpp CROSS=macosx
+spin2cpp/build-macosx/flexcc:
 	make -C spin2cpp CROSS=macosx
 
 loadp2/build-macosx/loadp2:

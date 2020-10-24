@@ -1,3 +1,6 @@
+Version 5.0.0
+- Renamed "fastspin" to "flexspin"
+
 Version 4.5.0
 - Renamed to FlexProp
 - Added C time sample
