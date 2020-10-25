@@ -251,9 +251,9 @@ void rendermandel(void *arg)
 
 void Setup_Video()
 {
-    vid.initDisplay(@display1, vid.VGA, VGA_BASE_PIN, VGA_VSYNC_PIN, vid.RGBHV, @lineBuffer, LINEBUFSIZE, 0);
+    vid.initDisplay(&display1, vid.VGA, VGA_BASE_PIN, VGA_VSYNC_PIN, vid.RGBHV, &lineBuffer[0], LINEBUFSIZE, 0);
 
-    vid.initRegion(@first, vid.RGBI, 480, 0, 0, 0, 8, &frameBuffer[0], 0);
+    vid.initRegion(&first, vid.RGBI, 480, 0, 0, 0, 8, &frameBuffer[0], 0);
   
     // enable display list
     vid.setDisplayRegions(display1, first);
