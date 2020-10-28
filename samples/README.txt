@@ -45,10 +45,5 @@ proplisp: Lisp interpreter written in C
 simpletools: Some samples using the Parallax simpletools library
   (Thanks to Roy Eltham for the port)
   
-upython: MicroPython interpreter for P2
-  This is a binary-only package, which may be run using the `Special`
-  menu or the `Run Binary` button. See the README for some information
-  on micropython features.
-  
 vga: Simple VGA text
   This is a demo of ANSI compatible VGA text output.

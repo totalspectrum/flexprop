@@ -2,6 +2,7 @@ Version 5.0.0
 - Renamed "fastspin" to "flexspin"
 - Added new simpletools samples from Roy Eltham
 - Added option for using fixed point to GUI
+- Removed upython sample
 
 Version 4.5.0
 - Renamed to FlexProp

@@ -129,17 +129,6 @@ Like "Enter P2 ROM TAQOZ", but after TAQOZ is started the text in the
 currently selected editor window is downloaded to TAQOZ as if the
 user had typed it.
 
-#### Run uPython on P2
-
-Runs the microPython interpreter on the P2. This is loaded from the
-`samples/upython` directory.
-
-#### Load current buffer into uPython
-
-Like "Run uPython on P2", but after microPython is started the text in the
-currently selected editor window is downloaded to the P2 as if the
-user had typed it.
-
 #### Run proplisp on P2
 
 Runs a Lisp interpreter on the P2. This is loaded from the
