@@ -12,7 +12,7 @@ FlexProp is distributed under the MIT license; see the file License.txt for deta
 * Built in terminal emulator
 * GUI checks files for external changes, so you may use any editor and compile in FlexProp
 * Options for interacting directly with P2 ROM monitor and ROM TAQOZ
-* Micropython for P2 sample included
+
 
 ### PASM enhancements
 
