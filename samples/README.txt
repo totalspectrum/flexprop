@@ -14,7 +14,8 @@ c_time.c:       C program to illustrate settimeofday/gettimeofday
 fibo.bas:       Recursive Fibonacci in BASIC
 fibo.spin:      Recursive Fibonacci in Spin
 hello.spin:     Print "Hello world" on the terminal
-led_server_asm.c: Run an LED blinker in another COG (with C style assembly)
+interact_pin.bas:  Interactive pin setter, in BASIC
+led_server_asm.c:  Run an LED blinker in another COG (with C style assembly)
 led_server_pasm.c: Run an LED blinker in another COG (with Spin style assembly)
 led_server.bas: Run an LED blinker in another COG (BASIC version)
 lunar.bas:      Old-style BASIC program; land a rocket on the moon
