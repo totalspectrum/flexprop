@@ -36,6 +36,7 @@ loop
 sub showhelp()
   print "hi n  : set pin n high"
   print "lo n  : set pin n low"
+  print "help  : show this help"
 end sub
 
 ''
@@ -46,7 +47,7 @@ end sub
 ''
 sub docommand(cmd$, num$)
   dim n as integer  ' the numeric value of what's in num$
-  if cmd$ = "help" then
+  if cmd$ = "help" or cmd$ = "?" then
     showhelp()
   else if cmd$ = "hi" then
     n = validate_pin(num$)  ' num$ should be a pin
