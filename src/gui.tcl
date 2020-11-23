@@ -1890,8 +1890,8 @@ proc doRunOptions {} {
     frame .runopts.change
     frame .runopts.end
 
-    ttk::button .runopts.change.p2a -text "P2a defaults" -command setShadowP2aDefaults
-    ttk::button .runopts.change.p2b -text "P2b defaults" -command setShadowP2bDefaults
+#    ttk::button .runopts.change.p2a -text "P2a defaults" -command setShadowP2aDefaults
+    ttk::button .runopts.change.p2b -text "P2 defaults" -command setShadowP2bDefaults
     ttk::button .runopts.change.p1 -text "P1 defaults" -command setShadowP1Defaults
     
     ttk::button .runopts.end.ok -text " OK " -command {copyShadowClose .runopts}
@@ -1908,7 +1908,7 @@ proc doRunOptions {} {
     grid .runopts.b.runtext -sticky nsew
     grid .runopts.c.flashtext -sticky nsew
 
-    grid .runopts.change.p2b .runopts.change.p2a .runopts.change.p1 -sticky nsew
+    grid .runopts.change.p2b .runopts.change.p1 -sticky nsew
     grid .runopts.end.ok .runopts.end.cancel -sticky nsew
     
     grid columnconfigure .runopts.a 0 -weight 1
