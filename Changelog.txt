@@ -1,6 +1,7 @@
 Version 5.0.1
 - Disabled P2a buttons
 - Enabled ANSI console mode for P1 loader in Windows
+- On Linux and Mac, use $HOME for config file location
 
 Version 5.0.0
 - Renamed "fastspin" to "flexspin"

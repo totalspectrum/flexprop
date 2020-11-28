@@ -27,9 +27,6 @@ set tcl_nonwordchars {[^[:alnum:]_]}
 # files are relative (usually the location of the program)
 #
 
-# config file name
-set CONFIG_FILE "$ROOTDIR/.flexprop.config"
-
 # prefix for shortcut keys (Command on Mac, Control elsewhere)
 if { [tk windowingsystem] == "aqua" } {
     set CTRL_PREFIX "Command"
@@ -45,9 +42,16 @@ if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/flexspin.mac"] 
     set EXE ".mac"
 }
 
+if { [info exists ::env(HOME) ] } {    
+    set CONFIGDIR $::env(HOME)
+} else {
+    set CONFIGDIR $ROOTDIR
+}
+
 # prefix for starting a command in a window
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start \"Propeller Output %p\""
+    set CONFIGDIR $ROOTDIR
 } elseif { [tk windowingsystem] == "aqua" } {
     set WINPREFIX $ROOTDIR/bin/mac_terminal.sh
 } elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
@@ -55,6 +59,9 @@ if { $tcl_platform(platform) == "windows" } {
 } else {
     set WINPREFIX "xterm -fs 14 -T \"Propeller Output %p\" -e"
 }
+
+# config file name
+set CONFIG_FILE "$CONFIGDIR/.flexprop.config"
 
 # default configuration variables
 # the config() array is written to the config file and read
