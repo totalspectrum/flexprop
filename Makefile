@@ -163,6 +163,8 @@ ifdef PANDOC_EXISTS
 	cp -r $(HTMLFILES) flexprop/doc
 endif
 	cp -r spin2cpp/doc/* flexprop/doc
+	cp -r spin2cpp/Changelog.txt flexprop/doc/Compiler-Changelog.txt
+	cp -r Changelog.txt flexprop/doc/GUI-Changelog.txt
 	cp -r loadp2/README.md flexprop/doc/loadp2.md
 	cp -r loadp2/LICENSE flexprop/doc/loadp2.LICENSE.txt
 	cp -r spin2cpp/COPYING.LIB flexprop/doc/COPYING.LIB
