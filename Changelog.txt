@@ -1,5 +1,6 @@
 Version 5.0.3
 - Added Changelogs to documentation
+- Updated loadp2 to have -DTR and -RTS options
 
 Version 5.0.1
 - Disabled P2a buttons
