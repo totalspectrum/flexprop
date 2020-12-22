@@ -259,7 +259,7 @@ endif
 
 ifneq ($(OS),msys)
 loadp2/build-win32/loadp2.exe:
-	make -C loadp2 CROSS=win32
+	make -C loadp2 CROSS=win32 P2ASM="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include"
 endif
 
 $(RESOBJ): $(RES_RC)
