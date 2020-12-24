@@ -163,6 +163,8 @@ ifdef PANDOC_EXISTS
 	cp -r $(HTMLFILES) flexprop/doc
 endif
 	cp -r spin2cpp/doc/* flexprop/doc
+	cp -r spin2cpp/Changelog.txt flexprop/doc/Changelog-compiler.txt
+	cp -r Changelog.txt flexprop/doc/Changelog-gui.txt
 	cp -r loadp2/README.md flexprop/doc/loadp2.md
 	cp -r loadp2/LICENSE flexprop/doc/loadp2.LICENSE.txt
 	cp -r spin2cpp/COPYING.LIB flexprop/doc/COPYING.LIB
@@ -257,7 +259,7 @@ endif
 
 ifneq ($(OS),msys)
 loadp2/build-win32/loadp2.exe:
-	make -C loadp2 CROSS=win32
+	make -C loadp2 CROSS=win32 P2ASM="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include"
 endif
 
 $(RESOBJ): $(RES_RC)
