@@ -163,7 +163,9 @@ old (revision A) board.
 Config File
 -----------
 Settings for flexprop are saved in a file called
-".flexprop.config" in the directory where flexprop.exe is
-installed. If something gets really messed up, deleting that
-file will restore flexprop to its default state.
+".flexprop.config" in the user's HOME directory; if no
+HOME environment variable is found, the directory where
+flexprop.exe is installed is used instead. If something gets
+really messed up, deleting that file will restore flexprop
+to its default state.
 
