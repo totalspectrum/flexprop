@@ -9,7 +9,7 @@
 set aboutMsg "
 GUI tool for FlexProp
 Version $spin2gui_version
-Copyright 2018-2020 Total Spectrum Software Inc.
+Copyright 2018-2021 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
 output will be correct.   
@@ -51,7 +51,6 @@ if { [info exists ::env(HOME) ] } {
 # prefix for starting a command in a window
 if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "cmd.exe /c start \"Propeller Output %p\""
-    set CONFIGDIR $ROOTDIR
 } elseif { [tk windowingsystem] == "aqua" } {
     set WINPREFIX $ROOTDIR/bin/mac_terminal.sh
 } elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
