@@ -6,20 +6,11 @@ Menus
 
 ### File
 
-The File menu should be pretty self explanatory. You can create a new
-file in a new tab with "New File" or open an existing file with "Open Spin
-file...". If you use "Open file..." with the current tab holding
-an empty, unmodified new file, the file will be opened in that tab,
-otherwise it will be opened in a new tab.
+The File menu should be pretty self explanatory. You can create a new file in a new tab with "New File" or open an existing file with "Open Spin file...". If you use "Open file..." with the current tab holding an empty, unmodified new file, the file will be opened in that tab, otherwise it will be opened in a new tab.
 
-The default configuration always creates a listing file (.lst), which
-you can load into a window by selecting "Open Listing File" under the
-File menu. If the listing file window is open it will
-automatically be updated on every recompile.
+The default configuration always creates a listing file (.lst), which you can load into a window by selecting "Open Listing File" under the File menu. If the listing file window is open it will automatically be updated on every recompile.
 
-The "Library directories..." entry allows you to pick a directories that
-will be searched for OBJ declarations and include files automatically.
-The directories are searched in the order in which they are listed.
+The "Library directories..." entry allows you to pick a directories that will be searched for OBJ declarations and include files automatically.  The directories are searched in the order in which they are listed.
 
 "Close tab" closes the currently selected tab.
 
@@ -27,118 +18,67 @@ The directories are searched in the order in which they are listed.
 
 ### Edit
 
-The Edit menu is again pretty self-explanatory. The Undo/Redo
-functionality is quite limited; only one level of Redo is reliable,
-and trying to Redo again will produce unpredictable results.
+The Edit menu is again pretty self-explanatory. The Undo/Redo functionality is quite limited; only one level of Redo is reliable, and trying to Redo again will produce unpredictable results.
 
 ### Options
 
-The Options menu lets you change compiler and editor options. For now
-just the optimization level can be changed. The default optimization
-level is probably suitable for most purposes.
+The Options menu lets you change compiler and editor options. For now just the optimization level can be changed. The default optimization level is probably suitable for most purposes.
 
-"No Optimization" is only recommended for checking for compiler
-bugs (if the program works with no optimization but fails with
-optimization enabled, then either there's a timing issue or a compiler
-bug).
+"No Optimization" is only recommended for checking for compiler bugs (if the program works with no optimization but fails with optimization enabled, then either there's a timing issue or a compiler bug).
 
 "Default optimization" is the normal level of optimization.
 
-"Full Optimization" will often produce faster code, but it will typically
-consume more resources (including COG memory).
+"Full Optimization" will often produce faster code, but it will typically consume more resources (including COG memory).
 
-"No extra warnings" means the compiler will only warn about serious
-problems.
+"No extra warnings" means the compiler will only warn about serious problems.
 
-"Enable compatibility warnings" will cause the compiler to also warn
-about some differences between flexspin and the official Spin2
-compiler. Fixing these warnings will make porting your code to the
-Parallax compiler easier (although there still may be issues!)
+"Enable compatibility warnings" will cause the compiler to also warn about some differences between flexspin and the official Spin2 compiler. Fixing these warnings will make porting your code to the Parallax compiler easier (although there still may be issues!)
 
-"Use IEEE floating point" is the default; the compiler uses IEEE
-format binary floating point for floating point values in all languages.
+"Use IEEE floating point" is the default; the compiler uses IEEE format binary floating point for floating point values in all languages.
 
-"Use 16.16 fixed point in place of floats" causes the compiler to use
-16.16 fixed point values where it previously would use IEEE floating
-point. This means that floating point values are severely restricted
-in range, but it is much faster than true floating point. Use this
-option with some care, it is still experimental.
+"Use 16.16 fixed point in place of floats" causes the compiler to use 16.16 fixed point values where it previously would use IEEE floating point. This means that floating point values are severely restricted in range, but it is much faster than true floating point. Use this option with some care, it is still experimental.
 
-"Debug disabled" turns off all DEBUG messages in Spin2 files (this is
-the default). 
+"Debug disabled" turns off all DEBUG messages in Spin2 files (this is the default).
 
-"Debug enabled" turns on DEBUG, allowing the DEBUG() statements to be
-compiled and executed. Note that not all Spin2 DEBUG() commands are
-supported; see the general documentation for details.
+"Debug enabled" turns on DEBUG, allowing the DEBUG() statements to be compiled and executed. Note that not all Spin2 DEBUG() commands are supported; see the general documentation for details.
 
-The "Editor Options..." dialog allows you to change the way the source
-code editor looks, e.g. changing the font used for the text, or the
-tab settings. It also lets you change the font used for the compiler
-output window, and has an option to automatically load files changed
-by external programs (normally flexprop will prompt you to reload if
-it notices a change).
+The "Editor Options..." dialog allows you to change the way the source code editor looks, e.g. changing the font used for the text, or the tab settings. It also lets you change the font used for the compiler output window, and has an option to automatically load files changed by external programs (normally flexprop will prompt you to reload if it notices a change).
 
-The "Save session on exit" option, if enabled, causes the editor to reload any
-previously open files each time it is started.
+The "Save session on exit" option, if enabled, causes the editor to reload any previously open files each time it is started.
 
 ### Commands
 
-The Commands menu allow you to compile, run a binary, or both compile
-and run. The current file (the one in the currently selected tab) is
-always the one compiled, so it should be your top level file. It
-will be saved automatically before any compilation.
+The Commands menu allow you to compile, run a binary, or both compile and run. The current file (the one in the currently selected tab) is always the one compiled, so it should be your top level file. It will be saved automatically before any compilation.
 
-"Run Binary on device..." allows you to choose a binary that you
-compiled off-line (or that was compiled earlier) and run it on the
-device.
+"Run Binary on device..." allows you to choose a binary that you compiled off-line (or that was compiled earlier) and run it on the device.
 
-"Compile and Flash" and "Flash binary file..." are like the run
-options, but program the binary into the device. The default is to
-program the device's SPI flash. For P2 boards, the exact program to
-use for flashing may be selected with the "Choose P2 flash program..."
-menu. For example, choosing "P2ES_sdcard.bin" will cause the binary
-to be placed on an SD card instead of in the SPI flash.
+"Compile and Flash" and "Flash binary file..." are like the run options, but program the binary into the device. The default is to program the device's SPI flash. For P2 boards, the exact program to use for flashing may be selected with the "Choose P2 flash program..."  menu. For example, choosing "P2ES_sdcard.bin" will cause the binary to be placed on an SD card instead of in the SPI flash.
 
 ### Ports
 
-Presents a menu of serial port speeds and ports that may be selected.
-The default is to tell the loader program (loadp2 or proploader) to
-scan for a port to use. But you may override this by selecting a
-specific serial port.
+Presents a menu of serial port speeds and ports that may be selected.  The default is to tell the loader program (loadp2 or proploader) to scan for a port to use. But you may override this by selecting a specific serial port.
 
-If for some reason the port you wish to use is not listed (this may
-happen on Mac OS X, for example) then you can still override
-the port by configuring the command manually (using the Commands >
-Configure Commands... menu). In the "Run command" replace `%P` with
-`-p COM20` or `-p /dev/tty.usbmodem123` (or whatever the port you wish
-to use is).
+If for some reason the port you wish to use is not listed (this may happen on Mac OS X, for example) then you can still override the port by configuring the command manually (using the Commands > Configure Commands... menu). In the "Run command" replace `%P` with `-p COM20` or `-p /dev/tty.usbmodem123` (or whatever the port you wish to use is).
 
 ### Special
 
-The `Special` menu presents some options for interacting with P2
-boards.
+The `Special` menu presents some options for interacting with P2 boards.
 
 #### Enter P2 ROM TAQOZ
 
-Opens a terminal window connected to the version of Peter Jakacki's
-Forth interpreter TAQOZ that is built into the P2 ROM.
+Opens a terminal window connected to the version of Peter Jakacki's Forth interpreter TAQOZ that is built into the P2 ROM.
 
 #### Load current buffer into TAQOZ
 
-Like "Enter P2 ROM TAQOZ", but after TAQOZ is started the text in the
-currently selected editor window is downloaded to TAQOZ as if the
-user had typed it.
+Like "Enter P2 ROM TAQOZ", but after TAQOZ is started the text in the currently selected editor window is downloaded to TAQOZ as if the user had typed it.
 
 #### Run proplisp on P2
 
-Runs a Lisp interpreter on the P2. This is loaded from the
-`samples/proplisp` directory.
+Runs a Lisp interpreter on the P2. This is loaded from the `samples/proplisp` directory.
 
 #### Load current buffer into proplisp
 
-Like "Run proplisp on P2", but after Lisp is started the text in the
-currently selected editor window is downloaded to the P2 as if the
-user had typed it.
+Like "Run proplisp on P2", but after Lisp is started the text in the currently selected editor window is downloaded to the P2 as if the user had typed it.
 
 #### Enter ROM Monitor
 
@@ -146,26 +86,22 @@ Opens a terminal window connected to the built in P2 ROM debug monitor.
 
 #### Terminal only
 
-Opens a terminal window. Does not scan for a P2, so the port to use must
-be explicitly set in the `Port` menu.
+Opens a terminal window. Does not scan for a P2, so the port to use must be explicitly set in the `Port` menu.
 
 Configuring Commands
 --------------------
 
-You can change the commands used for compiling and running
-programs. Since the commands are flexible, you can acutally use
-flexprop for compiling and running programs on the P1. The "P1
-defaults" button sets the commands for this (you will need to supply
-propeller-load.exe yourself). "P2b defaults" restores the settings to
-the original Prop2 development. Use "P2a defaults" if you have an
-old (revision A) board.
+You can change the commands used for compiling and running programs. Since the commands are flexible, you can acutally use flexprop for compiling and running programs on the P1. The "P1 defaults" button sets the commands for this (you will need to supply propeller-load.exe yourself). "P2b defaults" restores the settings to the original Prop2 development. Use "P2a defaults" if you have an old (revision A) board.
 
 Config File
 -----------
-Settings for flexprop are saved in a file called
-".flexprop.config" in the user's HOME directory; if no
-HOME environment variable is found, the directory where
-flexprop.exe is installed is used instead. If something gets
-really messed up, deleting that file will restore flexprop
-to its default state.
 
+Settings for flexprop are saved in a file called `.flexprop.config`. This is searched for in the following places (in this order):
+
+(1) If a file called `.flexprop.config` already exists in the directory containing the `flexprop` executable, then that file is used. This provides an easy way to make a "portable" installation of FlexProp on a USB stick; just provide an empty `.flexprop.config` next to `flexprop.exe`.
+
+(2) Otherwise, if an environment variable called HOME exists then the config file is `$HOME/.flexprop.config`.
+
+(3) If no HOME environment variable is found, the directory where `flexprop.exe` is installed is used as the home for `.flexprop.config`.
+
+If something gets really messed up, deleting the `.flexprop.config` file will restore flexprop to its default state.
