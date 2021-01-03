@@ -1,3 +1,6 @@
+Version 5.0.4
+- Added tooltips for open file tabs
+
 Version 5.0.3
 - Added Changelogs to documentation
 - Updated loadp2 to have -DTR and -RTS options

@@ -1039,6 +1039,24 @@ proc doClickOnLink { w coord } {
 }
 
 #
+# help for tabs
+#
+proc tabHelp {w x y} {
+    set t [$w identify tab $x $y]
+    global filenames
+    if {$t ne ""} then {
+	set alltabs [.p.nb tabs]
+	set msg1 [.p.nb tab $t -text]
+	set msg2 [getWindowFile [lindex $alltabs $t]]
+	#set msg "$msg1: $msg2"
+	set msg "$msg2"
+	showBalloonHelp $w $msg
+    } else {
+	destroy .balloonHelp
+    }
+}
+
+#
 # set up syntax highlighting for a given ctext widget
 #
 
@@ -1421,6 +1439,14 @@ bind . <$CTRL_PREFIX-l> { doListing }
 bind . <$CTRL_PREFIX-f> { searchrep [focus] 0 }
 bind . <$CTRL_PREFIX-k> { searchrep [focus] 1 }
 bind . <$CTRL_PREFIX-w> { closeTab }
+
+set toolTipScript [list tabHelp %W %x %y]
+set enterScript [list after 1000 $toolTipScript]
+set leaveScript [list after cancel $toolTipScript]
+append leaveScript \n [list after 200 [list destroy .balloonHelp]]
+
+bind .p.nb <Enter> $enterScript
+bind .p.nb <Leave> $leaveScript
 
 # bind to right mouse button on Linux and Windows
 

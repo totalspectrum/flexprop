@@ -21,6 +21,7 @@ source $ROOTDIR/src/ctext/ctext.tcl
 source $ROOTDIR/src/checkserial.tcl
 source $ROOTDIR/src/pathbox.tcl
 source $ROOTDIR/src/fontchooser.tcl
+source $ROOTDIR/src/balloon.tcl
 source $ROOTDIR/src/gui.tcl
 
 namespace import ::choosefont::choosefont
