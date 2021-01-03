@@ -42,7 +42,10 @@ if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/flexspin.mac"] 
     set EXE ".mac"
 }
 
-if { [info exists ::env(HOME) ] } {    
+if { [file exists "$ROOTDIR/.flexprop.config"] } {
+    # portable installation
+    set CONFIGDIR $ROOTDIR
+} elseif { [info exists ::env(HOME) ] } {    
     set CONFIGDIR $::env(HOME)
 } else {
     set CONFIGDIR $ROOTDIR
