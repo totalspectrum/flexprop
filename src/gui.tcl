@@ -570,6 +570,8 @@ proc newTabName {} {
 proc createNewTab {} {
     global filenames
     global config
+    global tabEnterScript
+    global tabLeaveScript
     set w [newTabName]
     
     #.p.bot.txt delete 1.0 end
@@ -579,7 +581,12 @@ proc createNewTab {} {
     setfont $w.txt $config(font)
     .p.nb add $w
     .p.nb tab $w -text "New File"
+    
     .p.nb select $w
+
+    bind $w <Enter> $tabLeaveScript
+    bind $w <Leave> $tabEnterScript
+    
     return $w
 }
 
@@ -1044,7 +1051,11 @@ proc doClickOnLink { w coord } {
 # help for tabs
 #
 proc tabHelp {w x y} {
-    set t [$w identify tab $x $y]
+    #set sx $x
+    #set sy $y
+    set sx [expr [winfo pointerx $w]-[winfo rootx .p.nb]]
+    set sy [expr [winfo pointery $w]-[winfo rooty .p.nb]]
+    set t [.p.nb identify tab $sx $sy]
     global filenames
     if {$t ne ""} then {
 	set alltabs [.p.nb tabs]
@@ -1443,12 +1454,12 @@ bind . <$CTRL_PREFIX-k> { searchrep [focus] 1 }
 bind . <$CTRL_PREFIX-w> { closeTab }
 
 set toolTipScript [list tabHelp %W %x %y]
-set enterScript [list after 1000 $toolTipScript]
-set leaveScript [list after cancel $toolTipScript]
-append leaveScript \n [list after 200 [list destroy .balloonHelp]]
+set tabEnterScript [list after 1000 $toolTipScript]
+set tabLeaveScript [list after cancel $toolTipScript]
+append tabLeaveScript \n [list after 200 [list destroy .balloonHelp]]
 
-bind .p.nb <Enter> $enterScript
-bind .p.nb <Leave> $leaveScript
+bind .p.nb <Enter> $tabEnterScript
+bind .p.nb <Leave> $tabLeaveScript
 
 # bind to right mouse button on Linux and Windows
 
