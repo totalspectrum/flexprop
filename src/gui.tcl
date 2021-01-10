@@ -665,6 +665,7 @@ proc loadHelpFile {filename title} {
 	grid .help.f -sticky nsew
     }
     setfont .help.f.txt $config(font)
+    .help.f.txt configure -wrap word
     loadFileToWindow $filename .help.f.txt
     .help.f.txt yview moveto $viewpos
     wm title .help [file tail $filename]

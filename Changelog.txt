@@ -1,3 +1,6 @@
+Version 5.0.6
+- Made help text for GUI wrap
+
 Version 5.0.4
 - Added tooltips for open file tabs
 - Use $HOME/.flexprop.config for the config file location on Windows too
