@@ -2025,6 +2025,7 @@ proc searchrep {t {replace 1}} {
        focus $w
        $w.f icursor end
    }
+    bind $w <Destroy> "searchrep'done $t"
 }
 
 # Find the next instance
@@ -2066,6 +2067,13 @@ proc searchrep'rep1 w {
 proc searchrep'all w {
     set go 1
     while {$go} {set go [searchrep'rep1 $w]}
+}
+
+# done search
+proc searchrep'done w {
+    foreach {from to} [$w tag ranges hilite] {
+        $w tag remove hilite $from $to
+    }
 }
 
 # set the sash position on .p

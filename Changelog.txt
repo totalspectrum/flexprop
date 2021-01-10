@@ -1,5 +1,6 @@
 Version 5.0.6
 - Made help text for GUI wrap
+- Removed search hilight when search window is closed
 
 Version 5.0.4
 - Added tooltips for open file tabs
