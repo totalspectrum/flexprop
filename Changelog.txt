@@ -1,4 +1,5 @@
 Version 5.0.6
+- Added links to Parallax documentation under Help menu
 - Made help text for GUI wrap
 - Removed search hilight when search window is closed
 
