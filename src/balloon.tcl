@@ -45,7 +45,7 @@ proc showBalloonHelp {w msg} {
   if {$::tcl_platform(platform) == "macintosh"} {
     unsupported1 style $t floating sideTitlebar
   }
-  pack [label $t.l -text [subst $msg] -bg yellow -font {Helvetica 9}]\
+  pack [label $t.l -text [subst -nocommands $msg] -bg yellow -font {Helvetica 9}]\
     -padx 1\
     -pady 1
   set width [expr {[winfo reqwidth $t.l] + 2}]
