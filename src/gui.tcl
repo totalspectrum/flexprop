@@ -2023,10 +2023,12 @@ proc searchrep {t {replace 1}} {
        grid columnconfigure $w 1 -weight 1
        $t tag config hilite -background yellow
        focus $w.f
+       $w.f selection range 0 end
    } else {
        raise $w.f
        focus $w
        $w.f icursor end
+       $w.f selection range 0 end
    }
     bind $w <Destroy> "searchrep'done $t"
 }

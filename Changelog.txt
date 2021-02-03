@@ -1,3 +1,6 @@
+Version 5.1.0
+- Made the search/replace box leave the last typed thing selected
+
 Version 5.0.6
 - Added links to Parallax documentation under Help menu
 - Made help text for GUI wrap
