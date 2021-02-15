@@ -45,7 +45,7 @@ if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/flexspin.mac"] 
 if { [file exists "$ROOTDIR/.flexprop.config"] } {
     # portable installation
     set CONFIGDIR $ROOTDIR
-} elseif { [info exists ::env(HOME) ] } {    
+} elseif { [info exists ::env(HOME) ] && [file isdirectory $::env(HOME)] } {    
     set CONFIGDIR $::env(HOME)
 } else {
     set CONFIGDIR $ROOTDIR
@@ -362,8 +362,12 @@ proc uread {name} {
 
 # exit the program
 proc exitProgram { } {
-    checkAllChanges
-    config_save
+    try {
+	checkAllChanges
+	config_save
+    } on error {} {
+	puts "WARNING: Unable to save config!"
+    }
     exit
 }
 
