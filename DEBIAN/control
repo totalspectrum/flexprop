@@ -1,0 +1,9 @@
+Package: flexprop
+Version: 5.1-0
+Section: base
+Priority: optional
+Architecture: amd64
+Depends: libc6 (>=2.2.5), tk8.6 (>= 8.6.0)
+Maintainer: Eric Smith <ersmith@totalspectrum.ca>
+Description: FlexProp
+ A simple GUI for programming the Parallax Propeller
