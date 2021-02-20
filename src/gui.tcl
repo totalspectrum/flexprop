@@ -362,12 +362,10 @@ proc uread {name} {
 
 # exit the program
 proc exitProgram { } {
-    try {
+    catch {
 	checkAllChanges
 	config_save
-    } on error {} {
-	puts "WARNING: Unable to save config!"
-    }
+    } errMsg
     exit
 }
 
