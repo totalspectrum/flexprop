@@ -72,6 +72,10 @@ install: flexprop_base $(NATIVE_BINARIES)
 	cp -r $(NATIVE_BINARIES) flexprop/bin
 	cp -r mac_scripts/* flexprop/bin
 	cp -r flexprop/* $(INSTALL)
+ifndef OPENSPIN
+	@echo
+	@echo "WARNING: openspin not found, P1 loader is not built"
+endif
 
 # where the Tcl and Tk source code are checked out (side by side)
 TCLROOT ?= /home/ersmith/src/Tcl
