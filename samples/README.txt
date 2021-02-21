@@ -43,6 +43,10 @@ proplisp: Lisp interpreter written in C
   lisp.c: Interactive interpreter
   fibo.c: Recursive fibonacci in Lisp
 
+shell: copy files between host and P2 SD card
+  README.md: Documentation
+  shell.c:   simple shell program
+  
 simpletools: Some samples using the Parallax simpletools library
   (Thanks to Roy Eltham for the port)
   
