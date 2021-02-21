@@ -14,6 +14,10 @@
 #include <sys/stat.h>
 #include <sys/vfs.h>
 
+#ifndef _BAUD
+#define _BAUD 230400
+#endif
+
 #ifndef PATH_MAX
 #define PATH_MAX 256
 #endif
@@ -196,6 +200,8 @@ void main()
     char *cmd;
     char *arg1, *arg2;
     int r;
+
+    _setbaud(_BAUD);
     
     // initialize the file systems
     r = mount("/sd", _vfs_open_sdcard());
