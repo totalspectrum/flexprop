@@ -97,6 +97,9 @@ void do_dir(const char *filename)
 
 //
 // perform a copy from file src to file dest
+// as a special case, if "dest" is NULL then
+// copy to the standard output (the serial terminal);
+// this is how we implement the "type" command
 //
 void do_copy(const char *src, const char *dest)
 {
@@ -109,8 +112,8 @@ void do_copy(const char *src, const char *dest)
         printf("Cannot copy whole directories yet\n");
         return;
     }
-    // dest can be, but then we need to fix up the name
-    if (is_directory(dest)) {
+    // dest can be a directory, but then we need to fix up the name
+    if (dest && is_directory(dest)) {
         // copy /host/x.bin /sd
         // should be transformed to
         // copy /host/x.bin /sd/x.bin
@@ -130,13 +133,18 @@ void do_copy(const char *src, const char *dest)
         perror(src);
         return;
     }
-    // optne the output file
-    outf = fopen(dest, "wb");
-    if (!outf) {
-        // there was an error
-        perror(dest);
-        fclose(inf);
-        return;
+    if (dest) {
+        // open the output file
+        outf = fopen(dest, "wb");
+        if (!outf) {
+            // there was an error
+            perror(dest);
+            fclose(inf);
+            return;
+        }
+    } else {
+        // NULL dest means copy to standard output
+        outf = stdout;
     }
     // copy the file data, slow and simple implementation
     for(;;) {
@@ -146,22 +154,25 @@ void do_copy(const char *src, const char *dest)
     }
     // now close the files
     fclose(inf);
-    fclose(outf);
+    if (outf != stdout) {
+        fclose(outf);
+    }
 }
 
 // show the help text
 void do_help(void)
 {
     printf("cd            :  show current directory path\n");
-    printf("cd <dir>      :  change to directory dir\n");
-    printf("copy <s> <d>  :  copy file s to d\n");
+    printf("cd <d>        :  change to directory <d>\n");
+    printf("copy <a> <b>  :  copy file <a> to <b>\n");
     printf("del <f>       :  delete ordinary file <f>\n");
     printf("dir           :  display contents of current directory\n");
-    printf("dir <d>       :  display contents of directory d\n");
+    printf("dir <d>       :  display contents of directory <d>\n");
     printf("exec <f>      :  execute file <f> (never returns)\n");
     printf("help          :  show this help\n");
-    printf("mkdir <d>     :  create new directory d\n");
-    printf("rmdir <d>     :  remove directory d\n");
+    printf("mkdir <d>     :  create new directory <d>\n");
+    printf("rmdir <d>     :  remove directory <d>\n");
+    printf("type <f>      :  show file <f> on the console\n");
 }
 
 // parse a command line into the command and up to 2 optional arguments
@@ -290,6 +301,8 @@ void main()
         } else if (!strcmp(cmd, "rmdir") || !strcmp(cmd, "rd")) {
             r = rmdir(arg1);
             if (r) perror(arg1);
+        } else if (!strcmp(cmd, "type") || !strcmp(cmd, "cat")) {
+            do_copy(arg1, NULL);
         } else {
             printf("Unknown command: %s\n", cmd);
             do_help();
