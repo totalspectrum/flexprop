@@ -508,8 +508,8 @@ int fixup_argv(int *argc, TCHAR ***argv)
     *argc = my_argc;
     *argv = my_argv;
 
-    _tputenv_s(TEXT("TCL_LIBRARY"), dyn_strcat(namebuffer, TEXT("/src/tcl_library/tcl9.0")));
-    _tputenv_s(TEXT("TK_LIBRARY"), dyn_strcat(namebuffer, TEXT("/src/tcl_library/tk8.7")));
+    _tputenv_s(TEXT("TCL_LIBRARY"), dyn_strcat(namebuffer, TEXT("/tcl_library/tcl9.0")));
+    _tputenv_s(TEXT("TK_LIBRARY"), dyn_strcat(namebuffer, TEXT("/tcl_library/tk8.7")));
     return 0;
 }      
 

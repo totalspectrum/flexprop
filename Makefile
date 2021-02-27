@@ -121,6 +121,7 @@ SIGN ?= ./spin2cpp/sign.dummy.sh
 
 flexprop.zip: flexprop_base flexprop.exe $(WIN_BINARIES)
 	cp -r flexprop.exe flexprop/
+	cp -r tcl_library flexprop/
 	cp -r $(WIN_BINARIES) flexprop/bin
 	rm -f flexprop.zip
 	zip -r flexprop.zip flexprop
