@@ -7,15 +7,16 @@ This is a simple C program to allow copying of files between host and SD card.
 The commands available may be shown by typing "help" at the prompt. They are:
 ```
 cd            :  show current directory path
-cd <dir>      :  change to directory dir
-copy <s> <d>  :  copy file s to d
+cd <d>        :  change to directory <d>
+copy <a> <b>  :  copy file <a> to <b>
 del <f>       :  delete ordinary file <f>
 dir           :  display contents of current directory
-dir <d>       :  display contents of directory d
+dir <d>       :  display contents of directory <d>
 exec <f>      :  execute file <f> (never returns)
 help          :  show this help
-mkdir <d>     :  create new directory d
-rmdir <d>     :  remove directory d
+mkdir <d>     :  create new directory <d>
+rmdir <d>     :  remove directory <d>
+type  <f>     :  show file <f> on the terminal
 ```
 
 The SD card (if found) is mounted as "/sd", and the host file system mounted as "/host".

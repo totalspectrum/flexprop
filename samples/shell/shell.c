@@ -14,10 +14,6 @@
 #include <sys/stat.h>
 #include <sys/vfs.h>
 
-#ifndef _BAUD
-#define _BAUD 230400
-#endif
-
 #ifndef PATH_MAX
 #define PATH_MAX 256
 #endif
@@ -64,13 +60,8 @@ void do_dir(const char *filename)
         printf("ERROR: unable to read directory %s\n", filename);
         return;
     }
-    // save current directory
     getcwd(tempdir, sizeof(tempdir));
-    // switch to the one we want to list
-    // (this makes doing the "stat" easier, we don't have
-    // to prepend the full directory path)
     chdir(filename);
-    // show the contents of the directory
     for(;;) {
         ent = readdir(d); // get next directory entry
         if (!ent) break;  // NULL pointer indicates we are done
@@ -91,29 +82,23 @@ void do_dir(const char *filename)
     }
     // all done, close the directory
     closedir(d);
-    // and go back to the original current directory
     chdir(tempdir);
 }
 
 //
 // perform a copy from file src to file dest
-// as a special case, if "dest" is NULL then
-// copy to the standard output (the serial terminal);
-// this is how we implement the "type" command
 //
 void do_copy(const char *src, const char *dest)
 {
     const char *basename;
     FILE *inf, *outf;
     int c;
-
-    // source cannot be a directory
+    
     if (is_directory(src)) {
         printf("Cannot copy whole directories yet\n");
         return;
     }
-    // dest can be a directory, but then we need to fix up the name
-    if (dest && is_directory(dest)) {
+    if (is_directory(dest)) {
         // copy /host/x.bin /sd
         // should be transformed to
         // copy /host/x.bin /sd/x.bin
@@ -126,53 +111,40 @@ void do_copy(const char *src, const char *dest)
         snprintf(tempname, sizeof(tempname), "%s/%s", dest, basename);
         dest = tempname;
     }
-    // open the input file
     inf = fopen(src, "rb");
     if (!inf) {
-        // there was an error
         perror(src);
         return;
     }
-    if (dest) {
-        // open the output file
-        outf = fopen(dest, "wb");
-        if (!outf) {
-            // there was an error
-            perror(dest);
-            fclose(inf);
-            return;
-        }
-    } else {
-        // NULL dest means copy to standard output
-        outf = stdout;
+    outf = fopen(dest, "wb");
+    if (!outf) {
+        perror(dest);
+        fclose(inf);
+        return;
     }
-    // copy the file data, slow and simple implementation
     for(;;) {
         c = fgetc(inf);
         if (c < 0) break;
         fputc(c, outf);
     }
-    // now close the files
+    
     fclose(inf);
-    if (outf != stdout) {
-        fclose(outf);
-    }
+    fclose(outf);
 }
 
 // show the help text
 void do_help(void)
 {
     printf("cd            :  show current directory path\n");
-    printf("cd <d>        :  change to directory <d>\n");
-    printf("copy <a> <b>  :  copy file <a> to <b>\n");
+    printf("cd <dir>      :  change to directory dir\n");
+    printf("copy <s> <d>  :  copy file s to d\n");
     printf("del <f>       :  delete ordinary file <f>\n");
     printf("dir           :  display contents of current directory\n");
-    printf("dir <d>       :  display contents of directory <d>\n");
+    printf("dir <d>       :  display contents of directory d\n");
     printf("exec <f>      :  execute file <f> (never returns)\n");
     printf("help          :  show this help\n");
-    printf("mkdir <d>     :  create new directory <d>\n");
-    printf("rmdir <d>     :  remove directory <d>\n");
-    printf("type <f>      :  show file <f> on the console\n");
+    printf("mkdir <d>     :  create new directory d\n");
+    printf("rmdir <d>     :  remove directory d\n");
 }
 
 // parse a command line into the command and up to 2 optional arguments
@@ -180,33 +152,22 @@ void do_help(void)
 char *parse_cmd(char *buf, char **arg1, char **arg2)
 {
     char *cmd;
-
-    // set arg1 and arg2 to NULL to indicate
-    // that they are not valid
     *arg1 = *arg2 = 0;
-
-    // skip leading spaces
     while (isspace(*buf)) buf++;
     if (*buf == 0) {
-        // empty string, so return NULL
         return 0;
     }
-    // pick out the command as the series of non-space
-    // characters
     cmd = buf;
     while (*buf && !isspace(*buf)) {
         buf++;
     }
     if (*buf) {
-        // add a 0 so the command string is properly terminated
         *buf++ = 0;
     }
-    // now skip any spaces after the command
     while (*buf && isspace(*buf)) {
         buf++;
     }
     if (*buf) {
-        // found a non-space character, so this goes into arg1
         *arg1 = buf;
         while (*buf && !isspace(*buf)) {
             buf++;
@@ -219,8 +180,6 @@ char *parse_cmd(char *buf, char **arg1, char **arg2)
         buf++;
     }
     if (*buf) {
-        // found another non-space character, put the rest of the
-        // line into arg2
         *arg2 = buf;
         while (*buf && *buf != '\n') {
             buf++;
@@ -237,8 +196,6 @@ void main()
     char *cmd;
     char *arg1, *arg2;
     int r;
-
-    _setbaud(_BAUD);
     
     // initialize the file systems
     r = mount("/sd", _vfs_open_sdcard());
@@ -258,18 +215,13 @@ void main()
     for(;;) {
         // print prompt
         printf("cmd> ");
-        // read user input (one line) into cmdbuf
-        // also sets "cmd" to point to "cmdbuf"
         cmd = fgets(cmdbuf, sizeof(cmdbuf), stdin);
         if (!cmd) break;
 
-        // split the command buffer into the command word,
-        // and up to two arguments
         cmd = parse_cmd(cmd, &arg1, &arg2);
         if (!cmd) {
-            continue;  // no command found
+            continue;
         }
-        // interpret the command
         if (!strcmp(cmd, "?") || !strcmp(cmd, "help")) {
             do_help();
         } else if (!strcmp(cmd, "cd")) {
@@ -301,8 +253,6 @@ void main()
         } else if (!strcmp(cmd, "rmdir") || !strcmp(cmd, "rd")) {
             r = rmdir(arg1);
             if (r) perror(arg1);
-        } else if (!strcmp(cmd, "type") || !strcmp(cmd, "cat")) {
-            do_copy(arg1, NULL);
         } else {
             printf("Unknown command: %s\n", cmd);
             do_help();
