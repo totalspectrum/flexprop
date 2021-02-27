@@ -64,8 +64,13 @@ void do_dir(const char *filename)
         printf("ERROR: unable to read directory %s\n", filename);
         return;
     }
+    // save current directory
     getcwd(tempdir, sizeof(tempdir));
+    // switch to the one we want to list
+    // (this makes doing the "stat" easier, we don't have
+    // to prepend the full directory path)
     chdir(filename);
+    // show the contents of the directory
     for(;;) {
         ent = readdir(d); // get next directory entry
         if (!ent) break;  // NULL pointer indicates we are done
@@ -86,6 +91,7 @@ void do_dir(const char *filename)
     }
     // all done, close the directory
     closedir(d);
+    // and go back to the original current directory
     chdir(tempdir);
 }
 
@@ -97,11 +103,13 @@ void do_copy(const char *src, const char *dest)
     const char *basename;
     FILE *inf, *outf;
     int c;
-    
+
+    // source cannot be a directory
     if (is_directory(src)) {
         printf("Cannot copy whole directories yet\n");
         return;
     }
+    // dest can be, but then we need to fix up the name
     if (is_directory(dest)) {
         // copy /host/x.bin /sd
         // should be transformed to
@@ -115,23 +123,28 @@ void do_copy(const char *src, const char *dest)
         snprintf(tempname, sizeof(tempname), "%s/%s", dest, basename);
         dest = tempname;
     }
+    // open the input file
     inf = fopen(src, "rb");
     if (!inf) {
+        // there was an error
         perror(src);
         return;
     }
+    // optne the output file
     outf = fopen(dest, "wb");
     if (!outf) {
+        // there was an error
         perror(dest);
         fclose(inf);
         return;
     }
+    // copy the file data, slow and simple implementation
     for(;;) {
         c = fgetc(inf);
         if (c < 0) break;
         fputc(c, outf);
     }
-    
+    // now close the files
     fclose(inf);
     fclose(outf);
 }
@@ -156,22 +169,33 @@ void do_help(void)
 char *parse_cmd(char *buf, char **arg1, char **arg2)
 {
     char *cmd;
+
+    // set arg1 and arg2 to NULL to indicate
+    // that they are not valid
     *arg1 = *arg2 = 0;
+
+    // skip leading spaces
     while (isspace(*buf)) buf++;
     if (*buf == 0) {
+        // empty string, so return NULL
         return 0;
     }
+    // pick out the command as the series of non-space
+    // characters
     cmd = buf;
     while (*buf && !isspace(*buf)) {
         buf++;
     }
     if (*buf) {
+        // add a 0 so the command string is properly terminated
         *buf++ = 0;
     }
+    // now skip any spaces after the command
     while (*buf && isspace(*buf)) {
         buf++;
     }
     if (*buf) {
+        // found a non-space character, so this goes into arg1
         *arg1 = buf;
         while (*buf && !isspace(*buf)) {
             buf++;
@@ -184,6 +208,8 @@ char *parse_cmd(char *buf, char **arg1, char **arg2)
         buf++;
     }
     if (*buf) {
+        // found another non-space character, put the rest of the
+        // line into arg2
         *arg2 = buf;
         while (*buf && *buf != '\n') {
             buf++;
@@ -221,13 +247,18 @@ void main()
     for(;;) {
         // print prompt
         printf("cmd> ");
+        // read user input (one line) into cmdbuf
+        // also sets "cmd" to point to "cmdbuf"
         cmd = fgets(cmdbuf, sizeof(cmdbuf), stdin);
         if (!cmd) break;
 
+        // split the command buffer into the command word,
+        // and up to two arguments
         cmd = parse_cmd(cmd, &arg1, &arg2);
         if (!cmd) {
-            continue;
+            continue;  // no command found
         }
+        // interpret the command
         if (!strcmp(cmd, "?") || !strcmp(cmd, "help")) {
             do_help();
         } else if (!strcmp(cmd, "cd")) {
