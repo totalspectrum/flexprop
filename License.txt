@@ -1,8 +1,8 @@
-Flexgui as a whole is copyright (c) 2019-2020 Total Spectrum Software Inc.
+FlexProp as a whole is copyright (c) 2019-2021 Total Spectrum Software Inc.
 
 Some individual parts are:
 
-Fastspin is copyright (c) 2011-2020 Total Spectrum Software Inc.
+Flexspin is copyright (c) 2011-2021 Total Spectrum Software Inc.
 
 loadp2 is copyright (c) 2018-2020 Dave Hein and Total Spectrum Software Inc.
 
