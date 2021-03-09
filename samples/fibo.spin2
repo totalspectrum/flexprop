@@ -14,20 +14,20 @@ CON
   baud = _BAUD
   
 OBJ
-#ifdef __P2__
-  ser: "spin/SmartSerial"
-#else
-  ser: "spin/FullDuplexSerial"
-#endif
-
-PUB demo | i, n, t
-  ser.start_default(baud)
+  ser: "spin/SimpleSerial"  ' basic serial object
+  fmt: "spin/ers_fmt"       ' format output with SEND
+  
+PUB demo() | i, n, t
+  ser.start(baud)
+  send := @ser.tx
+  
   _waitms(100)
   repeat i from 1 to 10 step 1
     t := CNT
     n := fiborec(i)
     t := CNT - t
-    ser.printf( "fibo(%d) = %d; cycles = %d\n", i, n, t )
+    send( "fibo(", fmt.dec(i), ") = ", fmt.dec(n) )
+    send( "; cycles = ", fmt.unsdec(t), 13, 10 )
 
 '' iterative version
 PUB fibolp(n) : r | lastr
@@ -37,5 +37,5 @@ PUB fibolp(n) : r | lastr
     (lastr,r) := (r, r+lastr)
 
 '' recursive version
-PUB fiborec(n)
+PUB fiborec(n) : r
   return (n < 2) ? n : fiborec(n-1)+fiborec(n-2)
