@@ -1,3 +1,6 @@
+Version 5.2.1
+- Removed dependency on openspin for P1 builds
+
 Version 5.1.1
 - Tweaked source to work better on Tcl 5.1.1
 - Added new sample "shell" for copying files between host and P2
