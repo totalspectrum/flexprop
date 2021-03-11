@@ -1,5 +1,6 @@
 Version 5.2.1
 - Removed dependency on openspin for P1 builds
+- Updated loadp2
 
 Version 5.1.1
 - Tweaked source to work better on Tcl 5.1.1
