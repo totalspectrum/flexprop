@@ -1214,19 +1214,21 @@ proc setSyntaxHighlightingBasic {w} {
     
     foreach i $keywordslower {
 	lappend keywordsupper [string toupper $i]
+	lappend keywordsupper [string totitle $i]
     }
     set keywords [concat $keywordsupper $keywordslower]
     
     foreach i $typewordslower {
 	lappend typewordsupper [string toupper $i]
+	lappend typewordsupper [string totitle $i]
     }
     set typewords [concat $typewordsupper $typewordslower]
 
     foreach i $opwordslower {
 	lappend opwordsupper [string toupper $i]
+	lappend opwordsupper [string totitle $i]
     }
     set opwords [concat $opwordsupper $opwordslower]
-
     
     $w configure -commentstyle basic
     
