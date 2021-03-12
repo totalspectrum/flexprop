@@ -93,6 +93,7 @@ sudo apt-get install git
 sudo apt-get install tk8.6
 sudo ln -s /usr/bin/wish8.6 /usr/bin/wish
 git clone --recursive https://github.com/totalspectrum/flexprop
+cd flexprop
 make install
 ```
 You will get a warning that openspin was not found and so the P1 loader is not built. If you're developing only for P2 this won't matter. Otherwise you will have to build or find the openspin Spin compiler and add it to your PATH before doing the steps above.
