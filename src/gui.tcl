@@ -1297,6 +1297,10 @@ proc rescanPorts { } {
     }
 }
 
+# actually read in our config info
+config_open
+
+# now set up the menus and widgets
 menu .popup1 -tearoff 0
 .popup1 add command -label "Cut" -command {event generate [focus] <<Cut>>}
 .popup1 add command -label "Copy" -command {event generate [focus] <<Copy>>}
@@ -1499,9 +1503,6 @@ wm protocol . WM_DELETE_WINDOW {
 #autoscroll::autoscroll .p.bot.v
 #autoscroll::autoscroll .p.bot.h
 
-# actually read in our config info
-config_open
-
 # font configuration stuff
 proc doSelectFont {} {
     global config
@@ -1548,6 +1549,7 @@ proc resetFont {w} {
 }
 
 proc resetBottomFont {w} {
+    global config
     set fnt [font actual $w]
     set config(botfont) $fnt
     .p.bot.txt configure -font $fnt

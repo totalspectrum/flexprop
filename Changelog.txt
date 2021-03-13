@@ -1,6 +1,6 @@
 Version 5.2.1
-- Added syntax highlighting for keywords with just first letter
-  capitalized
+- Added syntax highlighting for keywords with just first letter capitalized
+- Fixed saving of compiler output window font
 - Removed dependency on openspin for P1 builds
 - Merged PropLoader with latest from Parallax
 - Updated loadp2
