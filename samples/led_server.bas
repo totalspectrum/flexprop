@@ -92,17 +92,17 @@ end sub
 
     '' change settings for cog1
     print "telling cog1 to start blinking pin 56"
-    update_mbox(mbox1, 56, FREQ/2)
+    update_mbox(mbox1, 56, CLKFREQ/2)
     pausems 2000
 
     '' change settings for cog2
     print "starting to blink pin 57"
-    update_mbox(mbox2, 57, FREQ/3)
+    update_mbox(mbox2, 57, CLKFREQ/3)
     pausems 4000
 
     '' revise settings for cog1
     print "changing frequency on pin 56"
-    update_mbox(mbox1, 56, FREQ/8)
+    update_mbox(mbox1, 56, CLKFREQ/8)
 
     pausems 8000
     print "shutting down blinking on pin 57"
