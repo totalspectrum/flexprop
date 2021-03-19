@@ -1,7 +1,9 @@
-Version 5.2.1
+Version 5.3.0
 - Added syntax highlighting for keywords with just first letter capitalized
 - Fixed saving of compiler output window font
 - Removed dependency on openspin for P1 builds
+- Made PropLoader use ^] to exit instead of ESC
+- Made PropLoader terminal use VT-100 sequences
 - Merged PropLoader with latest from Parallax
 - Updated loadp2
 
