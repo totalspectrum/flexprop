@@ -1,3 +1,6 @@
+Version 5.3.1
+- Added a special menu item for the command shell
+
 Version 5.3.0
 - Added syntax highlighting for keywords with just first letter capitalized
 - Fixed saving of compiler output window font

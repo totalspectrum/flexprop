@@ -1,5 +1,5 @@
 # Simple GUI for Spin
-# Copyright 2018-2020 Total Spectrum Software
+# Copyright 2018-2021 Total Spectrum Software
 # Distributed under the terms of the MIT license;
 # see License.txt for details.
 #
@@ -1394,9 +1394,9 @@ set comport_last [.mbar.comport index end]
 .mbar.special add command -label "Enter P2 ROM TAQOZ" -command { doSpecial "-xTAQOZ" "" }
 .mbar.special add command -label "Load current buffer into TAQOZ" -command { doSpecial "-xTAQOZ" [scriptSendCurFile] }
 .mbar.special add separator
-#.mbar.special add command -label "Run uPython on P2" -command { doSpecial "samples/upython/upython.binary" "" }
+.mbar.special add command -label "Command shell for P2" -command { doSpecial "samples/shell/shell.binary" "" }
 #.mbar.special add command -label "Load current buffer into uPython on P2" -command { doSpecial "samples/upython/upython.binary" [scriptSendCurFile] }
-#.mbar.special add separator
+.mbar.special add separator
 .mbar.special add command -label "Run proplisp on P2" -command { doSpecial "samples/proplisp/lisp.binary" "" }
 .mbar.special add command -label "Load current buffer into proplisp on P2" -command { doSpecial "samples/proplisp/lisp.binary" [scriptSendCurFile] }
 .mbar.special add separator
