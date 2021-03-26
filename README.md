@@ -96,7 +96,6 @@ git clone --recursive https://github.com/totalspectrum/flexprop
 cd flexprop
 make install
 ```
-You will get a warning that openspin was not found and so the P1 loader is not built. If you're developing only for P2 this won't matter. Otherwise you will have to build or find the openspin Spin compiler and add it to your PATH before doing the steps above.
 
 Once the build is finished, the final flexprop installation will be in $HOME/flexprop. You can change this to another directory by adding an `INSTALL=<dir>` in the `make install` step, e.g.
 ```
