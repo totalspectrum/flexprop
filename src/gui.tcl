@@ -503,9 +503,11 @@ set BinTypes {
 proc checkChanges {w} {
     global filenames
     set s $filenames($w)
-    if { $s eq "" } {
-	return
-    }
+    # if these lines are left in then new files
+    # get closed without checking... not good
+    #if { $s eq "" } {
+    #	return
+    #}
     if {[$w.txt edit modified]==1} {
 	set answer [tk_messageBox -icon question -type yesno -message "Save file $s?" -default yes]
 	if { $answer eq "yes" } {

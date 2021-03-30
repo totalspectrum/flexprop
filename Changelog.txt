@@ -1,3 +1,6 @@
+Version 5.3.2
+- Extended checks for saving modified files to include new files
+
 Version 5.3.1
 - Added a special menu item for the command shell
 
