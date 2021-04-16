@@ -117,7 +117,7 @@ proc setShadowP1Defaults {} {
     global ROOTDIR
     global EXE
     
-    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -D_BAUD=%r -l %O %I \"%S\""
+    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -r -t -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
@@ -129,7 +129,7 @@ proc setShadowP2aDefaults {} {
     global ROOTDIR
     global EXE
     
-    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2a -l -D_BAUD=%r %O %I \"%S\""
+    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2a -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
@@ -141,7 +141,7 @@ proc setShadowP2bDefaults {} {
     global ROOTDIR
     global EXE
     
-    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l -D_BAUD=%r %O %I \"%S\""
+    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
@@ -1698,7 +1698,7 @@ proc mapPercent {str} {
     } else {
 	set srcfile "undefined"
     }
-    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT "%F" $config(flashprogram) "%r" $config(baud)]
+    set percentmap [ list "%%" "%" "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT "%F" $config(flashprogram) "%r" $config(baud) "%t" $config(tabwidth)]
     set result [string map $percentmap $str]
     return $result
 }
@@ -1909,6 +1909,7 @@ set cmddialoghelptext {
     %P = Replace with port to use prefixed by -p
     %r = Replace with current baud rate
     %S = Replace with current source file name
+    %t = Replace with tab width
     %% = Insert a % character
 }
 proc copyShadowClose {w} {

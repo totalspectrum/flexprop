@@ -1,3 +1,6 @@
+Version 5.4.0
+- Passed tab settings to flexspin to work around some indentation issues in Spin
+
 Version 5.3.2
 - Extended checks for saving modified files to include new files
 - Modified terminal programs to also exit on Control-Z
