@@ -1,3 +1,6 @@
+Version 5.4.1
+- Updated loadp2 to scan more serial ports on Windows
+
 Version 5.4.0
 - Passed tab settings to flexspin to work around some indentation issues in Spin
 
