@@ -98,7 +98,7 @@ void do_copy(const char *src, const char *dest)
         printf("Cannot copy whole directories yet\n");
         return;
     }
-    if (is_directory(dest)) {
+    if (dest && is_directory(dest)) {
         // copy /host/x.bin /sd
         // should be transformed to
         // copy /host/x.bin /sd/x.bin
@@ -116,11 +116,15 @@ void do_copy(const char *src, const char *dest)
         perror(src);
         return;
     }
-    outf = fopen(dest, "wb");
-    if (!outf) {
-        perror(dest);
-        fclose(inf);
-        return;
+    if (dest) {
+        outf = fopen(dest, "wb");
+        if (!outf) {
+            perror(dest);
+            fclose(inf);
+            return;
+        }
+    } else {
+        outf = stdout;
     }
     for(;;) {
         c = fgetc(inf);
@@ -129,7 +133,7 @@ void do_copy(const char *src, const char *dest)
     }
     
     fclose(inf);
-    fclose(outf);
+    if (dest) fclose(outf);
 }
 
 // show the help text
@@ -145,6 +149,7 @@ void do_help(void)
     printf("help          :  show this help\n");
     printf("mkdir <d>     :  create new directory d\n");
     printf("rmdir <d>     :  remove directory d\n");
+    printf("type <f>      :  type file on console\n");
 }
 
 // parse a command line into the command and up to 2 optional arguments
@@ -253,6 +258,8 @@ void main()
         } else if (!strcmp(cmd, "rmdir") || !strcmp(cmd, "rd")) {
             r = rmdir(arg1);
             if (r) perror(arg1);
+        } else if (!strcmp(cmd, "type") || !strcmp(cmd, "cat")) {
+            do_copy(arg1, NULL);  // print to stdout
         } else {
             printf("Unknown command: %s\n", cmd);
             do_help();
