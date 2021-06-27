@@ -123,6 +123,20 @@ proc setShadowP1Defaults {} {
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
     set shadow(baud) 115200
 }
+# provide some default settings
+proc setShadowP1BytecodeDefaults {} {
+    global shadow
+    global WINPREFIX
+    global ROOTDIR
+    global EXE
+
+    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --interp=rom --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -r -t -k"
+    set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
+    set shadow(baud) 115200
+    tk_messageBox -icon warning -message "Bytecode output is still experimental!\n Many things will not work..." -type ok
+}
 proc setShadowP2aDefaults {} {
     global shadow
     global WINPREFIX
@@ -163,18 +177,17 @@ proc checkPropVersion {} {
     global PROP_VERSION
     if {[string first " -2a " $config(compilecmd)] != -1} {
 	set PROP_VERSION "P2a"
-	set otherProp "P1"
     } elseif {[string first " -2" $config(compilecmd)] != -1} {
 	set PROP_VERSION "P2"
-	set otherProp "P1"
+    } elseif {[string first " --interp=rom" $config(compilecmd)] != -1} {
+	set PROP_VERSION "P1 ByteCode"
     } else {
 	set PROP_VERSION "P1"
-	set otherProp "P2"
     }
     if { [winfo exists .toolbar] } {
 	.toolbar.compile configure -text "Compile for $PROP_VERSION"
 	.toolbar.compileRun configure -text "Compile & Run on $PROP_VERSION"
-	.toolbar.configmsg configure -text "    Use Commands>Configure Commands... to switch to $otherProp"
+	.toolbar.configmsg configure -text "    Use Commands>Configure Commands... to switch targets"
     }
 }
 
@@ -1433,7 +1446,8 @@ grid .p -column 0 -row 1 -columnspan 2 -rowspan 1 -sticky nsew
 ttk::button .toolbar.compile -text "Compile for P2" -command doCompile
 ttk::button .toolbar.runBinary -text "Run Binary" -command doLoadRun
 ttk::button .toolbar.compileRun -text "Compile & Run on P2" -command doCompileRun
-label  .toolbar.configmsg -text "   Use Commands>Configure Commands... to switch to P1" -font TkSmallCaptionFont
+label  .toolbar.configmsg -text "   Use Commands>Configure Commands... to switch targets" -font TkSmallCaptionFont
+checkPropVersion
 
 grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun .toolbar.configmsg -sticky nsew
 
@@ -1952,6 +1966,7 @@ proc doRunOptions {} {
 #    ttk::button .runopts.change.p2a -text "P2a defaults" -command setShadowP2aDefaults
     ttk::button .runopts.change.p2b -text "P2 defaults" -command setShadowP2bDefaults
     ttk::button .runopts.change.p1 -text "P1 defaults" -command setShadowP1Defaults
+    ttk::button .runopts.change.p1bc -text "P1 Bytecode defaults" -command setShadowP1BytecodeDefaults
     
     ttk::button .runopts.end.ok -text " OK " -command {copyShadowClose .runopts}
     ttk::button .runopts.end.cancel -text " Cancel " -command {destroy .runopts}
@@ -1967,7 +1982,7 @@ proc doRunOptions {} {
     grid .runopts.b.runtext -sticky nsew
     grid .runopts.c.flashtext -sticky nsew
 
-    grid .runopts.change.p2b .runopts.change.p1 -sticky nsew
+    grid .runopts.change.p2b .runopts.change.p1 .runopts.change.p1bc -sticky nsew
     grid .runopts.end.ok .runopts.end.cancel -sticky nsew
     
     grid columnconfigure .runopts.a 0 -weight 1
