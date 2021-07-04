@@ -81,6 +81,9 @@ RESOBJ=$(RESDIR)/wish.res.o
 WINTK_INC = -I$(TCLROOT)/tk/xlib -I$(TCLROOT)/tcl/win -I$(TCLROOT)/tcl/generic -I$(TCLROOT)/tk/win -I$(TCLROOT)/tk/generic
 WINTK_LIBS = $(TCLROOT)/tk/win/libtk87.a $(TCLROOT)/tk/win/libtkstub87.a $(TCLROOT)/tcl/win/libtcl90.a $(TCLROOT)/tcl/win/libtclstub90.a $(WINLIBS) $(RESOBJ) -mwindows -pipe -static-libgcc -municode
 
+NATIVETK_INC =-I/usr/include/tcl8.6
+NATIVETK_LIBS=-ltk8.6 -ltcl8.6
+
 VPATH=.:spin2cpp/doc
 
 ifdef PANDOC_EXISTS
@@ -109,8 +112,11 @@ flexprop.zip: flexprop_base flexprop.exe $(WIN_BINARIES)
 	rm -f flexprop.zip
 	zip -r flexprop.zip flexprop
 
-flexprop.exe: src/flexprop.c $(RESOBJ)
-	$(WINGCC) $(WINCFLAGS) -o flexprop.exe src/flexprop.c $(WINTK_INC) $(WINTK_LIBS)
+flexprop.bin: src/flexprop_native.c
+	$(CC) $(CFLAGS) -o flexprop.bin src/flexprop_native.c $(NATIVETK_INC) $(NATIVETK_LIBS)
+
+flexprop.exe: src/flexprop_win.c $(RESOBJ)
+	$(WINGCC) $(WINCFLAGS) -o flexprop.exe src/flexprop_win.c $(WINTK_INC) $(WINTK_LIBS)
 	$(SIGN) flexprop
 	mv flexprop.signed.exe flexprop.exe
 
