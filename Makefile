@@ -81,8 +81,14 @@ RESOBJ=$(RESDIR)/wish.res.o
 WINTK_INC = -I$(TCLROOT)/tk/xlib -I$(TCLROOT)/tcl/win -I$(TCLROOT)/tcl/generic -I$(TCLROOT)/tk/win -I$(TCLROOT)/tk/generic
 WINTK_LIBS = $(TCLROOT)/tk/win/libtk87.a $(TCLROOT)/tk/win/libtkstub87.a $(TCLROOT)/tcl/win/libtcl90.a $(TCLROOT)/tcl/win/libtclstub90.a $(WINLIBS) $(RESOBJ) -mwindows -pipe -static-libgcc -municode
 
+ifeq ($(OS),linux)
 NATIVETK_INC =-I/usr/include/tcl8.6
 NATIVETK_LIBS=-ltk8.6 -ltcl8.6
+endif
+ifeq ($(OS),macosx)
+NATIVETK_INC =-I/usr/local/opt/tcl-tk/include
+NATIVETK_LIBS=-L/usr/local/opt/tcl-tk/lib -ltk8.6 -ltcl8.6
+endif
 
 VPATH=.:spin2cpp/doc
 
