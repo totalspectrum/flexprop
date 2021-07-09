@@ -51,7 +51,7 @@ EXEBINFILES=bin/flexspin.exe bin/flexcc.exe bin/loadp2.exe bin/flexspin.mac bin/
 EXEFILES=flexprop.exe $(EXEBINFILES)
 
 WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe bin/proploader.mac
-NATIVE_BINARIES=bin/flexspin bin/flexcc bin/loadp2 bin/proploader
+NATIVE_BINARIES=flexprop.bin bin/flexspin bin/flexcc bin/loadp2 bin/proploader
 
 install: flexprop_base $(NATIVE_BINARIES)
 	mkdir -p $(INSTALL)
@@ -59,6 +59,7 @@ install: flexprop_base $(NATIVE_BINARIES)
 	cp -r $(NATIVE_BINARIES) flexprop/bin
 	cp -r mac_scripts/* flexprop/bin
 	cp -r flexprop/* $(INSTALL)
+	cp -rp flexprop.bin $(INSTALL)/flexprop
 
 # where the Tcl and Tk source code are checked out (side by side)
 TCLROOT ?= /home/ersmith/src/Tcl
