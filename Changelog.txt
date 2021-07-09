@@ -1,3 +1,7 @@
+Version 6.0.0
+- Added bytecode options to menus
+- Built flexprop binary for MacOS
+
 Version 5.4.1
 - Updated loadp2 to scan more serial ports on Windows
 
