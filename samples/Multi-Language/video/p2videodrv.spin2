@@ -361,7 +361,7 @@ PUB getSize(region) : r
 
 PUB setMode(region, mode)
     if (mode < 0) ' configure as text
-        byte[region][5] &= ~GRAPHICS_MODE 
+        byte[region][5] &= !GRAPHICS_MODE 
     else 
         byte[region][4] := mode
         byte[region][5] |= GRAPHICS_MODE
