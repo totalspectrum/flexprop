@@ -172,7 +172,6 @@ endif
 	cp -r spin2cpp/include flexprop/
 	cp -r doc/*.txt flexprop/doc
 	cp -r board/* flexprop/board
-	cp -r flexprop.tcl flexprop/
 
 .PHONY: flexprop_base
 

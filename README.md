@@ -77,7 +77,7 @@ Create a directory called "flexprop" (or whatever you'd like) and unpack the .zi
 
 ## Installation on Mac OS X
 
-For Mac OS X, it's recommended to run the `flexprop.tcl` script from a command line. Pre-built binaries of the command line tools like `flexspin` and `loadp2` are provided. You may get a Gatekeeper warning about the binaries; if so you'll have to tell Gatekeeper to run them anyway.
+For Mac OS X, it's recommended to run the `flexprop` program from a command line (although it should work from the Finder as well, that just isn't tested as much). Pre-built binaries of the command line tools like `flexspin` and `loadp2` are provided. You may get a Gatekeeper warning about the binaries; if so you'll have to tell Gatekeeper to run them anyway.
 
 ## Building from source
 
@@ -90,8 +90,7 @@ sudo apt-get update
 sudo apt-get install build-essential
 sudo apt-get install bison
 sudo apt-get install git
-sudo apt-get install tk8.6
-sudo ln -s /usr/bin/wish8.6 /usr/bin/wish
+sudo apt-get install tk8.6-dev
 git clone --recursive https://github.com/totalspectrum/flexprop
 cd flexprop
 make install
@@ -102,11 +101,11 @@ Once the build is finished, the final flexprop installation will be in $HOME/fle
 make install INSTALL=/opt/flexprop
 ```
 
-To run, go to the flexprop installation directory and run `./flexprop.tcl`.
+To run, go to the flexprop installation directory and run `./flexprop`.
 
 ## Basic Usage
 
-Run flexprop.exe (Windows) or flexprop.tcl (other systems). Use the `File` menu to open a Spin or BASIC file. You may open multiple files. The one that is currently selected will be treated as the top level project if you try to compile and/or run. The commands used for compiling or running are settable from the `Commands > Configure Commands...` menu item. Compiling and running on Prop2 is the main focus, but you can configure for virtually any situation where just one file is compiled. So for example it should be feasible to use this GUI for `p2gcc` with a bit of tweaking.
+Run flexprop.exe (Windows) or flexprop (other systems). Use the `File` menu to open a Spin or BASIC file. You may open multiple files. The one that is currently selected will be treated as the top level project if you try to compile and/or run. The commands used for compiling or running are settable from the `Commands > Configure Commands...` menu item. Compiling and running on Prop2 is the main focus, but you can configure for virtually any situation where just one file is compiled. So for example it should be feasible to use this GUI for `p2gcc` with a bit of tweaking.
 
 Also under the `File` menu is an option for viewing the listing file. This will only be useful after a program is compiled.
 

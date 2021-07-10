@@ -490,7 +490,7 @@ int fixup_argv(int *argc, TCHAR ***argv)
     my_argv = malloc( (my_argc+2) * sizeof(TCHAR *) );
     my_argv[0] = (*argv)[0];
     //_tprintf(_T("copying my_argv[1]\n"));
-    my_argv[1] =  dyn_strcat(namebuffer, TEXT("/flexprop.tcl"));
+    my_argv[1] =  dyn_strcat(namebuffer, TEXT("/src/flexprop.tcl"));
     //_tprintf(_T("copying remaining argv\n"));
     for (i = 2; i <= my_argc; i++) {
         my_argv[i] = (*argv)[i-1];
