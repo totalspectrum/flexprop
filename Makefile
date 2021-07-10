@@ -51,9 +51,9 @@ EXEBINFILES=bin/flexspin.exe bin/flexcc.exe bin/loadp2.exe bin/flexspin.mac bin/
 EXEFILES=flexprop.exe $(EXEBINFILES)
 
 WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe bin/proploader.mac
-NATIVE_BINARIES=flexprop.bin bin/flexspin bin/flexcc bin/loadp2 bin/proploader
+NATIVE_BINARIES=bin/flexspin bin/flexcc bin/loadp2 bin/proploader
 
-install: flexprop_base $(NATIVE_BINARIES)
+install: flexprop_base flexprop.bin $(NATIVE_BINARIES)
 	mkdir -p $(INSTALL)
 	mkdir -p flexprop/bin
 	cp -r $(NATIVE_BINARIES) flexprop/bin
@@ -83,12 +83,13 @@ WINTK_INC = -I$(TCLROOT)/tk/xlib -I$(TCLROOT)/tcl/win -I$(TCLROOT)/tcl/generic -
 WINTK_LIBS = $(TCLROOT)/tk/win/libtk87.a $(TCLROOT)/tk/win/libtkstub87.a $(TCLROOT)/tcl/win/libtcl90.a $(TCLROOT)/tcl/win/libtclstub90.a $(WINLIBS) $(RESOBJ) -mwindows -pipe -static-libgcc -municode
 
 ifeq ($(OS),linux)
-NATIVETK_INC =-I/usr/include/tcl8.6
-NATIVETK_LIBS=-ltk8.6 -ltcl8.6
+NATIVETK_INC=-I/usr/include/tcl8.6
+XLIBS=-lfontconfig -lXft -lXss -lXext -lX11
+NATIVETK_LIBS=-ltk8.6 -ltcl8.6 $(XLIBS) -lz -ldl -lpthread -lm
 endif
 ifeq ($(OS),macosx)
 NATIVETK_INC =-I/usr/local/opt/tcl-tk/include
-NATIVETK_LIBS=-L/usr/local/opt/tcl-tk/lib -ltk8.6 -ltcl8.6
+NATIVETK_LIBS=-L/usr/local/opt/tcl-tk/lib -l:libtk8.6.a -l:libtcl8.6.a -lz -lpthread -lm
 endif
 
 VPATH=.:spin2cpp/doc
