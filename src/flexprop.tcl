@@ -14,14 +14,14 @@ package require Tk
 #package require autoscroll
 #package require ctext
 
-source $ROOTDIR/src/version.tcl
-source $ROOTDIR/src/autoscroll.tcl
-source $ROOTDIR/src/browser.tcl
-source $ROOTDIR/src/ctext/ctext.tcl
-source $ROOTDIR/src/checkserial.tcl
-source $ROOTDIR/src/pathbox.tcl
-source $ROOTDIR/src/fontchooser.tcl
-source $ROOTDIR/src/balloon.tcl
-source $ROOTDIR/src/gui.tcl
+source $ROOTDIR/version.tcl
+source $ROOTDIR/autoscroll.tcl
+source $ROOTDIR/browser.tcl
+source $ROOTDIR/ctext/ctext.tcl
+source $ROOTDIR/checkserial.tcl
+source $ROOTDIR/pathbox.tcl
+source $ROOTDIR/fontchooser.tcl
+source $ROOTDIR/balloon.tcl
+source $ROOTDIR/gui.tcl
 
 namespace import ::choosefont::choosefont
