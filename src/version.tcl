@@ -7,9 +7,9 @@
 # 1 "spin2cpp/version.h" 1
 # 2 "<stdin>" 2
 
-set spin2gui_version_major 6
-set spin2gui_version_minor 0
-set spin2gui_version_rev 0
+set spin2gui_version_major 5
+set spin2gui_version_minor 9
+set spin2gui_version_rev 1
 
 set spin2gui_beta "-beta"
 
