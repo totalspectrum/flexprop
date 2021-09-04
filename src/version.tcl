@@ -9,7 +9,7 @@
 
 set spin2gui_version_major 5
 set spin2gui_version_minor 9
-set spin2gui_version_rev 1
+set spin2gui_version_rev 2
 
 set spin2gui_beta "-beta"
 
