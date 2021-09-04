@@ -161,6 +161,18 @@ proc setShadowP2bDefaults {} {
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
     set shadow(baud) 230400
 }
+proc setShadowP2NuDefaults {} {
+    global shadow
+    global WINPREFIX
+    global ROOTDIR
+    global EXE
+    
+    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2nu -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
+    set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
+    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
+    set shadow(baud) 230400
+}
 proc copyShadowToConfig {} {
     global config
     global shadow
@@ -177,6 +189,8 @@ proc checkPropVersion {} {
     global PROP_VERSION
     if {[string first " -2a " $config(compilecmd)] != -1} {
 	set PROP_VERSION "P2a"
+    } elseif {[string first " -2nu" $config(compilecmd)] != -1} {
+	set PROP_VERSION "P2 ByteCode"
     } elseif {[string first " -2" $config(compilecmd)] != -1} {
 	set PROP_VERSION "P2"
     } elseif {[string first " --interp=rom" $config(compilecmd)] != -1} {
@@ -1965,6 +1979,7 @@ proc doRunOptions {} {
 
 #    ttk::button .runopts.change.p2a -text "P2a defaults" -command setShadowP2aDefaults
     ttk::button .runopts.change.p2b -text "P2 defaults" -command setShadowP2bDefaults
+    ttk::button .runopts.change.p2nu -text "P2 Bytecode defaults" -command setShadowP2NuDefaults
     ttk::button .runopts.change.p1 -text "P1 defaults" -command setShadowP1Defaults
     ttk::button .runopts.change.p1bc -text "P1 Bytecode defaults" -command setShadowP1BytecodeDefaults
     
@@ -1982,7 +1997,7 @@ proc doRunOptions {} {
     grid .runopts.b.runtext -sticky nsew
     grid .runopts.c.flashtext -sticky nsew
 
-    grid .runopts.change.p2b .runopts.change.p1 .runopts.change.p1bc -sticky nsew
+    grid .runopts.change.p2b .runopts.change.p2nu .runopts.change.p1 .runopts.change.p1bc -sticky nsew
     grid .runopts.end.ok .runopts.end.cancel -sticky nsew
     
     grid columnconfigure .runopts.a 0 -weight 1
