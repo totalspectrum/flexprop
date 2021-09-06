@@ -88,8 +88,9 @@ XLIBS=-lfontconfig -lXft -lXss -lXext -lX11
 NATIVETK_LIBS=-ltk8.6 -ltcl8.6 $(XLIBS) -lz -ldl -lpthread -lm
 endif
 ifeq ($(OS),macosx)
-NATIVETK_INC =-I/opt/tcl-tk/include
-NATIVETK_LIBS=-L/opt/tcl-tk/lib -ltk8.6 -ltcl8.6 -lz -lpthread -framework CoreFoundation -framework CoreServices -framework Cocoa -framework Carbon -framework IOKit -lm -lobjc
+# These are locations as specified by Homebrew
+NATIVETK_INC =-I/usr/local/opt/tcl-tk/include
+NATIVETK_LIBS=-L/usr/local/opt/tcl-tk/lib -ltk8.6 -ltcl8.6 -lz -lpthread -lm
 endif
 
 VPATH=.:spin2cpp/doc

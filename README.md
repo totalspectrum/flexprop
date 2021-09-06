@@ -81,6 +81,8 @@ For Mac OS X, it's recommended to run the `flexprop` program from a command line
 
 ## Building from source
 
+### Linux
+
 Here are complete steps for building from scratch on a generic Ubuntu based platform. Note that the first few steps (setting up a directory for the source code) may be tweaked to suit your wishes.
 ```
 cd $HOME
@@ -102,6 +104,13 @@ make install INSTALL=/opt/flexprop
 ```
 
 To run, go to the flexprop installation directory and run `./flexprop`.
+
+### Mac OS X
+
+You'll need to install tcl-tk development packages. I use homebrew for this, and installed with:
+```
+brew install tcl-tk
+```
 
 ## Basic Usage
 
