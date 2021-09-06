@@ -7,7 +7,7 @@
 # The guts of the IDE GUI
 #
 set aboutMsg "
-GUI tool for FlexProp
+GUI tool for FlexSpin
 Version $spin2gui_version
 Copyright 2018-2021 Total Spectrum Software Inc.
 ------
@@ -954,9 +954,10 @@ proc doAbout {} {
     tk_messageBox -icon info -type ok -message "FlexProp" -detail $aboutMsg
 }
 
-proc doHelp { file title } {
+proc doGuiHelp { } {
     global ROOTDIR
-    
+    set file "$ROOTDIR/doc/help.txt"
+    set title "Help"
     loadHelpFile $file $title
 }
 
@@ -1433,7 +1434,7 @@ set comport_last [.mbar.comport index end]
 .mbar.special add command -label "Terminal only" -command { doSpecial "-n" "-t" }
 
 .mbar add cascade -menu .mbar.help -label Help
-.mbar.help add command -label "GUI" -command { doHelp "$ROOTDIR/doc/help.txt" "Help" }
+.mbar.help add command -label "GUI" -command { doGuiHelp }
 .mbar.help add command -label "General compiler documentation" -command { launchBrowser "file://$ROOTDIR/doc/general.html" }
 .mbar.help add command -label "BASIC Language" -command { launchBrowser "file://$ROOTDIR/doc/basic.html" }
 .mbar.help add command -label "C Language" -command { launchBrowser "file://$ROOTDIR/doc/c.html" }
@@ -2142,6 +2143,17 @@ set BINFILE ""
 if { [tk windowingsystem] == "aqua" } {
     proc ::tk::mac::Quit {} {
         exitProgram
+    }
+    proc ::tk::mac::ShowHelp {} {
+	doGuiHelp
+    }
+    proc ::tk::mac::OpenDocument {args} {
+	foreach f $args {
+	    loadSourceFile $f
+	}
+    }
+    proc tkAboutDialog {} {
+	doAbout
     }
 }
 
