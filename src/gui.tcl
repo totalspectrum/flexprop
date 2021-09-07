@@ -15,6 +15,22 @@ There is no warranty and no guarantee that
 output will be correct.   
 "
 
+# warnings about experimental features
+set bcversion 1
+set bcMsg "
+ROM bytecode is designed for Spin 1 only. \
+Some C / BASIC features are unimplemented and/or may not \
+work properly.
+"
+
+# warnings about experimental features
+set nuversion 1
+set nuMsg "
+P2 bytecode is still under heavy development.
+Performance (both size/speed) is not in final state yet.
+Some features may be unimplemented or not work properly.
+"
+
 # some Tcl/Tk config
 # make sure tcl_wordchars is set
 catch {tcl_endOfWord}
@@ -91,6 +107,13 @@ set config(savesession) 1
 set config(syntaxhighlight) 1
 set config(autoindent) 1
 
+# we provide some warnings to the user about experimental features
+# start the version off at 0, and provide a popup when we find the
+# current note version is > the version
+
+set config(note_nuversion) 0
+set config(note_bcversion) 0
+
 #
 # filenames($w) gives the file name in window $w, for all of the various tabs
 # filetimes($w) gives the last modified time for that file
@@ -129,13 +152,19 @@ proc setShadowP1BytecodeDefaults {} {
     global WINPREFIX
     global ROOTDIR
     global EXE
-
+    global config
+    global bcversion
+    global bcMsg
+    
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --interp=rom --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -r -t -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
     set shadow(baud) 115200
-    tk_messageBox -icon warning -message "Bytecode output is still experimental!\n Many things will not work..." -type ok
+    if { $config(note_bcversion) != $bcversion } {
+	tk_messageBox -icon warning -type ok -message $bcMsg
+	#set config(note_bcversion) $bcversion
+    }
 }
 proc setShadowP2aDefaults {} {
     global shadow
@@ -162,16 +191,24 @@ proc setShadowP2bDefaults {} {
     set shadow(baud) 230400
 }
 proc setShadowP2NuDefaults {} {
+    global config
     global shadow
     global WINPREFIX
     global ROOTDIR
     global EXE
-    
+    global nuversion
+    global nuMsg
+
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2nu -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
     set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
     set shadow(baud) 230400
+
+    if { $config(note_nuversion) != $nuversion } {
+	tk_messageBox -icon warning -type ok -message $nuMsg
+	#set config(note_nuversion) $nuversion
+    }
 }
 proc copyShadowToConfig {} {
     global config
