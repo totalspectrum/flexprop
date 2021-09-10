@@ -162,8 +162,8 @@ proc setShadowP1BytecodeDefaults {} {
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
     set shadow(baud) 115200
     if { $config(note_bcversion) != $bcversion } {
+	set config(note_bcversion) $bcversion
 	tk_messageBox -icon warning -type ok -message $bcMsg
-	#set config(note_bcversion) $bcversion
     }
 }
 proc setShadowP2aDefaults {} {
@@ -206,8 +206,8 @@ proc setShadowP2NuDefaults {} {
     set shadow(baud) 230400
 
     if { $config(note_nuversion) != $nuversion } {
+	set config(note_nuversion) $nuversion
 	tk_messageBox -icon warning -type ok -message $nuMsg
-	#set config(note_nuversion) $nuversion
     }
 }
 proc copyShadowToConfig {} {
