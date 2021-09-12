@@ -1426,7 +1426,8 @@ menu .mbar.help -tearoff 0
 .mbar.options add radiobutton -label "Use 16.16 fixed point in place of floats" -variable FIXEDREAL -value "--fixedreal"
 .mbar.options add separator
 .mbar.options add radiobutton -label "Debug disabled" -variable DEBUG_OPT -value "-gnone"
-.mbar.options add radiobutton -label "Debug enabled" -variable DEBUG_OPT -value "-g"
+.mbar.options add radiobutton -label "Print debug" -variable DEBUG_OPT -value "-g"
+.mbar.options add radiobutton -label "BRK based debug" -variable DEBUG_OPT -value "-gbrk"
 #.mbar.options add separator
 #.mbar.options add radiobutton -label "No Compression" -variable COMPRESS -value "-z0"
 #.mbar.options add radiobutton -label "Compress Code" -variable COMPRESS -value "-z1"
