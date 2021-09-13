@@ -2,20 +2,20 @@
 namespace eval ::tcl::clock {
     ::msgcat::mcset sq DAYS_OF_WEEK_ABBREV [list \
         "Die"\
-        "Hën"\
+        "H\u00ebn"\
         "Mar"\
-        "Mër"\
+        "M\u00ebr"\
         "Enj"\
         "Pre"\
         "Sht"]
     ::msgcat::mcset sq DAYS_OF_WEEK_FULL [list \
         "e diel"\
-        "e hënë"\
-        "e martë"\
-        "e mërkurë"\
+        "e h\u00ebn\u00eb"\
+        "e mart\u00eb"\
+        "e m\u00ebrkur\u00eb"\
         "e enjte"\
         "e premte"\
-        "e shtunë"]
+        "e shtun\u00eb"]
     ::msgcat::mcset sq MONTHS_ABBREV [list \
         "Jan"\
         "Shk"\
@@ -27,7 +27,7 @@ namespace eval ::tcl::clock {
         "Gsh"\
         "Sht"\
         "Tet"\
-        "Nën"\
+        "N\u00ebn"\
         "Dhj"\
         ""]
     ::msgcat::mcset sq MONTHS_FULL [list \
@@ -41,7 +41,7 @@ namespace eval ::tcl::clock {
         "gusht"\
         "shtator"\
         "tetor"\
-        "nëntor"\
+        "n\u00ebntor"\
         "dhjetor"\
         ""]
     ::msgcat::mcset sq BCE "p.e.r."

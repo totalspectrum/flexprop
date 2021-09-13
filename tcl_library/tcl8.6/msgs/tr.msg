@@ -4,27 +4,27 @@ namespace eval ::tcl::clock {
         "Paz"\
         "Pzt"\
         "Sal"\
-        "Çar"\
+        "\u00c7ar"\
         "Per"\
         "Cum"\
         "Cmt"]
     ::msgcat::mcset tr DAYS_OF_WEEK_FULL [list \
         "Pazar"\
         "Pazartesi"\
-        "Salı"\
-        "Çarşamba"\
-        "Perşembe"\
+        "Sal\u0131"\
+        "\u00c7ar\u015famba"\
+        "Per\u015fembe"\
         "Cuma"\
         "Cumartesi"]
     ::msgcat::mcset tr MONTHS_ABBREV [list \
         "Oca"\
-        "Şub"\
+        "\u015eub"\
         "Mar"\
         "Nis"\
         "May"\
         "Haz"\
         "Tem"\
-        "Ağu"\
+        "A\u011fu"\
         "Eyl"\
         "Eki"\
         "Kas"\
@@ -32,17 +32,17 @@ namespace eval ::tcl::clock {
         ""]
     ::msgcat::mcset tr MONTHS_FULL [list \
         "Ocak"\
-        "Şubat"\
+        "\u015eubat"\
         "Mart"\
         "Nisan"\
-        "Mayıs"\
+        "May\u0131s"\
         "Haziran"\
         "Temmuz"\
-        "Ağustos"\
-        "Eylül"\
+        "A\u011fustos"\
+        "Eyl\u00fcl"\
         "Ekim"\
-        "Kasım"\
-        "Aralık"\
+        "Kas\u0131m"\
+        "Aral\u0131k"\
         ""]
     ::msgcat::mcset tr DATE_FORMAT "%d.%m.%Y"
     ::msgcat::mcset tr TIME_FORMAT "%H:%M:%S"

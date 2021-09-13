@@ -5,7 +5,7 @@ namespace eval ::tcl::clock {
         "Pon"\
         "Uto"\
         "Sre"\
-        "Čet"\
+        "\u010cet"\
         "Pet"\
         "Sub"]
     ::msgcat::mcset sh DAYS_OF_WEEK_FULL [list \
@@ -13,7 +13,7 @@ namespace eval ::tcl::clock {
         "Ponedeljak"\
         "Utorak"\
         "Sreda"\
-        "Četvrtak"\
+        "\u010cetvrtak"\
         "Petak"\
         "Subota"]
     ::msgcat::mcset sh MONTHS_ABBREV [list \

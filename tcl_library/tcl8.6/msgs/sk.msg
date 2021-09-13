@@ -5,15 +5,15 @@ namespace eval ::tcl::clock {
         "Po"\
         "Ut"\
         "St"\
-        "Št"\
+        "\u0160t"\
         "Pa"\
         "So"]
     ::msgcat::mcset sk DAYS_OF_WEEK_FULL [list \
-        "Nedeľe"\
+        "Nede\u013ee"\
         "Pondelok"\
         "Utorok"\
         "Streda"\
-        "Štvrtok"\
+        "\u0160tvrtok"\
         "Piatok"\
         "Sobota"]
     ::msgcat::mcset sk MONTHS_ABBREV [list \
@@ -21,9 +21,9 @@ namespace eval ::tcl::clock {
         "feb"\
         "mar"\
         "apr"\
-        "máj"\
-        "jún"\
-        "júl"\
+        "m\u00e1j"\
+        "j\u00fan"\
+        "j\u00fal"\
         "aug"\
         "sep"\
         "okt"\
@@ -31,16 +31,16 @@ namespace eval ::tcl::clock {
         "dec"\
         ""]
     ::msgcat::mcset sk MONTHS_FULL [list \
-        "január"\
-        "február"\
+        "janu\u00e1r"\
+        "febru\u00e1r"\
         "marec"\
-        "apríl"\
-        "máj"\
-        "jún"\
-        "júl"\
+        "apr\u00edl"\
+        "m\u00e1j"\
+        "j\u00fan"\
+        "j\u00fal"\
         "august"\
         "september"\
-        "október"\
+        "okt\u00f3ber"\
         "november"\
         "december"\
         ""]

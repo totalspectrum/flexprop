@@ -4,25 +4,25 @@ namespace eval ::tcl::clock {
         "Dom"\
         "Lun"\
         "Mar"\
-        "Mér"\
+        "M\u00e9r"\
         "Xov"\
         "Ven"\
-        "Sáb"]
+        "S\u00e1b"]
     ::msgcat::mcset gl DAYS_OF_WEEK_FULL [list \
         "Domingo"\
         "Luns"\
         "Martes"\
-        "Mércores"\
+        "M\u00e9rcores"\
         "Xoves"\
         "Venres"\
-        "Sábado"]
+        "S\u00e1bado"]
     ::msgcat::mcset gl MONTHS_ABBREV [list \
         "Xan"\
         "Feb"\
         "Mar"\
         "Abr"\
         "Mai"\
-        "Xuñ"\
+        "Xu\u00f1"\
         "Xul"\
         "Ago"\
         "Set"\
@@ -36,7 +36,7 @@ namespace eval ::tcl::clock {
         "Marzo"\
         "Abril"\
         "Maio"\
-        "Xuño"\
+        "Xu\u00f1o"\
         "Xullo"\
         "Agosto"\
         "Setembro"\

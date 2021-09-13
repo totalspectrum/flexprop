@@ -1,21 +1,21 @@
 # created by tools/loadICU.tcl -- do not edit
 namespace eval ::tcl::clock {
     ::msgcat::mcset da DAYS_OF_WEEK_ABBREV [list \
-        "sø"\
+        "s\u00f8"\
         "ma"\
         "ti"\
         "on"\
         "to"\
         "fr"\
-        "lø"]
+        "l\u00f8"]
     ::msgcat::mcset da DAYS_OF_WEEK_FULL [list \
-        "søndag"\
+        "s\u00f8ndag"\
         "mandag"\
         "tirsdag"\
         "onsdag"\
         "torsdag"\
         "fredag"\
-        "lørdag"]
+        "l\u00f8rdag"]
     ::msgcat::mcset da MONTHS_ABBREV [list \
         "jan"\
         "feb"\

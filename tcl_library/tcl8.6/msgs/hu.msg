@@ -9,21 +9,21 @@ namespace eval ::tcl::clock {
         "P"\
         "Szo"]
     ::msgcat::mcset hu DAYS_OF_WEEK_FULL [list \
-        "vasárnap"\
-        "hétfő"\
+        "vas\u00e1rnap"\
+        "h\u00e9tf\u0151"\
         "kedd"\
         "szerda"\
-        "csütörtök"\
-        "péntek"\
+        "cs\u00fct\u00f6rt\u00f6k"\
+        "p\u00e9ntek"\
         "szombat"]
     ::msgcat::mcset hu MONTHS_ABBREV [list \
         "jan."\
         "febr."\
-        "márc."\
-        "ápr."\
-        "máj."\
-        "jún."\
-        "júl."\
+        "m\u00e1rc."\
+        "\u00e1pr."\
+        "m\u00e1j."\
+        "j\u00fan."\
+        "j\u00fal."\
         "aug."\
         "szept."\
         "okt."\
@@ -31,16 +31,16 @@ namespace eval ::tcl::clock {
         "dec."\
         ""]
     ::msgcat::mcset hu MONTHS_FULL [list \
-        "január"\
-        "február"\
-        "március"\
-        "április"\
-        "május"\
-        "június"\
-        "július"\
+        "janu\u00e1r"\
+        "febru\u00e1r"\
+        "m\u00e1rcius"\
+        "\u00e1prilis"\
+        "m\u00e1jus"\
+        "j\u00fanius"\
+        "j\u00falius"\
         "augusztus"\
         "szeptember"\
-        "október"\
+        "okt\u00f3ber"\
         "november"\
         "december"\
         ""]
