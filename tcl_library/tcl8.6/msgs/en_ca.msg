@@ -1,1 +1,0 @@
-/home/ersmith/src/Tcl/tcl/library/msgs/en_ca.msg

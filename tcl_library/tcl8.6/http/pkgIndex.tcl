@@ -1,1 +1,0 @@
-/home/ersmith/src/Tcl/tcl/library/http/pkgIndex.tcl
