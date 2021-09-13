@@ -67,8 +67,10 @@ namespace eval ttk::theme::xpnative {
 	ttk::style configure Treeview -background SystemWindow
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
+				{!disabled !selected} SystemWindow \
 				selected SystemHighlight] \
 	    -foreground [list   disabled SystemGrayText \
+				{!disabled !selected} SystemWindowText \
 				selected SystemHighlightText];
     }
 }

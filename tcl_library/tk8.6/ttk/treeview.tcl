@@ -46,7 +46,7 @@ bind Treeview	<Shift-ButtonPress-1> \
 bind Treeview	<<ToggleSelection>> \
 		{ ttk::treeview::Select %W %x %y toggle }
 
-ttk::copyBindings TtkScrollable Treeview
+ttk::copyBindings TtkScrollable Treeview 
 
 ### Binding procedures.
 #
@@ -205,7 +205,7 @@ proc ttk::treeview::resize.drag {w x} {
 }
 
 proc ttk::treeview::resize.release {w x} {
-    $w drop
+    # no-op
 }
 
 ### Heading activation.
@@ -336,12 +336,6 @@ proc ttk::treeview::CloseItem {w item} {
 ## Toggle -- toggle opened/closed state of item
 #
 proc ttk::treeview::Toggle {w item} {
-    # don't allow toggling on indicators that
-    # are not present in front of leaf items
-    if {[$w children $item] == {}} {
-        return
-    }
-    # not a leaf, toggle!
     if {[$w item $item -open]} {
 	CloseItem $w $item
     } else {

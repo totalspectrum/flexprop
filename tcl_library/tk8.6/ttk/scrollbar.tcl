@@ -2,6 +2,24 @@
 # Bindings for TScrollbar widget
 #
 
+# Still don't have a working ttk::scrollbar under OSX -
+# Swap in a [tk::scrollbar] on that platform,
+# unless user specifies -class or -style.
+#
+if {[tk windowingsystem] eq "aqua"} {
+    rename ::ttk::scrollbar ::ttk::_scrollbar
+    proc ttk::scrollbar {w args} {
+	set constructor ::tk::scrollbar
+	foreach {option _} $args {
+	    if {$option eq "-class" || $option eq "-style"} {
+		set constructor ::ttk::_scrollbar
+		break
+	    }
+	}
+	return [$constructor $w {*}$args]
+    }
+}
+
 namespace eval ttk::scrollbar {
     variable State
     # State(xPress)	--
@@ -68,7 +86,7 @@ proc ttk::scrollbar::Press {w x y} {
 proc ttk::scrollbar::Drag {w x y} {
     variable State
     if {![info exists State(first)]} {
-    	# Initial buttonpress was not on the thumb,
+    	# Initial buttonpress was not on the thumb, 
 	# or something screwy has happened.  In either case, ignore:
 	return;
     }
