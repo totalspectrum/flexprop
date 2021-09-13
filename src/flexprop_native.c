@@ -267,8 +267,8 @@ int fixup_argv(int *argc, char ***argv)
     *argc = my_argc;
     *argv = my_argv;
 
-    putenv(dyn_strcat("TCL_LIBRARY=", dyn_strcat(namebuffer, "/tcl_library/tcl9.0")));
-    putenv(dyn_strcat("TK_LIBRARY=", dyn_strcat(namebuffer, "/tcl_library/tk8.7")));
+    putenv(dyn_strcat("TCL_LIBRARY=", dyn_strcat(namebuffer, "/tcl_library/tcl8.6")));
+    putenv(dyn_strcat("TK_LIBRARY=", dyn_strcat(namebuffer, "/tcl_library/tk8.6")));
     return 0;
 }      
 

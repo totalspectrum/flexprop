@@ -60,6 +60,7 @@ install: flexprop_base flexprop.bin $(NATIVE_BINARIES)
 	cp -r mac_scripts/* flexprop/bin
 	cp -r flexprop/* $(INSTALL)
 	cp -rp flexprop.bin $(INSTALL)/flexprop
+	cp -rp tcl_library $(INSTALL)/
 
 # where the Tcl and Tk source code are checked out (side by side)
 TCLROOT ?= /home/ersmith/src/Tcl
