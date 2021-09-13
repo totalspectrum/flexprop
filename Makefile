@@ -81,7 +81,7 @@ RES_RC=$(RESDIR)/wish.rc
 RESOBJ=$(RESDIR)/wish.res.o
 
 WINTK_INC = -I$(TCLROOT)/tk/xlib -I$(TCLROOT)/tcl/win -I$(TCLROOT)/tcl/generic -I$(TCLROOT)/tk/win -I$(TCLROOT)/tk/generic
-WINTK_LIBS = $(TCLROOT)/tk/win/libtk87.a $(TCLROOT)/tk/win/libtkstub87.a $(TCLROOT)/tcl/win/libtcl90.a $(TCLROOT)/tcl/win/libtclstub90.a $(WINLIBS) $(RESOBJ) -mwindows -pipe -static-libgcc -municode
+WINTK_LIBS = $(TCLROOT)/tk/win/libtk86.a $(TCLROOT)/tk/win/libtkstub86.a $(TCLROOT)/tcl/win/libtcl86.a $(TCLROOT)/tcl/win/libtclstub86.a $(WINLIBS) $(RESOBJ) -mwindows -pipe -static-libgcc -municode
 
 ifeq ($(OS),linux)
 NATIVETK_INC=-I/usr/include/tcl8.6
@@ -115,8 +115,10 @@ BOARDFILES=board/P2ES_flashloader.bin board/P2ES_flashloader.spin2 board/P2ES_sd
 
 SIGN ?= ./spin2cpp/sign.dummy.sh
 
-flexprop.zip: flexprop_base flexprop.exe $(WIN_BINARIES)
+flexprop.zip: flexprop_base flexprop.exe flexprop.bin $(WIN_BINARIES)
 	cp -r flexprop.exe flexprop/
+	cp -r flexprop.bin flexprop/flexprop.linux
+	cp -rf flexprop.mac flexprop/flexprop.mac
 	cp -r tcl_library flexprop/
 	cp -r $(WIN_BINARIES) flexprop/bin
 	rm -f flexprop.zip

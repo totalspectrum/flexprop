@@ -77,7 +77,11 @@ Create a directory called "flexprop" (or whatever you'd like) and unpack the .zi
 
 ## Installation on Mac OS X
 
-For Mac OS X, it's recommended to run the `flexprop` program from a command line (although it should work from the Finder as well, that just isn't tested as much). Pre-built binaries of the command line tools like `flexspin` and `loadp2` are provided. You may get a Gatekeeper warning about the binaries; if so you'll have to tell Gatekeeper to run them anyway.
+For Mac OS X, it's recommended to run the `flexprop.mac` program from a command line (although it should work from the Finder as well, that just isn't tested as much). Pre-built binaries of the command line tools like `flexspin` and `loadp2` are provided. You may get a Gatekeeper warning about the binaries; if so you'll have to tell Gatekeeper to run them anyway.
+
+## Installation on Linux
+
+Pre-built binaries are included for Linux x64, as `flexprop.linux`. For other architectures, build from source (see directions below).
 
 ## Building from source
 
