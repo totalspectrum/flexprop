@@ -267,8 +267,11 @@ int fixup_argv(int *argc, char ***argv)
     *argc = my_argc;
     *argv = my_argv;
 
+#ifndef __linux__
+    // for Linux, just use the system libraries
     putenv(dyn_strcat("TCL_LIBRARY=", dyn_strcat(namebuffer, "/tcl_library/tcl8.6")));
     putenv(dyn_strcat("TK_LIBRARY=", dyn_strcat(namebuffer, "/tcl_library/tk8.6")));
+#endif    
     return 0;
 }      
 
