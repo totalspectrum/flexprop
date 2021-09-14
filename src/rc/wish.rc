@@ -62,7 +62,7 @@ END
 //   as the application's icon.
 //
 
-app                      ICON    DISCARDABLE     "wish.ico"
+app                      ICON    DISCARDABLE     "tk.ico"
 
 #if STATIC_BUILD
 #include "tk_base.rc"
