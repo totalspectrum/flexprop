@@ -19,15 +19,15 @@ output will be correct.
 set bcversion 1
 set bcMsg "
 ROM bytecode is designed for Spin 1 only. \
-Some C / BASIC features are unimplemented and/or may not \
+Some features in other languages are unimplemented and/or may not \
 work properly.
 "
 
 # warnings about experimental features
 set nuversion 1
 set nuMsg "
-P2 bytecode is still under heavy development.
-Performance (both size/speed) is not in final state yet.
+P2 bytecode is still under heavy development. \
+Performance (both size/speed) is not in final state yet. \
 Some features may be unimplemented or not work properly.
 "
 
@@ -100,6 +100,7 @@ set COMPRESS "-z0"
 set WARNFLAGS "-Wnone"
 set FIXEDREAL "--floatreal"
 set DEBUG_OPT "-gnone"
+set CHARSET "--charset=utf8"
 set PROP_VERSION ""
 set OPENFILES ""
 set config(showlinenumbers) 1
@@ -300,6 +301,7 @@ proc config_open {} {
     global FIXEDREAL
     global DEBUG_OPT
     global COMPORT
+    global CHARSET
     global OPENFILES
     
     if {[file exists $CONFIG_FILE]} {
@@ -331,6 +333,10 @@ proc config_open {} {
 	    warnflags {
 		# set warning flags
 		set WARNFLAGS [lindex $data 1]
+	    }
+	    runtime_charset {
+		# set warning flags
+		set CHARSET [lindex $data 1]
 	    }
 	    fixedreal {
 		# set warning flags
@@ -378,6 +384,7 @@ proc config_save {} {
     global DEBUG_OPT
     global COMPORT
     global OPENFILES
+    global CHARSET
     
     updateLibraryList
     updateOpenFiles
@@ -392,6 +399,7 @@ proc config_save {} {
     puts $fp "warnflags\t\{$WARNFLAGS\}"
     puts $fp "fixedreal\t\{$FIXEDREAL\}"
     puts $fp "debugopt\t\{$DEBUG_OPT\}"
+    puts $fp "runtime_charset\t\{$CHARSET\}"
     foreach i [array names config] {
 	if {$i != ""} {
 	    puts $fp "$i\t\{$config($i)\}"
@@ -1415,13 +1423,23 @@ menu .mbar.help -tearoff 0
 .mbar.edit add command -label "Replace..." -accelerator "$CTRL_PREFIX-K" -command {searchrep [focus] 1}
 
 .mbar add cascade -menu .mbar.options -label Options
-.mbar.options add radiobutton -label "No Optimization" -variable OPT -value "-O0"
-.mbar.options add radiobutton -label "Default Optimization" -variable OPT -value "-O1"
-.mbar.options add radiobutton -label "Full Optimization" -variable OPT -value "-O2"
-.mbar.options add separator
-.mbar.options add radiobutton -label "No extra warnings" -variable WARNFLAGS -value "-Wnone"
-.mbar.options add radiobutton -label "Enable compatibility warnings" -variable WARNFLAGS -value "-Wall"
-.mbar.options add separator
+menu .mbar.options.opt
+.mbar.options add cascade -menu .mbar.options.opt -label "Optimization"
+.mbar.options.opt add radiobutton -label "No Optimization" -variable OPT -value "-O0"
+.mbar.options.opt add radiobutton -label "Default Optimization" -variable OPT -value "-O1"
+.mbar.options.opt add radiobutton -label "Full Optimization" -variable OPT -value "-O2"
+
+menu .mbar.options.warn
+.mbar.options add cascade -menu .mbar.options.warn -label "Warnings"
+.mbar.options.warn add radiobutton -label "No extra warnings" -variable WARNFLAGS -value "-Wnone"
+.mbar.options.warn add radiobutton -label "Enable compatibility warnings" -variable WARNFLAGS -value "-Wall"
+
+menu .mbar.options.charset
+.mbar.options add cascade -menu .mbar.options.charset -label "Runtime character set"
+.mbar.options.charset add radiobutton -label "UTF-8 (Unicode)" -variable CHARSET -value "--charset=utf8"
+.mbar.options.charset add radiobutton -label "Latin-1" -variable CHARSET -value "--charset=latin1"
+.mbar.options.charset add radiobutton -label "Parallax OEM" -variable CHARSET -value "--charset=parallax"
+
 .mbar.options add radiobutton -label "Use IEEE floating point" -variable FIXEDREAL -value "--floatreal"
 .mbar.options add radiobutton -label "Use 16.16 fixed point in place of floats" -variable FIXEDREAL -value "--fixedreal"
 .mbar.options add separator
@@ -1734,6 +1752,7 @@ proc mapPercent {str} {
     global ROOTDIR
     global OPT
     global WARNFLAGS
+    global CHARSET
     global FIXEDREAL
     global DEBUG_OPT
     global COMPRESS
@@ -1743,6 +1762,7 @@ proc mapPercent {str} {
     set ourwarn $WARNFLAGS
     set ourdebug $DEBUG_OPT
     set ourfixed $FIXEDREAL
+    set ourcharset $CHARSET
     if { "$ourwarn" eq "-Wnone" } {
 	set ourwarn ""
     }
@@ -1753,7 +1773,7 @@ proc mapPercent {str} {
 	set ourfixed ""
     }
 #    set fulloptions "$OPT $ourwarn $COMPRESS"
-    set fulloptions "$OPT $ourwarn $ourdebug $ourfixed"
+    set fulloptions "$OPT $ourwarn $ourdebug $ourfixed $ourcharset"
     if { $COMPORT ne " " } {
 	set fullcomport "$COMPORT"
     } else {

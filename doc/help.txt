@@ -22,17 +22,27 @@ The Edit menu is again pretty self-explanatory. The Undo/Redo functionality is q
 
 ### Options
 
-The Options menu lets you change compiler and editor options. For now just the optimization level can be changed. The default optimization level is probably suitable for most purposes.
+The Options menu lets you change compiler and editor options, such as optimization level, debug mode, and warning levels.
+
+#### Optimization
 
 "No Optimization" is only recommended for checking for compiler bugs (if the program works with no optimization but fails with optimization enabled, then either there's a timing issue or a compiler bug).
 
-"Default optimization" is the normal level of optimization.
+"Default optimization" is the normal level of optimization, and is recommended.
 
 "Full Optimization" will often produce faster code, but it will typically consume more resources (including COG memory).
+
+#### Warnings
 
 "No extra warnings" means the compiler will only warn about serious problems.
 
 "Enable compatibility warnings" will cause the compiler to also warn about some differences between flexspin and the official Spin2 compiler. Fixing these warnings will make porting your code to the Parallax compiler easier (although there still may be issues!)
+
+#### Runtime Character Set
+
+The compiler's input is always Unicode (typically encoded as UTF-8), but at runtime some libraries may use other character sets. For example, when using a TV driver with the Parallax font it may be useful to use the Parallax OEM character set.
+
+#### Floating Point
 
 "Use IEEE floating point" is the default; the compiler uses IEEE format binary floating point for floating point values in all languages.
 
@@ -41,6 +51,8 @@ The Options menu lets you change compiler and editor options. For now just the o
 "Debug disabled" turns off all DEBUG messages in Spin2 files (this is the default).
 
 "Debug enabled" turns on DEBUG, allowing the DEBUG() statements to be compiled and executed. Note that not all Spin2 DEBUG() commands are supported; see the general documentation for details.
+
+#### Editor Options
 
 The "Editor Options..." dialog allows you to change the way the source code editor looks, e.g. changing the font used for the text, or the tab settings. It also lets you change the font used for the compiler output window, and has an option to automatically load files changed by external programs (normally flexprop will prompt you to reload if it notices a change).
 
