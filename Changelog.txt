@@ -1,6 +1,10 @@
-Version 6.0.0
-- Added bytecode options to menus
+Version 5.9.4
 - Added character set options to menus
+- Fixed serial port detection on Windows
+- Re-arranged Option menu to use submenus
+
+Version 5.9.3
+- Added bytecode options to menus
 - Built flexprop binary for MacOS
 - Used new version of loadp2 with different timeout routines
 

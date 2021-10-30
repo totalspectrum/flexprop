@@ -47,10 +47,12 @@ errmessage:
 # binaries to make
 #
 
-EXEBINFILES=bin/flexspin.exe bin/flexcc.exe bin/loadp2.exe bin/flexspin.mac bin/flexcc.mac bin/loadp2.mac bin/mac_terminal.sh 
+#EXEBINFILES=bin/flexspin.exe bin/flexcc.exe bin/loadp2.exe bin/flexspin.mac bin/flexcc.mac bin/loadp2.mac bin/mac_terminal.sh 
+EXEBINFILES=bin/flexspin.exe bin/flexcc.exe bin/loadp2.exe
 EXEFILES=flexprop.exe $(EXEBINFILES)
 
-WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe bin/proploader.mac
+#WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe bin/proploader.mac
+WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe
 NATIVE_BINARIES=bin/flexspin bin/flexcc bin/loadp2 bin/proploader
 
 install: flexprop_base flexprop.bin $(NATIVE_BINARIES)
