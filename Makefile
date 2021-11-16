@@ -160,6 +160,7 @@ clean:
 	rm -rf samples/$(SUBSAMPLES)/*.binary
 	rm -rf $(RESOBJ)
 	rm -rf pandoc.yml
+	rm -rf src/version.tcl
 
 flexprop_base: src/version.tcl src/makepandoc.tcl $(BOARDFILES) $(PDFFILES) $(HTMLFILES)
 	mkdir -p flexprop/bin
