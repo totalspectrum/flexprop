@@ -1,3 +1,7 @@
+Version 5.9.5
+- Fixed opening HTML files in some browsers
+- Some minor packaging fixes
+
 Version 5.9.4
 - Added character set options to menus
 - Fixed serial port detection on Windows

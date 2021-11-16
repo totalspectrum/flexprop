@@ -10,7 +10,7 @@
 variable myScript [file normalize [info script]]
 variable ROOTDIR [file dirname $myScript]
 if { [file tail $ROOTDIR] eq "src" } {
-    set ROOTDIR [string range $ROOTDIR 0 [string length $ROOTDIR]-4]
+    set ROOTDIR [string range $ROOTDIR 0 [string length $ROOTDIR]-5]
 }
 package require Tk
 #package require autoscroll
