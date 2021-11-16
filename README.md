@@ -87,7 +87,7 @@ Pre-built binaries are included for Linux x64, as `flexprop.linux`. For other ar
 
 ### Linux
 
-Here are complete steps for building from scratch on a generic Ubuntu based platform. Note that the first few steps (setting up a directory for the source code) may be tweaked to suit your wishes.
+Here are complete steps for building from scratch on a generic Ubuntu based platform. Note that the first few steps (setting up a directory for the source code) may be tweaked to suit your wishes. Also note that the steps involving `texlive-latex-recommended` and `pandoc` are only required for formatting the documentation; if you only want the binaries you may skip these.
 ```
 cd $HOME
 mkdir -p src
@@ -97,6 +97,8 @@ sudo apt-get install build-essential
 sudo apt-get install bison
 sudo apt-get install git
 sudo apt-get install tk8.6-dev
+sudo apt-get install texlive-latex-recommended
+sudo apt-get install pandoc
 git clone --recursive https://github.com/totalspectrum/flexprop
 cd flexprop
 make install
