@@ -1,6 +1,8 @@
+Version 5.9.6
+- Made the Help menu items use the .md files if HTML files are not available
+
 Version 5.9.5
 - Fixed opening HTML files in some browsers
-- Made the Help menu items use the .md files if HTML files are not available
 - Some minor packaging fixes
 
 Version 5.9.4
