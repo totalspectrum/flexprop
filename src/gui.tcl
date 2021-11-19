@@ -1006,6 +1006,17 @@ proc doGuiHelp { } {
     loadHelpFile $file $title
 }
 
+proc doHelp { name } {
+    global ROOTDIR
+    set htmlfile "$ROOTDIR/doc/$name.html"
+    set mdfile "$ROOTDIR/doc/$name.md"
+    if { [file exists $htmlfile] } {
+	launchBrowser "file://$htmlfile"
+    } else {
+	loadHelpFile $mdfile $name
+    }
+}
+
 proc doSpecial {name extraargs} {
     global ROOTDIR
     global BINFILE
@@ -1491,10 +1502,10 @@ set comport_last [.mbar.comport index end]
 
 .mbar add cascade -menu .mbar.help -label Help
 .mbar.help add command -label "GUI" -command { doGuiHelp }
-.mbar.help add command -label "General compiler documentation" -command { launchBrowser "file://$ROOTDIR/doc/general.html" }
-.mbar.help add command -label "BASIC Language" -command { launchBrowser "file://$ROOTDIR/doc/basic.html" }
-.mbar.help add command -label "C Language" -command { launchBrowser "file://$ROOTDIR/doc/c.html" }
-.mbar.help add command -label "Spin Language" -command { launchBrowser "file://$ROOTDIR/doc/spin.html" }
+.mbar.help add command -label "General compiler documentation" -command { doHelp "general" }
+.mbar.help add command -label "BASIC Language" -command { doHelp "basic" }
+.mbar.help add command -label "C Language" -command { doHelp "c" }
+.mbar.help add command -label "Spin Language" -command { doHelp "spin" }
 .mbar.help add separator
 .mbar.help add command -label "Parallax P1 documentation" -command { launchBrowser "https://www.parallax.com/download/propeller-1-documentation/" }
 .mbar.help add command -label "Parallax P2 documentation" -command { launchBrowser "https://www.parallax.com/propeller-2/documentation" }
