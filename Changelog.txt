@@ -1,5 +1,6 @@
 Version 5.9.6
 - Made the Help menu items use the .md files if HTML files are not available
+- Updated P1 proploader program to support the Plan 9 file system
 
 Version 5.9.5
 - Fixed opening HTML files in some browsers

@@ -142,7 +142,7 @@ proc setShadowP1Defaults {} {
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -r -t -k"
+    set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -r \"-9%b\" -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
     set shadow(baud) 115200
