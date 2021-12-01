@@ -47,12 +47,12 @@ errmessage:
 # binaries to make
 #
 
-#EXEBINFILES=bin/flexspin.exe bin/flexcc.exe bin/loadp2.exe bin/flexspin.mac bin/flexcc.mac bin/loadp2.mac bin/mac_terminal.sh 
-EXEBINFILES=bin/flexspin.exe bin/flexcc.exe bin/loadp2.exe
+EXEBINFILES=bin/flexspin.exe bin/flexcc.exe bin/loadp2.exe bin/flexspin.mac bin/flexcc.mac bin/loadp2.mac bin/mac_terminal.sh 
+#EXEBINFILES=bin/flexspin.exe bin/flexcc.exe bin/loadp2.exe
 EXEFILES=flexprop.exe $(EXEBINFILES)
 
-#WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe bin/proploader.mac
-WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe
+WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe bin/proploader.mac
+#WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe
 NATIVE_BINARIES=bin/flexspin bin/flexcc bin/loadp2 bin/proploader
 
 install: flexprop_base flexprop.bin $(NATIVE_BINARIES)
@@ -120,8 +120,9 @@ SIGN ?= ./spin2cpp/sign.dummy.sh
 flexprop.zip: flexprop_base flexprop.exe flexprop.bin $(WIN_BINARIES)
 	cp -r flexprop.exe flexprop/
 	cp -r flexprop.bin flexprop/flexprop.linux
-#	cp -rf flexprop.mac flexprop/flexprop.mac
 	cp -r tcl_library flexprop/
+	cp -rf MACOSX/flexprop.mac flexprop/flexprop
+	cp -rf MACOSX/*.dylib flexprop/tcl_library/
 	cp -r $(WIN_BINARIES) flexprop/bin
 	rm -f flexprop.zip
 	zip -r flexprop.zip flexprop
