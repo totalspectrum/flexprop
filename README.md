@@ -117,6 +117,15 @@ You'll need to install tcl-tk development packages. I use homebrew for this, and
 ```
 brew install tcl-tk
 ```
+Then you can build with something like:
+```
+cd $HOME
+mkdir -p src
+cd src
+git clone --recursive https://github.com/totalspectrum/flexprop
+cd flexprop
+make install
+```
 
 ## Basic Usage
 
@@ -139,9 +148,9 @@ Under the `File` menu is an option for viewing the listing file, which shows the
 
 ## High level languages
 
-The main advantage of FlexProp over PNut (the "official" development tool for the Prop2) is that PNut supports only Spin 2, whereas FlexProp supports Spin 1, Spin 2, BASIC, and C. You can basically write ordinary Spin code, with Prop2 assembly code in the DAT section (instead of Prop1 assembly code). This makes prototyping your applications much easier.
+The main advantage of FlexProp over PNut (the "official" development tool for the Prop2) is that PNut supports only Spin 2, whereas FlexProp supports Spin 1, Spin 2, BASIC, and C. You can write ordinary Spin1 code, with Prop2 assembly code in the DAT section (instead of Prop1 assembly code). This makes porting code from P1 easier.
 
-The code is compiled to P2 assembler by flexspin. This is somewhat different from the way Spin traditionally worked on the Prop1, where Spin code is typically compiled to bytecode and interpreted. (Note that flexspin does work for Prop1, and compiles to P1 assembler in that case.)
+The code is compiled to P2 assembler by flexspin. This is somewhat different from the way Spin traditionally worked on the Prop1, where Spin code is typically compiled to bytecode and interpreted. (Note that flexspin does work for Prop1, and compiles to P1 assembler in that case.) There is now an experimental bytecode compiler, which you may select in the Commands > Configure Commands... menu (click on "P1 bytecode defaults").
 
 Documentation for the various languages supported is in the `doc` folder of the unpacked flexprop. BASIC is the best documented. The Spin documentation assumes familiarity with the original (Propeller1) Spin manual, and outlines the differences in the language flexspin accepts. The C documentation is a placeholder for now and mostly covers the flexspin specific extensions to C.
 
