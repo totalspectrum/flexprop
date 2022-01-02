@@ -68,15 +68,15 @@ if { [file exists "$ROOTDIR/.flexprop.config"] } {
 }
 
 # prefix for starting a command in a window
-if { $tcl_platform(platform) == "windows" } {
-    set WINPREFIX "cmd.exe /c start \"Propeller Output %p\""
-} elseif { [tk windowingsystem] == "aqua" } {
-    set WINPREFIX $ROOTDIR/bin/mac_terminal.sh
-} elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
-    set WINPREFIX "/etc/alternatives/x-terminal-emulator -T \"Propeller Output %p\" -e"
-} else {
-    set WINPREFIX "xterm -fs 14 -T \"Propeller Output %p\" -e"
-}
+#if { $tcl_platform(platform) == "windows" } {
+#    set WINPREFIX "cmd.exe /c start \"Propeller Output %p\""
+#} elseif { [tk windowingsystem] == "aqua" } {
+#    set WINPREFIX $ROOTDIR/bin/mac_terminal.sh
+#} elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
+#    set WINPREFIX "/etc/alternatives/x-terminal-emulator -T \"Propeller Output %p\" -e"
+#} else {
+#    set WINPREFIX "xterm -fs 14 -T \"Propeller Output %p\" -e"
+#}
 
 # config file name
 set CONFIG_FILE "$CONFIGDIR/.flexprop.config"
@@ -91,6 +91,9 @@ set config(spinext) ".spin"
 set config(lastdir) [pwd]
 set config(font) "TkFixedFont"
 set config(botfont) "courier 10"
+set config(term_font) "TkFixedFont"
+set config(term_w) 79
+set config(term_h) 24
 set config(sash) ""
 set config(tabwidth) 4
 set config(autoreload) 0
@@ -137,20 +140,18 @@ proc getWindowFile { w } {
 # provide some default settings
 proc setShadowP1Defaults {} {
     global shadow
-    global WINPREFIX
     global ROOTDIR
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -r \"-9%b\" -k"
+    set shadow(runcmd) "\"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -r \"-9%b\" -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
+    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
     set shadow(baud) 115200
 }
 # provide some default settings
 proc setShadowP1BytecodeDefaults {} {
     global shadow
-    global WINPREFIX
     global ROOTDIR
     global EXE
     global config
@@ -158,9 +159,9 @@ proc setShadowP1BytecodeDefaults {} {
     global bcMsg
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --interp=rom --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -r -t -k"
+    set shadow(runcmd) "\"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -r -t -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
+    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -Dbaudrate=%r %P \"%B\" -e -k"
     set shadow(baud) 115200
     if { $config(note_bcversion) != $bcversion } {
 	set config(note_bcversion) $bcversion
@@ -169,41 +170,38 @@ proc setShadowP1BytecodeDefaults {} {
 }
 proc setShadowP2aDefaults {} {
     global shadow
-    global WINPREFIX
     global ROOTDIR
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2a -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
+    set shadow(runcmd) "\"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
+    set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
     set shadow(baud) 230400
 }
 proc setShadowP2bDefaults {} {
     global shadow
-    global WINPREFIX
     global ROOTDIR
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
+    set shadow(runcmd) "\"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
+    set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
     set shadow(baud) 230400
 }
 proc setShadowP2NuDefaults {} {
     global config
     global shadow
-    global WINPREFIX
     global ROOTDIR
     global EXE
     global nuversion
     global nuMsg
 
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2nu -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
+    set shadow(runcmd) "\"%D/bin/loadp2$EXE\" %P -b%r \"%B\" \"-9%b\" -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
-    set shadow(flashcmd) "$WINPREFIX \"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
+    set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
     set shadow(baud) 230400
 
     if { $config(note_nuversion) != $nuversion } {
@@ -1927,8 +1925,12 @@ proc doJustRun {extraargs} {
     global BINFILE
     
     set cmdstr [mapPercent $config(runcmd)]
-    doJustRunCmd $cmdstr $extraargs
+    if { $extraargs ne "" } {
+	set cmdstr [concat "$cmdstr" " " "$extraargs"]
+    }
+    ::TkTerm::RunInWindow $cmdstr
 }
+
 set flashMsg "
 Note that many boards require jumpers or switches
 to be set before programming flash and/or
