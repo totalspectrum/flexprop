@@ -4,7 +4,7 @@ Some individual parts are:
 
 Flexspin is copyright (c) 2011-2022 Total Spectrum Software Inc.
 
-loadp2 is copyright (c) 2018-2020 Dave Hein and Total Spectrum Software Inc.
+loadp2 is copyright (c) 2018-2022 Dave Hein and Total Spectrum Software Inc.
 
 PropLoader is copyright (c) 2015-2016 David Michael Betz
 
@@ -93,9 +93,9 @@ permission to use and distribute the software in accordance with the
 terms specified in this license.
 
 ============================================================================
-Some sample code may have different licenses; see the source code of
-the samples directory for details. In particular, the micropython
-license is at samples/upython/LICENSE.
+The TkTerm terminal widget used for displaying output is based on the
+tkterm example from Expect, written by Don Libes of NIST and placed in
+the public domain.
 
 ============================================================================
 The Parallax forum (https://forums.parallax.com) is a wonderful
