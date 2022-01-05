@@ -1,8 +1,8 @@
-FlexProp as a whole is copyright (c) 2019-2021 Total Spectrum Software Inc.
+FlexProp as a whole is copyright (c) 2019-2022 Total Spectrum Software Inc.
 
 Some individual parts are:
 
-Flexspin is copyright (c) 2011-2021 Total Spectrum Software Inc.
+Flexspin is copyright (c) 2011-2022 Total Spectrum Software Inc.
 
 loadp2 is copyright (c) 2018-2020 Dave Hein and Total Spectrum Software Inc.
 
