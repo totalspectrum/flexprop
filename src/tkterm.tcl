@@ -119,15 +119,6 @@ proc term_cursor_changed {} {
 set term_standout 0	;# if in standout mode or not
 set term_pipe ""        ;# I/O with remote
 
-# this shouldn't be needed if Ousterhout fixes text bug
-toplevel $toplev
-text $term \
-     -yscroll "$sb set" \
-     -relief sunken -bd 1 -width $cols -height $rows -wrap none -setgrid 1
-
-# define scrollbars
-scrollbar $sb -command "$term yview"
-
 proc graphicsGet {} {
     variable graphics
     return $graphics(mode)
@@ -145,12 +136,31 @@ proc graphicsSet {mode} {
     }
 }
 
+# this shouldn't be needed if Ousterhout fixes text bug
+proc term_create {} {
+    variable toplev
+    variable term
+    variable cols
+    variable rows
+    variable sb
+    
+    toplevel $toplev
+    wm title $toplev "FlexProp Terminal"
+    
+    text $term \
+	-yscroll "$sb set" \
+	-relief sunken -bd 1 -width $cols -height $rows -wrap none -setgrid 1
+
+    # define scrollbars
+    scrollbar $sb -command "$term yview"
+
     grid $term -column 1 -row 0 -sticky nsew
     # let text box only expand
     grid rowconfigure $toplev 0 -weight 1
     grid columnconfigure $toplev 1 -weight 1
 
-$term tag configure standout -background  black -foreground white
+    $term tag configure standout -background  black -foreground white
+}
 
 proc term_clear {} {
     variable term
@@ -184,6 +194,7 @@ proc term_init {} {
     variable cur_col
     variable term
     variable rowsDumb
+
     # initialize it with blanks to make insertions later more easily
     set blankline [format %*s $cols ""]\n
     for {set i 1} {$i <= $rows} {incr i} {
@@ -357,6 +368,7 @@ proc term_update_cursor {} {
     term_cursor_changed
 }
 
+term_create
 term_init
 graphicsSet 0
 
@@ -384,6 +396,10 @@ proc term_recv { c } {
 	    # Text
 	    term_insert $c
 	    term_update_cursor
+	}
+	"^\x1a" {
+	    # ctrl-z
+	    term_insert $c
 	}
 	"^\r" {
 	    # (cr,) Go to beginning of line
@@ -457,6 +473,7 @@ proc term_recv { c } {
 
 proc Terminal_Data { } {
     variable term_pipe
+    variable term_esc
     set c [read $term_pipe 1]
     if { "$c" eq "" } {
 	if { [eof $term_pipe] } {
@@ -468,8 +485,20 @@ proc Terminal_Data { } {
 }
 
 proc RunInWindow { cmd } {
+    variable toplev
     variable term
     variable term_pipe
+    if { "$term_pipe" != "" } {
+	close $term_pipe
+	set term_pipe ""
+    }
+    if { ![winfo exists $toplev] } {
+	term_create
+    }
+    if { ![winfo viewable $toplev] } {
+	wm deiconify $toplev
+    }
+    #raise $toplev
     term_clear
     set term_pipe [open |$cmd r+]
     fconfigure $term_pipe -blocking 0 -buffering none -translation binary
@@ -484,6 +513,13 @@ proc RunInWindow { cmd } {
 #    # when this is working, uncomment ...
 #    # term_resize $rows $cols
 #}
+
+bind $toplev <Destroy> {
+    if { "$::TkTerm::term_pipe" != "" } {
+	close $::TkTerm::term_pipe
+	set ::TkTerm::term_pipe ""
+    }
+}
 
 bind $term <Any-Enter> {
     focus %W
@@ -501,6 +537,7 @@ bind $term <KeyPress> {
 
 bind $term <Control-space>	{::TkTerm::term_send "\000"}
 bind $term <Control-at>		{::TkTerm::term_send "\000"}
+bind $term <Control-z>		{::TkTerm::term_send "\x1a"}
 
 bind $term <F1> {::TkTerm::term_send "\033OP"}
 bind $term <F2> {::TkTerm::term_send "\033OQ"}
