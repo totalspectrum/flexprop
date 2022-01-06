@@ -394,6 +394,8 @@ proc term_send { c } {
 
 proc term_recv { c } {
     variable cur_col
+    variable cur_row
+    variable term
     #puts "term_recv: ($c)"
     switch -regexp "$c" {
 	"^\[^\x01-\x1f]+" {
@@ -410,6 +412,11 @@ proc term_recv { c } {
 	    screen_flush
 	    set cur_col 0
 	    term_update_cursor
+	    # check for debug commands
+	    set line [$term get $cur_row.$cur_col $cur_row.end]
+	    if { "`" eq [string index $line 0] } {
+		::DebugWin::RunCmd [string range $line 1 end]
+	    }
 	}
 	"^\n" {
 	    # (ind,do) Move cursor down one line
