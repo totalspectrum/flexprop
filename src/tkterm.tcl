@@ -385,7 +385,11 @@ proc screen_flush {} {
 proc term_send { c } {
     variable term_pipe
     #puts "term_send: ($c)"
-    puts -nonewline $term_pipe $c
+    if { "$term_pipe" ne "" } {
+	if { ! [eof $term_pipe] } {
+	    puts -nonewline $term_pipe $c
+	}
+    }
 }
 
 proc term_recv { c } {
@@ -532,12 +536,29 @@ bind $term <Meta-KeyPress> {
 }
 
 bind $term <KeyPress> {
+    #puts "got %K (%k) '%A')"
     ::TkTerm::term_send %A
+    break
 }
 
 bind $term <Control-space>	{::TkTerm::term_send "\000"}
 bind $term <Control-at>		{::TkTerm::term_send "\000"}
 bind $term <Control-z>		{::TkTerm::term_send "\x1a"}
+
+bind $term <Up> {::TkTerm::term_send "\033\[A"}
+bind $term <Down> {::TkTerm::term_send "\033\[B"}
+bind $term <Right> {::TkTerm::term_send "\033\[C"}
+bind $term <Left> {::TkTerm::term_send "\033\[D"}
+bind $term <Control-Up> {::TkTerm::term_send "\033\[1;5A"}
+bind $term <Control-Down> {::TkTerm::term_send "\033\[1;5B"}
+bind $term <Control-Right> {::TkTerm::term_send "\033\[1;5C"}
+bind $term <Control-Left> {::TkTerm::term_send "\033\[1;5D"}
+bind $term <Home> {::TkTerm::term_send "\033\[H"}
+bind $term <End> {::TkTerm::term_send "\033\[F"}
+
+bind $term <Insert> {::TkTerm::term_send "\033\[2~"}
+bind $term <Prior> {::TkTerm::term_send "\033\[5~"}
+bind $term <Next> {::TkTerm::term_send "\033\[6~"}
 
 bind $term <F1> {::TkTerm::term_send "\033OP"}
 bind $term <F2> {::TkTerm::term_send "\033OQ"}
