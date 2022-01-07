@@ -530,6 +530,8 @@ bind $toplev <Destroy> {
 	close $::TkTerm::term_pipe
 	set ::TkTerm::term_pipe ""
     }
+    # destroy any debug windows associated with this instance
+    ::DebugWin::DestroyWindows
 }
 
 bind $term <Any-Enter> {
