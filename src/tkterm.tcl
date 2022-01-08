@@ -410,12 +410,15 @@ proc term_recv { c } {
 	"^\r" {
 	    # (cr,) Go to beginning of line
 	    screen_flush
+	    set old_col $cur_col
 	    set cur_col 0
 	    term_update_cursor
 	    # check for debug commands
 	    set line [$term get $cur_row.$cur_col $cur_row.end]
 	    if { "`" eq [string index $line 0] } {
-		::DebugWin::RunCmd [string range $line 1 end]
+		if { $old_col != 0 } {
+		    ::DebugWin::RunCmd [string range $line 1 end]
+		}
 	    }
 	}
 	"^\n" {

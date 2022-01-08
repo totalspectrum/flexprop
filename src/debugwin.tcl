@@ -7,23 +7,76 @@
 namespace eval DebugWin {
     namespace export RunCmd
     namespace export DestroyWindows
+
+    array set debugwin {}
+    array set debugcmd {}
+    
+    proc normalize_cmds {list} {
+	set result {}
+	foreach i $list {
+	    set c [string index $i 0]
+	    switch $c {
+		"\'"  {
+		    # do nothing, literal string
+		}
+		"$" {
+		    set i [scan [string range $i 1 end] %x]
+		}
+		"%" {
+		    set i [scan [string range $i 1 end] %b]
+		}
+		default {
+		    set i [string tolower $i]
+		}
+	    }
+	    lappend result $i
+	}
+	return $result
+    }
+
+    proc TextCmd { name args } {
+	puts "Text command for $name is ( $args )"
+    }
+
+    proc CreateTextWindow {name args} {
+	return .toplev.$name
+    }
     
     proc RunCmd { c } {
-	set result [csv_split $c]
-	puts "DebugWin RunCmd: $c"
-	foreach i $result {
-	    puts " .. ($i)"
+	variable debugwin
+	variable debugcmd
+	puts "RunCmd: $c"
+	set args [normalize_cmds [csv_split $c]]
+	set cmd [lindex $args 0]
+	if { [info exists debugwin($cmd)] } {
+	    set args [lrange $args 1 end]
+	    eval [$debugcmd($cmd) $debugwin($cmd) $args]
+	} else {
+	    set name [lindex $args 1]
+	    set args [lrange $args 2 end]
+	    switch $cmd {
+		"term" {
+		    set debugwin($name) [CreateTextWindow $name $args]
+		    set debugcmd($name) "::DebugWin::TextCmd"
+		    puts "set debugwin($name) to $debugwin($name)"
+		}
+		default {
+		    puts "ERROR: unknown command $cmd"
+		}
+	    }
 	}
     }
 
     proc DestroyWindows { } {
 	variable debugwin
+	variable debugcmd
 	foreach i [array names debugwin] {
 	    if {$i != ""} {
-		event generate delete $debugwin($i) <<Delete>>
+		event generate $debugwin($i) <<Delete>>
 	    }
 	}
-	array unset debugwin
+	array unset debugwin *
+	array unset debugcmd *
     }
 
     # csv_split function from https://wiki.tcl-lang.org/page/csv
