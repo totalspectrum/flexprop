@@ -45,9 +45,9 @@ namespace eval DebugWin {
 	return $r
     }
     
-    proc TermCmd { name args } {
+    proc TermCmd { topname args } {
 	set args [lindex $args 0]
-	set w $name.txt
+	set w $topname.txt
 	if { ![winfo exists $w] } {
 	    return
 	}
@@ -67,8 +67,13 @@ namespace eval DebugWin {
 		    "1" {
 			$w mark set insert 1.0
 		    }
+		    "close" {
+			destroy $topname
+		    }
 		    default {
-			set txt $cmd
+			if { $cmd > 31 } {
+			    set txt "[format %c $cmd]"
+			}
 		    }
 		}
 	    }
@@ -83,9 +88,12 @@ namespace eval DebugWin {
     proc CreateTermWindow {name args} {
 	set w .toplev$name
 
+	if { [winfo exists $w] } {
+	    return
+	}
 	set args [lindex $args 0]
-	#set len [llength $args]
-	#puts "CreateTermWindow: len=$len args=$args"
+	set len [llength $args]
+	puts "CreateTermWindow: len=$len args=$args"
 
 	set title "$name - TERM"
 	set pos_x 0
@@ -109,6 +117,9 @@ namespace eval DebugWin {
 		}
 		"title" {
 		    set title [getstring [fetcharg args]]
+		}
+		"color" {
+		    set fgcolor [fetcharg args]
 		}
 		"" {
 		}
@@ -149,9 +160,11 @@ namespace eval DebugWin {
 	    switch $cmd {
 		"term" {
 		    set tmp [CreateTermWindow $name "$args"]
-		    set debugwin($name) $tmp
-		    set debugcmd($name) "::DebugWin::TermCmd"
-		    puts "set debugwin($name) to $debugwin($name)"
+		    if { $tmp ne "" } {
+			set debugwin($name) $tmp
+			set debugcmd($name) "::DebugWin::TermCmd"
+			puts "set debugwin($name) to $debugwin($name)"
+		    }
 		}
 		default {
 		    puts "ERROR: unknown command $cmd"
@@ -165,8 +178,10 @@ namespace eval DebugWin {
 	variable debugcmd
 	foreach i [array names debugwin] {
 	    if {$i != ""} {
-		if { [winfo exists $debugwin($i)] } {
-		    event generate $debugwin($i) <<Delete>>
+		set w $debugwin($i)
+		puts "name($i) destroy($w)"
+		if { [winfo exists $w] } {
+		    destroy $w
 		}
 	    }
 	}
