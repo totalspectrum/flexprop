@@ -207,6 +207,9 @@ proc term_init {} {
     $term mark set insert $cur_row.$cur_col
 
     set rowsDumb $rows
+
+    # initialize bindings
+    doTermBindings
 }
 
 # NOT YET COMPLETE!
@@ -368,10 +371,6 @@ proc term_update_cursor {} {
     term_cursor_changed
 }
 
-term_create
-term_init
-graphicsSet 0
-
 set flush 0
 proc screen_flush {} {
     variable flush
@@ -386,7 +385,9 @@ proc term_send { c } {
     variable term_pipe
     #puts "term_send: ($c)"
     if { "$term_pipe" ne "" } {
-	if { ! [eof $term_pipe] } {
+	if { [eof $term_pipe] } {
+	    close_term
+	} else {
 	    puts -nonewline $term_pipe $c
 	}
     }
@@ -508,6 +509,8 @@ proc RunInWindow { cmd } {
     }
     if { ![winfo exists $toplev] } {
 	term_create
+	term_init
+	graphicsSet 0
     }
     if { ![winfo viewable $toplev] } {
 	wm deiconify $toplev
@@ -519,6 +522,21 @@ proc RunInWindow { cmd } {
     fileevent $term_pipe readable { ::TkTerm::Terminal_Data }
 }
 
+proc close_term {} {
+    set pipe $::TkTerm::term_pipe
+    if { "$pipe" != "" } {
+	fileevent $pipe readable { }
+	close $pipe
+	set ::TkTerm::term_pipe ""
+    }
+    # destroy any debug windows associated with this instance
+    ::DebugWin::DestroyWindows
+}
+
+proc doTermBindings {} {
+    variable term
+    variable toplev
+    
 # New and incomplete!
 #bind $term <Configure> {
 #    scan [wm geometry .] "%dx%dx" rows cols
@@ -528,58 +546,52 @@ proc RunInWindow { cmd } {
 #    # term_resize $rows $cols
 #}
 
-bind $toplev <Destroy> {
-    if { "$::TkTerm::term_pipe" != "" } {
-	close $::TkTerm::term_pipe
-	set ::TkTerm::term_pipe ""
+    bind $toplev <Destroy> { ::TkTerm::close_term }
+
+    bind $term <Any-Enter> {
+	focus %W
     }
-    # destroy any debug windows associated with this instance
-    ::DebugWin::DestroyWindows
-}
 
-bind $term <Any-Enter> {
-    focus %W
-}
-
-bind $term <Meta-KeyPress> {
-    if {"%A" != ""} {
-	::TkTerm::term_send "\033%A"
+    bind $term <Meta-KeyPress> {
+	if {"%A" != ""} {
+	    ::TkTerm::term_send "\033%A"
+	}
     }
+
+    bind $term <KeyPress> {
+	#puts "got %K (%k) '%A')"
+	::TkTerm::term_send %A
+	break
+    }
+
+    bind $term <Control-space>	{::TkTerm::term_send "\000"}
+    bind $term <Control-at>		{::TkTerm::term_send "\000"}
+    bind $term <Control-w>		{::TkTerm::close_term}
+
+    bind $term <Up> {::TkTerm::term_send "\033\[A"}
+    bind $term <Down> {::TkTerm::term_send "\033\[B"}
+    bind $term <Right> {::TkTerm::term_send "\033\[C"}
+    bind $term <Left> {::TkTerm::term_send "\033\[D"}
+    bind $term <Control-Up> {::TkTerm::term_send "\033\[1;5A"}
+    bind $term <Control-Down> {::TkTerm::term_send "\033\[1;5B"}
+    bind $term <Control-Right> {::TkTerm::term_send "\033\[1;5C"}
+    bind $term <Control-Left> {::TkTerm::term_send "\033\[1;5D"}
+    bind $term <Home> {::TkTerm::term_send "\033\[H"}
+    bind $term <End> {::TkTerm::term_send "\033\[F"}
+
+    bind $term <Insert> {::TkTerm::term_send "\033\[2~"}
+    bind $term <Prior> {::TkTerm::term_send "\033\[5~"}
+    bind $term <Next> {::TkTerm::term_send "\033\[6~"}
+
+    bind $term <F1> {::TkTerm::term_send "\033OP"}
+    bind $term <F2> {::TkTerm::term_send "\033OQ"}
+    bind $term <F3> {::TkTerm::term_send "\033OR"}
+    bind $term <F4> {::TkTerm::term_send "\033OS"}
+    bind $term <F5> {::TkTerm::term_send "\033OT"}
+    bind $term <F6> {::TkTerm::term_send "\033OU"}
+    bind $term <F7> {::TkTerm::term_send "\033OV"}
+    bind $term <F8> {::TkTerm::term_send "\033OW"}
+    bind $term <F9> {::TkTerm::term_send "\033OX"}
 }
-
-bind $term <KeyPress> {
-    #puts "got %K (%k) '%A')"
-    ::TkTerm::term_send %A
-    break
-}
-
-bind $term <Control-space>	{::TkTerm::term_send "\000"}
-bind $term <Control-at>		{::TkTerm::term_send "\000"}
-bind $term <Control-z>		{::TkTerm::term_send "\x1a"}
-
-bind $term <Up> {::TkTerm::term_send "\033\[A"}
-bind $term <Down> {::TkTerm::term_send "\033\[B"}
-bind $term <Right> {::TkTerm::term_send "\033\[C"}
-bind $term <Left> {::TkTerm::term_send "\033\[D"}
-bind $term <Control-Up> {::TkTerm::term_send "\033\[1;5A"}
-bind $term <Control-Down> {::TkTerm::term_send "\033\[1;5B"}
-bind $term <Control-Right> {::TkTerm::term_send "\033\[1;5C"}
-bind $term <Control-Left> {::TkTerm::term_send "\033\[1;5D"}
-bind $term <Home> {::TkTerm::term_send "\033\[H"}
-bind $term <End> {::TkTerm::term_send "\033\[F"}
-
-bind $term <Insert> {::TkTerm::term_send "\033\[2~"}
-bind $term <Prior> {::TkTerm::term_send "\033\[5~"}
-bind $term <Next> {::TkTerm::term_send "\033\[6~"}
-
-bind $term <F1> {::TkTerm::term_send "\033OP"}
-bind $term <F2> {::TkTerm::term_send "\033OQ"}
-bind $term <F3> {::TkTerm::term_send "\033OR"}
-bind $term <F4> {::TkTerm::term_send "\033OS"}
-bind $term <F5> {::TkTerm::term_send "\033OT"}
-bind $term <F6> {::TkTerm::term_send "\033OU"}
-bind $term <F7> {::TkTerm::term_send "\033OV"}
-bind $term <F8> {::TkTerm::term_send "\033OW"}
-bind $term <F9> {::TkTerm::term_send "\033OX"}
 
 }
