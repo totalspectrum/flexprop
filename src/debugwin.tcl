@@ -155,6 +155,15 @@ namespace eval DebugWin {
 	}
 	set scale [fetchnum list "8"]
 
+	# replace all instances of "7" in pattern with "scale/2"
+	set halfscale [expr $scale / 2]
+	set pattern [string map [list 7 $halfscale] $pattern]
+	# replace F with "scale" (hex version)
+	if { $scale > 9 } {
+	    set scale [string map {10 A 11 B 12 C 13 D 14 E 15 F} $scale]
+	}
+	set pattern [string map [list F $scale] $pattern]
+	
 	# FIXME: we should be scaling the number by "scale" here
 	return "#$pattern"
     }
