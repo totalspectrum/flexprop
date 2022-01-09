@@ -289,6 +289,41 @@ namespace eval DebugWin {
 	set polar_circle($win) [expr $pi * 2.0 / $fullcircle]
     }
 
+    #
+    # parse the textsize and textstyle, and get a suitable font for it
+    # returns a list of two items: the font, and a word suitable for use
+    # with -anchor to describe how it's relative to the starting point
+    #  vertical orientation + horizontal orientation both combine
+    #  options are things like: center (default), nw (upper left), se (lower right)
+    #
+    # input textstyle is %YYXXUIWW
+    #   YYXX is orientation, U is underline, I is italic, WW is weight
+    
+    proc getFontStyle { textsize textstyle } {
+	set fontName "Courier"
+	set style "center"
+
+	if { [expr ($textstyle & 0x3) > 2] } {
+	    set weight "bold"
+	} else {
+	    set weight "normal"
+	}
+	if { [expr ($textstyle >> 2) & 0x1] } {
+	    set slant "italic"
+	} else {
+	    set slant "roman"
+	}
+
+	if { [expr ($textstyle >> 3) & 0x1] } {
+	    set underline "true"
+	} else {
+	    set underline "false"
+	}
+	set orient [expr ($textstyle >> 4) & 0xf]
+
+	set font [font create -family $fontName -size $textsize -weight $weight -slant $slant -underline $underline]
+	return [list $font $style]
+    }
     # convert x,y to screen space
     # returns a list of elements
     proc calcCoords { win x y } {
@@ -375,7 +410,49 @@ namespace eval DebugWin {
 		    set angle [fetchnum args 0]
 		    set msg [getstring [fetcharg args]]
 		    set coords [calcCoords $w $cur_x($w) $cur_y($w)]
-		    $w create text [lindex $coords 0] [lindex $coords 1] -text $msg -fill $cur_color($w)
+		    set finfo [getFontStyle $size $style]
+		    $w create text [lindex $coords 0] [lindex $coords 1] -font [lindex $finfo 0] -anchor [lindex $finfo 1] -text $msg -fill $cur_color($w)
+		    font delete [lindex $finfo 0]
+		}
+		"circle" {
+		    set diameter [fetchnum args 2]
+		    set linesize [fetchnum args 0]
+		    set opacity [fetchnum args 255]
+		    set coords [calcCoords $w $cur_x($w) $cur_y($w)]
+		    set upperx [expr [lindex $coords 0] - ($diameter / 2)]
+		    set uppery [expr [lindex $coords 1] - ($diameter / 2)]
+		    set lowerx [expr $upperx + $diameter]
+		    set lowery [expr $uppery + $diameter]
+		    if { $linesize == 0 } {
+			$w create oval $upperx $uppery $lowerx $lowery -fill $cur_color($w)
+		    } else {
+			$w create oval $upperx $uppery $lowerx $lowery -outline $cur_color($w) -width $linesize
+		    }
+		}
+		"line" {
+		    set newx [fetchnum args $cur_x($w)]
+		    set newy [fetchnum args $cur_y($w)]
+		    set linesize [fetchnum args 1]
+		    set opacity [fetchnum args 255]
+		    set coords [calcCoords $w $cur_x($w) $cur_y($w)]
+		    set newcoords [calcCoords $w $newx $newy]
+		    $w create line [concat $coords $newcoords] -fill $cur_color($w) -width $linesize
+		}
+		"oval" {
+		    set width [fetchnum args 2]
+		    set height [fetchnum args 2]
+		    set linesize [fetchnum args 0]
+		    set opacity [fetchnum args 255]
+		    set coords [calcCoords $w $cur_x($w) $cur_y($w)]
+		    set upperx [expr [lindex $coords 0] - ($width / 2)]
+		    set uppery [expr [lindex $coords 1] - ($height / 2)]
+		    set lowerx [expr $upperx + $width]
+		    set lowery [expr $uppery + $height]
+		    if { $linesize == 0 } {
+			$w create oval $upperx $uppery $lowerx $lowery -fill $cur_color($w)
+		    } else {
+			$w create oval $upperx $uppery $lowerx $lowery -outline $cur_color($w) -width $linesize
+		    }
 		}
 		default {
 		    puts "Unknown PLOT command $cmd"
@@ -491,7 +568,7 @@ namespace eval DebugWin {
 	    # be executed
 	    foreach cmd $windowlist {
 		set w $debugwin($cmd)
-		puts "send to $cmd - $w"
+		#puts "send to $cmd - $w"
 		if { $delayed_updates($w) } {
 		    QueueCmds $debugcmd($cmd) $w "$args"
 		} else {
@@ -535,7 +612,6 @@ namespace eval DebugWin {
 	foreach i [array names debugwin] {
 	    if {$i != ""} {
 		set w $debugwin($i)
-		puts "name($i) destroy($w)"
 		if { [winfo exists $w] } {
 		    destroy $w
 		}
