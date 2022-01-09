@@ -1396,6 +1396,7 @@ proc rescanPorts { } {
 	set name [lindex $v 0]
 	set portval [lindex $v 1]
 	set comname "$name ($portval)"
+	set portval "-i $portval"
 	.mbar.comport add radiobutton -label $comname -variable COMPORT -value "$portval"
     }
 }
