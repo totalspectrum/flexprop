@@ -345,16 +345,16 @@ namespace eval DebugWin {
 	set fullcircle $polar_circle($win)
 	if { $fullcircle } {
 	    # (x, y) is (length,angle)
-	    set angle [expr $fullcircle * ( $y + $polar_offset($win) ) ]
-	    set newx [expr $x * cos($angle)]
-	    set newy [expr $x * sin($angle)]
+	    set angle [expr { $fullcircle * ( $y + $polar_offset($win) ) } ]
+	    set newx [expr { $x * cos($angle) } ]
+	    set newy [expr { $x * sin($angle) } ]
 	    #puts "calcCoords len=$x angle=$y ($angle) result: ($newx, $newy)"
 	} else {
 	    set newx $x
 	    set newy $y
 	}
-	set newx [expr $origin_x($win) + $newx ]
-	set newy [expr $origin_y($win) - $newy ]
+	set newx [expr { $origin_x($win) + $newx } ]
+	set newy [expr { $origin_y($win) - $newy } ]
 	return [list $newx $newy]
     }
     
@@ -411,7 +411,7 @@ namespace eval DebugWin {
 		    set newx [fetchnum args cur_x($w)]
 		    set newy [fetchnum args cur_y($w)]
 		    set origin_x($w) $newx
-		    set origin_y($w) [expr [$w cget -height] - $newy]
+		    set origin_y($w) [expr { [$w cget -height] - $newy } ]
 		}
 		"polar" {
 		    set twopi [fetchnum args 0x10000000]
@@ -433,10 +433,10 @@ namespace eval DebugWin {
 		    set linesize [fetchnum args 0]
 		    set opacity [fetchnum args 255]
 		    set coords [calcCoords $w $cur_x($w) $cur_y($w)]
-		    set upperx [expr [lindex $coords 0] - ($diameter / 2)]
-		    set uppery [expr [lindex $coords 1] - ($diameter / 2)]
-		    set lowerx [expr $upperx + $diameter]
-		    set lowery [expr $uppery + $diameter]
+		    set upperx [expr { [lindex $coords 0] - ($diameter / 2) } ]
+		    set uppery [expr { [lindex $coords 1] - ($diameter / 2) } ]
+		    set lowerx [expr { $upperx + $diameter } ]
+		    set lowery [expr { $uppery + $diameter } ]
 		    if { $linesize == 0 } {
 			$w create oval $upperx $uppery $lowerx $lowery -fill $cur_color($w)
 		    } else {
@@ -458,10 +458,10 @@ namespace eval DebugWin {
 		    set linesize [fetchnum args 0]
 		    set opacity [fetchnum args 255]
 		    set coords [calcCoords $w $cur_x($w) $cur_y($w)]
-		    set upperx [expr [lindex $coords 0] - ($width / 2)]
-		    set uppery [expr [lindex $coords 1] - ($height / 2)]
-		    set lowerx [expr $upperx + $width]
-		    set lowery [expr $uppery + $height]
+		    set upperx [expr { [lindex $coords 0] - ($width / 2) } ]
+		    set uppery [expr { [lindex $coords 1] - ($height / 2) } ]
+		    set lowerx [expr { $upperx + $width } ]
+		    set lowery [expr { $uppery + $height } ]
 		    if { $linesize == 0 } {
 			$w create oval $upperx $uppery $lowerx $lowery -fill $cur_color($w)
 		    } else {
@@ -685,7 +685,7 @@ proc csv_split {line} {
           # Use all characters up to the space or line ending.
           regexp -start $beg {.*?(?=\ |$)} $line word
           lappend result $word
-          set beg [expr {$beg + [string length $word] + 1}]
+          set beg [expr { $beg + [string length $word] + 1 } ]
        }
     }
 
