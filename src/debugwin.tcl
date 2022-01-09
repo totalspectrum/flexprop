@@ -275,14 +275,7 @@ namespace eval DebugWin {
     proc setPolarScaling { win fullcircle offset } {
 	variable polar_circle
 	variable polar_offset
-	variable origin_x
-	variable origin_y
 	
-	set w [$win cget -width]
-	set h [$win cget -height]
-	set origin_x($win) [expr $w / 2]
-	set origin_y($win) [expr $h / 2]
-
 	set pi 3.1415926536
 	set polar_offset($win) $offset
 	set polar_circle($win) [expr $pi * 2.0 / $fullcircle]
@@ -318,6 +311,7 @@ namespace eval DebugWin {
 	variable cur_y
 	variable origin_x
 	variable origin_y
+	variable cur_color
 	
 	set args [lindex $args 0]
 	set w $topname.p
@@ -357,8 +351,10 @@ namespace eval DebugWin {
 		    set cur_y($w) $y
 		}
 		"origin" {
-		    set origin_x($w) [fetchnum args cur_x($w)]
-		    set origin_y($w) [fetchnum args cur_y($w)]
+		    set newx [fetchnum args cur_x($w)]
+		    set newy [fetchnum args cur_y($w)]
+		    set origin_x($w) $newx
+		    set origin_y($w) [expr [$w cget -height] - $newy]
 		}
 		"polar" {
 		    set twopi [fetchnum args 0x10000000]
@@ -370,8 +366,11 @@ namespace eval DebugWin {
 		    set style [fetchnum args 1]
 		    set angle [fetchnum args 0]
 		    set msg [fetcharg args]
+		    if { [string index $msg 0] eq "'" } {
+			set msg [string range $msg 1 end-1]
+		    }
 		    set coords [calcCoords $w $cur_x($w) $cur_y($w)]
-		    $w create text [lindex $coords 0] [lindex $coords 1] -text $msg
+		    $w create text [lindex $coords 0] [lindex $coords 1] -text $msg -fill $cur_color($w)
 		}
 		default {
 		    puts "Unknown PLOT command $cmd"
@@ -386,10 +385,6 @@ namespace eval DebugWin {
 	variable cur_y
 	variable origin_x
 	variable origin_y
-	variable scale_xx
-	variable scale_xy
-	variable scale_yx
-	variable scale_yy
 	variable delayed_updates
 	
 	set top .toplev$name
