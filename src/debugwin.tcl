@@ -57,6 +57,13 @@ namespace eval DebugWin {
 	#puts " ===> r = ($r) list = $list"
 	return $r
     }
+
+    proc getstring { msg } {
+	if { [string index $msg 0] eq "'" } {
+	    set msg [string range $msg 1 end-1]
+	}
+	return $msg
+    }
     
     # retrieve an optional number from a list
     # if the next thing is not a number, return the default value
@@ -365,10 +372,7 @@ namespace eval DebugWin {
 		    set size [fetchnum args 10]
 		    set style [fetchnum args 1]
 		    set angle [fetchnum args 0]
-		    set msg [fetcharg args]
-		    if { [string index $msg 0] eq "'" } {
-			set msg [string range $msg 1 end-1]
-		    }
+		    set msg [getstring [fetcharg args]]
 		    set coords [calcCoords $w $cur_x($w) $cur_y($w)]
 		    $w create text [lindex $coords 0] [lindex $coords 1] -text $msg -fill $cur_color($w)
 		}
@@ -447,10 +451,6 @@ namespace eval DebugWin {
 	set origin_x($w) 0
 	set origin_y($w) 0
 	set cur_color($w) "#ffffff"
-	set scale_xx($w) 1
-	set scale_xy($w) 0
-	set scale_yx($w) 0
-	set scale_yy($w) 1
 	set delayed_updates($w) $delayed
 	
 	return $top
@@ -463,8 +463,17 @@ namespace eval DebugWin {
 	set args [normalize_cmds [csv_split $c]]
 	set cmd [lindex $args 0]
 	if { [info exists debugwin($cmd)] } {
-	    set args [lrange $args 1 end]
-	    eval [$debugcmd($cmd) $debugwin($cmd) "$args"]
+	    set windowlist [list]
+	    while { [info exists debugwin($cmd)] } {
+		lappend windowlist $cmd
+		set args [lrange $args 1 end]
+		set cmd [lindex $args 0]
+	    }
+	    foreach cmd $windowlist {
+		set w $debugwin($cmd)
+		puts "send to $cmd - $w"
+		eval [$debugcmd($cmd) $w "$args"]
+	    }
 	} else {
 	    set len [llength $args]
 	    set name [lindex $args 1]
