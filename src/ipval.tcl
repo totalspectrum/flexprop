@@ -10,7 +10,7 @@ namespace eval IpEntry {
     set entry_callback "null"
     
     proc addIpAddress { callback } {
-	global savedips
+	global config
 	variable entry_callback
 
 	set entry_callback $callback
@@ -36,7 +36,7 @@ namespace eval IpEntry {
     }
 
     proc done { } {
-	global savedips
+	global config
 	variable ipname
 	variable ipval
 	variable entry_callback
@@ -46,7 +46,7 @@ namespace eval IpEntry {
 	# update savedips with the new entry
 	set idx 0
 	set deleteidx -1
-	set mylist $savedips
+	set mylist $config(savedips)
 	foreach e $mylist {
 	    if { [lindex $e 0] eq "$ipname" } {
 		# delete old entry
@@ -55,10 +55,10 @@ namespace eval IpEntry {
 	    incr idx
 	}
 	if { $deleteidx != -1 } {
-	    set savedips [lreplace $savedips $deleteidx $deleteidx]
+	    set config(savedips) [lreplace $config(savedips) $deleteidx $deleteidx]
 	}
 	if { "$ipval" ne "" } {
-	    lappend savedips $entry
+	    lappend config(savedips) $entry
 	}
 	eval $entry_callback
 	destroy .ipentry

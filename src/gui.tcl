@@ -113,7 +113,8 @@ set config(syntaxhighlight) 1
 set config(autoindent) 1
 
 # saved IP configuration
-set savedips [ list [list "localhost" "127.0.0.1" ] ]
+#set savedips [ list [list "localhost" "127.0.0.1" ] ]
+set config(savedips) [ list ]
 
 # we provide some warnings to the user about experimental features
 # start the version off at 0, and provide a popup when we find the
@@ -1347,8 +1348,8 @@ proc rescanPorts { } {
     global comport_last
     global PROP_VERSION
     global EXE
-    global savedips
-    set iplist $savedips
+    global config
+    set iplist $config(savedips)
     
     # search for serial ports using serial::listports (src/checkserial.tcl)
     .mbar.comport delete $comport_last end
