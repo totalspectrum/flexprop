@@ -1478,6 +1478,7 @@ menu .mbar.options.charset
 #.mbar.options add radiobutton -label "Compress Code" -variable COMPRESS -value "-z1"
 .mbar.options add separator
 .mbar.options add command -label "Editor Options..." -command { doEditorOptions }
+.mbar.options add checkbutton -label "Use internal terminal" -variable config(internal_term)
 
 
 .mbar add cascade -menu .mbar.run -label Commands
@@ -1488,7 +1489,6 @@ menu .mbar.options.charset
 .mbar.run add command -label "Compile and flash" -accelerator "$CTRL_PREFIX-E" -command { doCompileFlash }
 .mbar.run add command -label "Flash binary file..." -command { doLoadFlash }
 .mbar.run add separator
-.mbar.run add checkbutton -label "Use internal terminal" -variable config(internal_term)
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
 .mbar.run add command -label "Choose P2 flash program..." -command { pickFlashProgram }
 
