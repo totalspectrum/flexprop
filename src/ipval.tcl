@@ -40,7 +40,8 @@ namespace eval IpEntry {
 	variable ipname
 	variable ipval
 	variable entry_callback
-	
+
+	set ipval "-i $ipval"
 	set entry [list $ipname $ipval]
 
 	# update savedips with the new entry
