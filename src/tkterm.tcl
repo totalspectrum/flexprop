@@ -179,7 +179,7 @@ proc term_clear_to_eol {} {
     set col $cur_col
     set row $cur_row
 
-    set space_rem_on_line [expr $cols - $cur_col]
+    set space_rem_on_line [expr {$cols - $cur_col}]
     term_insert [format %[set space_rem_on_line]s ""]
 
     # restore current col/row
@@ -293,7 +293,7 @@ proc term_insert {s} {
     variable term_standout
 
     set chars_rem_to_write [string length $s]
-    set space_rem_on_line [expr $cols - $cur_col]
+    set space_rem_on_line [expr {$cols - $cur_col}]
 
     if {$term_standout} {
 	set tag_action "add"
@@ -313,12 +313,12 @@ proc term_insert {s} {
 	set newline 0
     }
 
-    $term delete $cur_row.$cur_col $cur_row.[expr $cur_col + $chars_to_write]
+    $term delete $cur_row.$cur_col $cur_row.[expr {$cur_col + $chars_to_write}]
     $term insert $cur_row.$cur_col [
-				    string range $s 0 [expr $space_rem_on_line-1]
+				    string range $s 0 [expr {$space_rem_on_line-1}]
 				   ]
 
-    $term tag $tag_action standout $cur_row.$cur_col $cur_row.[expr $cur_col + $chars_to_write]
+    $term tag $tag_action standout $cur_row.$cur_col $cur_row.[expr {$cur_col + $chars_to_write}]
 
     # discard first line already written
     incr chars_rem_to_write -$chars_to_write
@@ -336,7 +336,7 @@ proc term_insert {s} {
     ##################
     while {$chars_rem_to_write >= $cols} {
 	$term delete $cur_row.0 $cur_row.end
-	$term insert $cur_row.0 [string range $s 0 [expr $cols-1]]
+	$term insert $cur_row.0 [string range $s 0 [expr {$cols-1}]]
 	$term tag $tag_action standout $cur_row.0 $cur_row.end
 
 	# discard line from buffer
@@ -437,7 +437,7 @@ proc term_recv { c } {
 	}
 	"^\t" {
 	    # Tab, shouldn't happen
-	    set cur_col [expr ( $cur_col + 8 ) & 0xFFF8]
+	    set cur_col [expr {( $cur_col + 8 ) & 0xFFF8}]
 	    term_update_cursor
 	}
 	"^\x1b\\\[A" {
@@ -452,7 +452,7 @@ proc term_recv { c } {
 	}
 	"^\x1b\\\[(\[0-9]*);(\[0-9]*)H" {
 	    # (cup,cm) Move to row y col x
-	    set cur_row [expr $expect_out(1,string)+1]
+	    set cur_row [expr {$expect_out(1,string)+1}]
 	    set cur_col $expect_out(2,string)
 	    term_update_cursor
 	}
