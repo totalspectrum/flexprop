@@ -1,0 +1,15 @@
+CON
+_CLKFREQ = 10_000_000
+DEBUG_BAUD = 115200
+PUB go() | i, c
+
+  repeat c from 0 to 4
+    repeat i from "a" to "z"
+      if c&1
+        debug(`TERM MyTerm SIZE 9 1 TEXTSIZE 40 color blue)
+      else
+        debug(`TERM MyTerm SIZE 9 1 TEXTSIZE 40 color red)
+      debug(`MyTerm 1 'IDK? = x' `(i))
+      waitms(200)
+    debug(`MyTerm close)
+    waitms(1000)

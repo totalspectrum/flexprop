@@ -1,0 +1,10 @@
+CON _clkfreq = 10_000_000
+
+PUB go() | i
+
+  debug(`TERM MyTerm SIZE 9 1 TEXTSIZE 40)
+  debug(`TERM t2 SIZE 40 10 TEXTSIZE 12 TITLE 'Second Window')
+  repeat
+    repeat i from 50 to 60
+      debug(`MyTerm t2 1 'Temp = `(i)')
+      waitms(500)

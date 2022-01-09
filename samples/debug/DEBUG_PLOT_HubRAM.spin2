@@ -1,0 +1,44 @@
+debug_left = 600
+debug_top = 500
+debug_width = 400
+debug_height = 200
+debug_display_left = 50
+debug_display_top = 50
+
+
+
+_clkfreq = 10_000_000
+
+PUB go(): i, j, k
+
+  debug(`plot myplot size 600 650 backcolor white update)
+  debug(`myplot origin 300 270 polar -64 -16)
+  k~
+  repeat
+    debug(`myplot clear)
+    debug(`myplot set 330 0 cyan 3 text 30 3 'Hub RAM Interface')
+    debug(`myplot set 280 0 text 15 3 'Every cog can read/write 32 bits per clock')
+
+    if k & 8			'move RAMs or draw spokes?
+      j++
+    else
+      repeat i from 0 to 7
+        debug(`myplot grey 12 set 103 `(i*8) line 190 `(i*8) 20)
+
+    debug(`myplot set 0 0 cyan 4 circle 151 yellow 7 circle 147 3)
+    debug(`myplot set 24 0 white text 14 'Address LSBs')
+    debug(`myplot set 0 0 text 18 1 '8 Hub RAMs')
+    debug(`myplot set 24 32 text 14 '16K x 32' )
+
+    repeat i from 0 to 7	'draw RAMs and cogs
+      debug(`myplot cyan 6 set 103 `(i*8-j) circle 55 text 20 '`(i)')
+      debug(`myplot cyan 4 set 103 `(i*8-j) circle 57 3)
+      debug(`myplot orange 6 set 190 `(i*8) circle 81 text 20 'Cog`(i)')
+      debug(`myplot orange 4 set 190 `(i*8) circle 83 3)
+
+    debug(`myplot update `dly(30))
+    k++
+
+
+    if k < 128
+      'debug(`myplot save 'egg`(k)')
