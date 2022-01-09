@@ -69,13 +69,13 @@ if { [file exists "$ROOTDIR/.flexprop.config"] } {
 
 # prefix for starting a command in a window
 if { $tcl_platform(platform) == "windows" } {
-    set WINPREFIX "cmd.exe /c start \"Propeller Output %p\""
+    set WINPREFIX "cmd.exe /c start \"Propeller Output\""
 } elseif { [tk windowingsystem] == "aqua" } {
     set WINPREFIX $ROOTDIR/bin/mac_terminal.sh
 } elseif { [file executable /etc/alternatives/x-terminal-emulator] } {
-    set WINPREFIX "/etc/alternatives/x-terminal-emulator -T \"Propeller Output %p\" -e"
+    set WINPREFIX "/etc/alternatives/x-terminal-emulator -T \"Propeller Output\" -e"
 } else {
-    set WINPREFIX "xterm -fs 14 -T \"Propeller Output %p\" -e"
+    set WINPREFIX "xterm -fs 14 -T \"Propeller Output\" -e"
 }
 
 # config file name
@@ -1823,7 +1823,7 @@ proc mapPercent {str} {
     } else {
 	set srcfile "undefined"
     }
-    set percentmap [ list "%%" "%" "%#" $runprefix "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%p" $COMPORT "%F" $config(flashprogram) "%r" $config(baud) "%t" $config(tabwidth)]
+    set percentmap [ list "%%" "%" "%#" $runprefix "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%F" $config(flashprogram) "%r" $config(baud) "%t" $config(tabwidth)]
     set result [string map $percentmap $str]
     return $result
 }
@@ -2043,11 +2043,11 @@ set cmddialoghelptext {
     %F = Replace with currently selected flash program (sd/flash)
     %I = Replace with all library/include directories
     %O = Replace with optimization level
-    %p = Replace with port to use
     %P = Replace with port to use prefixed by -p
     %r = Replace with current baud rate
     %S = Replace with current source file name
     %t = Replace with tab width
+    %# = Replace with external terminal program
     %% = Insert a % character
 }
 proc copyShadowClose {w} {
