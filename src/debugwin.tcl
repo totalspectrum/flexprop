@@ -56,7 +56,6 @@ namespace eval DebugWin {
 	    set r [scan [string range $r 1 end] %b]
 	}
 
-	#puts " ===> r = ($r) list = $list"
 	return $r
     }
 
@@ -215,8 +214,10 @@ namespace eval DebugWin {
 	if { [winfo exists $top] } {
 	    return
 	}
+	#set len [llength $args]
+	#puts "CreateTermWindow: len=$len args=$args"
 	set args [lindex $args 0]
-	set len [llength $args]
+	#set len [llength $args]
 	#puts "CreateTermWindow: len=$len args=$args"
 
 	set title "$name - TERM"
@@ -586,9 +587,9 @@ namespace eval DebugWin {
 		set w $debugwin($cmd)
 		#puts "send to $cmd - $w"
 		if { $delayed_updates($w) } {
-		    QueueCmds $debugcmd($cmd) $w "$args"
+		    QueueCmds $debugcmd($cmd) $w $args
 		} else {
-		    eval [$debugcmd($cmd) $w "$args"]
+		    eval [$debugcmd($cmd) $w $args]
 		}
 	    }
 	} else {
@@ -600,7 +601,7 @@ namespace eval DebugWin {
 	    
 	    switch $cmd {
 		"term" {
-		    set tmp [CreateTermWindow $name "$args"]
+		    set tmp [CreateTermWindow $name $args]
 		    if { $tmp ne "" } {
 			set debugwin($name) $tmp
 			set debugcmd($name) "::DebugWin::TermCmd"
@@ -608,7 +609,7 @@ namespace eval DebugWin {
 		    }
 		}
 		"plot" {
-		    set tmp [CreatePlotWindow $name "$args"]
+		    set tmp [CreatePlotWindow $name $args]
 		    if { $tmp ne "" } {
 			set debugwin($name) $tmp
 			set debugcmd($name) "::DebugWin::PlotCmd"
