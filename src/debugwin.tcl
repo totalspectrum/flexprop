@@ -299,15 +299,16 @@ namespace eval DebugWin {
 	set fullcircle $polar_circle($win)
 	if { $fullcircle } {
 	    # (x, y) is (length,angle)
-	    set angle [expr $fullcircle * ( $x + $polar_offset($win) ) ]
-	    set newx [expr $x * cos($y)]
-	    set newy [expr $x * sin($y)]
+	    set angle [expr $fullcircle * ( $y + $polar_offset($win) ) ]
+	    set newx [expr $x * cos($angle)]
+	    set newy [expr $x * sin($angle)]
+	    puts "calcCoords len=$x angle=$y ($angle) result: ($newx, $newy)"
 	} else {
 	    set newx $x
 	    set newy $y
 	}
-	set newx [expr $newx + $origin_x($win)]
-	set newy [expr $newy + $origin_y($win)]
+	set newx [expr $origin_x($win) + $newx ]
+	set newy [expr $origin_y($win) - $newy ]
 	return [list $newx $newy]
     }
     
