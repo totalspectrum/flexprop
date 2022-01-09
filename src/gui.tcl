@@ -178,7 +178,7 @@ proc setShadowP2aDefaults {} {
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2a -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -2 %P -D baudrate=%r -D loader-baudrate=%r \"%B\" \"-9%b\" -k"
+    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -2 %P -D baudrate=%r -D loader-baudrate=%r \"%B\" \"-9%b\" -r -t -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
     set shadow(baud) 230400
@@ -189,7 +189,7 @@ proc setShadowP2bDefaults {} {
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -2 %P -D baudrate=%r -D loader-baudrate=%r \"%B\" \"-9%b\" -k"
+    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -2 %P -D baudrate=%r -D loader-baudrate=%r \"%B\" \"-9%b\" -r -t -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
     set shadow(baud) 230400
@@ -203,7 +203,7 @@ proc setShadowP2NuDefaults {} {
     global nuMsg
 
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2nu -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -2 %P -D baudrate=%r -D loader-baudrate=%r \"%B\" \"-9%b\" -k"
+    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -2 %P -D baudrate=%r -D loader-baudrate=%r \"%B\" \"-9%b\" -r -t -k"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
     set shadow(baud) 230400
