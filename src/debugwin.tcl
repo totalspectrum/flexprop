@@ -266,6 +266,7 @@ namespace eval DebugWin {
     }
 
     array set cur_color {}
+    array set text_color {}
     array set cur_x {}
     array set cur_y {}
     array set origin_x {}
@@ -355,7 +356,8 @@ namespace eval DebugWin {
 	variable origin_x
 	variable origin_y
 	variable cur_color
-
+	variable text_color
+	
 	set args [lindex $args 0]
 	set w $topname.p
 	if { ![winfo exists $w] } {
@@ -386,6 +388,9 @@ namespace eval DebugWin {
 		"orange" -
 		"grey" {
 		    set cur_color($w) [fetchcolor args $cmd]
+		    if { [lindex $args 0] eq "text" } {
+			set text_color($w) $cur_color($w)
+		    }
 		}
 		"set" {
 		    set x [fetcharg args]
@@ -411,7 +416,7 @@ namespace eval DebugWin {
 		    set msg [getstring [fetcharg args]]
 		    set coords [calcCoords $w $cur_x($w) $cur_y($w)]
 		    set finfo [getFontStyle $size $style]
-		    $w create text [lindex $coords 0] [lindex $coords 1] -font [lindex $finfo 0] -anchor [lindex $finfo 1] -text $msg -fill $cur_color($w)
+		    $w create text [lindex $coords 0] [lindex $coords 1] -font [lindex $finfo 0] -anchor [lindex $finfo 1] -text $msg -fill $text_color($w)
 		    font delete [lindex $finfo 0]
 		}
 		"circle" {
@@ -463,6 +468,7 @@ namespace eval DebugWin {
 
     proc CreatePlotWindow {name args} {
 	variable cur_color
+	variable text_color
 	variable cur_x
 	variable cur_y
 	variable origin_x
@@ -529,6 +535,7 @@ namespace eval DebugWin {
 	set origin_x($w) 0
 	set origin_y($w) 0
 	set cur_color($w) "#ffffff"
+	set text_color($w) "#000"
 	set delayed_updates($top) $delayed
 	
 	return $top
