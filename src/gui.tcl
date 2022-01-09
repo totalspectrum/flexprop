@@ -111,6 +111,9 @@ set config(savesession) 1
 set config(syntaxhighlight) 1
 set config(autoindent) 1
 
+# saved IP configuration
+set savedips [ list [list "localhost" "127.0.0.1" ] ]
+
 # we provide some warnings to the user about experimental features
 # start the version off at 0, and provide a popup when we find the
 # current note version is > the version
@@ -633,6 +636,7 @@ proc updateLibraryList {} {
     }
 }
 
+# "tabs" here are tabs in the main editor window
 set TABCOUNTER 0
 proc newTabName {} {
     global TABCOUNTER
@@ -1342,6 +1346,8 @@ proc rescanPorts { } {
     global comport_last
     global PROP_VERSION
     global EXE
+    global savedips
+    set iplist $savedips
     
     # search for serial ports using serial::listports (src/checkserial.tcl)
     .mbar.comport delete $comport_last end
@@ -1354,7 +1360,7 @@ proc rescanPorts { } {
     }
 
     # look for WIFI devices
-    if { $PROP_VERSION eq "P1" } {
+    #if { $PROP_VERSION eq "P1" } {
 	set wifis [exec -ignorestderr bin/proploader$EXE -W]
 	set wifis [split $wifis "\n"]
 	foreach v $wifis {
@@ -1375,9 +1381,20 @@ proc rescanPorts { } {
 		}
 	    }
 	    if { $portval ne "" } {
-		.mbar.comport add radiobutton -label $comname -variable COMPORT -value "$portval"
+		lappend iplist [list $comname $portval]
 	    }
 	}
+    #}
+
+    # Now add in any explicitly configured IP addresses
+    if { [llength $iplist] != 0 } {
+	    .mbar.comport add separator
+    }	
+    foreach v $iplist {
+	set name [lindex $v 0]
+	set portval [lindex $v 1]
+	set comname "$name ($portval)"
+	.mbar.comport add radiobutton -label $comname -variable COMPORT -value "$portval"
     }
 }
 
@@ -1480,6 +1497,7 @@ menu .mbar.options.charset
 .mbar.comport add radiobutton -label "2000000 baud" -variable config(baud) -value 2000000
 .mbar.comport add separator
 .mbar.comport add command -label "Scan for ports" -command rescanPorts
+.mbar.comport add command -label "Add IP address..." -command { ::IpEntry::addIpAddress rescanPorts }
 .mbar.comport add separator
 .mbar.comport add radiobutton -label "Find port automatically" -variable COMPORT -value " "
 set comport_last [.mbar.comport index end]
@@ -2240,4 +2258,3 @@ if { $::argc > 0 } {
 }
 
 rescanPorts
-

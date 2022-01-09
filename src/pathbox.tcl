@@ -1,5 +1,8 @@
 #!/usr/bin/wish
-
+#
+# the "pathbox" is a list of paths, which goes in $config(liblist)
+# We may also want to re-use this code for the list of stuff in
+# 
 proc do_pb_delete {} {
     set sel [.pb.pathbox curselection]
     if { $sel ne "" } {

@@ -26,6 +26,7 @@ source $ROOTDIR/src/fontchooser.tcl
 source $ROOTDIR/src/balloon.tcl
 source $ROOTDIR/src/debugwin.tcl
 source $ROOTDIR/src/tkterm.tcl
+source $ROOTDIR/src/ipval.tcl
 source $ROOTDIR/src/gui.tcl
 
 namespace import ::choosefont::choosefont
