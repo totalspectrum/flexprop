@@ -10,6 +10,8 @@ namespace eval DebugWin {
 
     array set debugwin {}
     array set debugcmd {}
+    array set delayed_updates {}
+    array set cmd_queue {}
     
     proc normalize_cmds {list} {
 	set result [list]
@@ -198,10 +200,10 @@ namespace eval DebugWin {
     }
 
     proc CreateTermWindow {name args} {
-	variable delay_updates
-	set w .toplev$name
+	variable delayed_updates
+	set top .toplev$name
 
-	if { [winfo exists $w] } {
+	if { [winfo exists $top] } {
 	    return
 	}
 	set args [lindex $args 0]
@@ -250,17 +252,17 @@ namespace eval DebugWin {
 	}
 	set wfont [font create -family Courier -size $textsize]
 	#puts "text $w.txt -bg $bgcolor -fg $fgcolor -font $wfont -height $size_h -width $size_w"
-	toplevel $w
-	text $w.txt -bg $bgcolor -fg $fgcolor -font $wfont -height $size_h -width $size_w -wrap none
-	grid columnconfigure $w 0 -weight 1
-	grid rowconfigure $w 0 -weight 1
-	grid $w.txt -sticky nsew
+	toplevel $top
+	text $top.txt -bg $bgcolor -fg $fgcolor -font $wfont -height $size_h -width $size_w -wrap none
+	grid columnconfigure $top 0 -weight 1
+	grid rowconfigure $top 0 -weight 1
+	grid $top.txt -sticky nsew
 
-	wm title $w $title
+	wm title $top $title
 
-	set delayed_updates($w) $delayed
+	set delayed_updates($top) $delayed
 	
-	return $w
+	return $top
     }
 
     array set cur_color {}
@@ -270,8 +272,7 @@ namespace eval DebugWin {
     array set origin_y {}
     array set polar_circle {}
     array set polar_offset {}
-    array set delayed_updates {}
-
+    
     #
     # set up for polar scaling
     # when converting from "degrees" to radians, we do
@@ -302,7 +303,7 @@ namespace eval DebugWin {
 	    set angle [expr $fullcircle * ( $y + $polar_offset($win) ) ]
 	    set newx [expr $x * cos($angle)]
 	    set newy [expr $x * sin($angle)]
-	    puts "calcCoords len=$x angle=$y ($angle) result: ($newx, $newy)"
+	    #puts "calcCoords len=$x angle=$y ($angle) result: ($newx, $newy)"
 	} else {
 	    set newx $x
 	    set newy $y
@@ -319,7 +320,7 @@ namespace eval DebugWin {
 	variable origin_x
 	variable origin_y
 	variable cur_color
-	
+
 	set args [lindex $args 0]
 	set w $topname.p
 	if { ![winfo exists $w] } {
@@ -451,28 +452,51 @@ namespace eval DebugWin {
 	set origin_x($w) 0
 	set origin_y($w) 0
 	set cur_color($w) "#ffffff"
-	set delayed_updates($w) $delayed
+	set delayed_updates($top) $delayed
 	
 	return $top
     }
 
+    proc QueueCmds { cmd win args } {
+	variable cmd_queue
+	set args [lindex $args 0]
+	foreach i $args {
+	    if { $i eq "update" } {
+		eval [$cmd $win "$cmd_queue($win)"]
+		set cmd_queue($win) [list]
+	    } else {
+		lappend cmd_queue($win) $i
+	    }
+	}
+    }
+    
     proc RunCmd { c } {
 	variable debugwin
 	variable debugcmd
+	variable cmd_queue
+	variable delayed_updates
+	
 #	puts "RunCmd: $c"
 	set args [normalize_cmds [csv_split $c]]
 	set cmd [lindex $args 0]
 	if { [info exists debugwin($cmd)] } {
+	    # the first N items will be window names, collect them
 	    set windowlist [list]
 	    while { [info exists debugwin($cmd)] } {
 		lappend windowlist $cmd
 		set args [lrange $args 1 end]
 		set cmd [lindex $args 0]
 	    }
+	    # now for each window name, queue the commands up to
+	    # be executed
 	    foreach cmd $windowlist {
 		set w $debugwin($cmd)
 		puts "send to $cmd - $w"
-		eval [$debugcmd($cmd) $w "$args"]
+		if { $delayed_updates($w) } {
+		    QueueCmds $debugcmd($cmd) $w "$args"
+		} else {
+		    eval [$debugcmd($cmd) $w "$args"]
+		}
 	    }
 	} else {
 	    set len [llength $args]
@@ -487,6 +511,7 @@ namespace eval DebugWin {
 		    if { $tmp ne "" } {
 			set debugwin($name) $tmp
 			set debugcmd($name) "::DebugWin::TermCmd"
+			set cmd_queue($name) [list]
 		    }
 		}
 		"plot" {
@@ -494,6 +519,7 @@ namespace eval DebugWin {
 		    if { $tmp ne "" } {
 			set debugwin($name) $tmp
 			set debugcmd($name) "::DebugWin::PlotCmd"
+			set cmd_queue($name) [list]
 		    }
 		}
 		default {
