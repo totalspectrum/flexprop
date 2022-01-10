@@ -469,6 +469,23 @@ namespace eval DebugWin {
 			$w create oval $upperx $uppery $lowerx $lowery -outline $cur_color($w) -width $linesize
 		    }
 		}
+		"obox" -
+		"box" {
+		    set width [fetchnum args 2]
+		    set height [fetchnum args 2]
+		    set linesize [fetchnum args 0]
+		    set opacity [fetchnum args 255]
+		    set coords [calcCoords $w $cur_x($w) $cur_y($w)]
+		    set upperx [expr { [lindex $coords 0] - ($width / 2) } ]
+		    set uppery [expr { [lindex $coords 1] - ($height / 2) } ]
+		    set lowerx [expr { $upperx + $width } ]
+		    set lowery [expr { $uppery + $height } ]
+		    if { $linesize == 0 } {
+			$w create rectangle $upperx $uppery $lowerx $lowery -fill $cur_color($w)
+		    } else {
+			$w create rectangle $upperx $uppery $lowerx $lowery -outline $cur_color($w) -width $linesize
+		    }
+		}
 		default {
 		    puts "Unknown PLOT command $cmd"
 		}
@@ -484,6 +501,7 @@ namespace eval DebugWin {
 	variable origin_x
 	variable origin_y
 	variable delayed_updates
+	variable polar_circle
 	
 	set top .toplev$name
 
@@ -543,9 +561,10 @@ namespace eval DebugWin {
 	set cur_x($w) 0
 	set cur_y($w) 0
 	set origin_x($w) 0
-	set origin_y($w) 0
+	set origin_y($w) $size_h
 	set cur_color($w) "#ffffff"
 	set text_color($w) "#000"
+	set polar_circle($w) 0
 	set delayed_updates($top) $delayed
 	
 	return $top
