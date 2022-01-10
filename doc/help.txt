@@ -58,6 +58,10 @@ The "Editor Options..." dialog allows you to change the way the source code edit
 
 The "Save session on exit" option, if enabled, causes the editor to reload any previously open files each time it is started.
 
+#### Use Internal Terminal
+
+Older versions of FlexProp ran the loader with an external terminal program, such as cmd.exe on Windows. If "Use Internal Terminal" is checked, FlexProp will use a built-in terminal window instead. This built in window is still experimental and probably does not correctly interpret ANSI escape sequences. However, it is able to detect and parse some of the Spin2 DEBUG commands, such as those to open a TERM or PLOT window.
+
 ### Commands
 
 The Commands menu allow you to compile, run a binary, or both compile and run. The current file (the one in the currently selected tab) is always the one compiled, so it should be your top level file. It will be saved automatically before any compilation.
@@ -71,6 +75,10 @@ The Commands menu allow you to compile, run a binary, or both compile and run. T
 Presents a menu of serial port speeds and ports that may be selected.  The default is to tell the loader program (loadp2 or proploader) to scan for a port to use. But you may override this by selecting a specific serial port.
 
 If for some reason the port you wish to use is not listed (this may happen on Mac OS X, for example) then you can still override the port by configuring the command manually (using the Commands > Configure Commands... menu). In the "Run command" replace `%P` with `-p COM20` or `-p /dev/tty.usbmodem123` (or whatever the port you wish to use is).
+
+The "Scan for ports" option also looks for WX WiFi modules on the local network. You may also explicitly add an IP address to the list with the "Add IP Address..." menu entry.
+
+To delete an existing IP address, enter its name with a blank address field. To replace one, just re-enter it with the same name but a new address.
 
 ### Special
 
