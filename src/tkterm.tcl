@@ -393,95 +393,110 @@ proc term_send { c } {
     }
 }
 
-proc term_recv { c } {
+proc term_recv { str } {
     variable cur_col
     variable cur_row
     variable term
-    #puts "term_recv: ($c)"
-    switch -regexp "$c" {
-	"^\[^\x01-\x1f]+" {
-	    # Text
-	    term_insert $c
-	    term_update_cursor
+    
+    #puts "term_recv: ($str)"
+    set len [string length $str]
+    while { $len > 0 } {
+	# grab all the printable characters (if any)
+	set c ""
+	regexp "^\[^\x01-\x1f]+" $str c
+	if { $c eq "" } {
+	    # no printable characters, just grab the first one
+	    set c [string range $str 0 0]
+	    set str [string range $str 1 end]
+	} else {
+	    set str [string range $str [string length $c] end]
 	}
-	"^\x1a" {
-	    # ctrl-z
-	    term_insert $c
-	}
-	"^\r" {
-	    # (cr,) Go to beginning of line
-	    screen_flush
-	    set old_col $cur_col
-	    set cur_col 0
-	    term_update_cursor
-	    # check for debug commands
-	    set line [$term get $cur_row.$cur_col $cur_row.end]
-	    if { "`" eq [string index $line 0] } {
-		if { $old_col != 0 } {
-		    ::DebugWin::RunCmd [string range $line 1 end]
+	set len [string length $str]
+	switch -regexp "$c" {
+	    "^\[^\x01-\x1f]+" {
+		# Text
+		term_insert $c
+		term_update_cursor
+	    }
+	    "^\x1a" {
+		# ctrl-z
+		term_insert $c
+	    }
+	    "^\r" {
+		# (cr,) Go to beginning of line
+		screen_flush
+		set old_col $cur_col
+		set cur_col 0
+		term_update_cursor
+		# check for debug commands
+		set line [$term get $cur_row.$cur_col $cur_row.end]
+		if { "`" eq [string index $line 0] } {
+		    if { $old_col != 0 } {
+			::DebugWin::RunCmd [string range $line 1 end]
+		    }
 		}
 	    }
-	}
-	"^\n" {
-	    # (ind,do) Move cursor down one line
-	    term_down
-	    term_update_cursor
-	}
-	"^\b" {
-	    # Backspace nondestructively
-	    incr cur_col -1
-	    term_update_cursor
-	}
-	"^\a" {
-	    bell
-	}
-	"^\t" {
-	    # Tab, shouldn't happen
-	    set cur_col [expr {( $cur_col + 8 ) & 0xFFF8}]
-	    term_update_cursor
-	}
-	"^\x1b\\\[A" {
-	    # (cuu1,up) Move cursor up one line
-	    term_up
-	    term_update_cursor
-	}
-	"^\x1b\\\[C" {
-	    # (cuf1,nd) Non-destructive space
-	    incr cur_col
-	    term_update_cursor
-	}
-	"^\x1b\\\[(\[0-9]*);(\[0-9]*)H" {
-	    # (cup,cm) Move to row y col x
-	    set cur_row [expr {$expect_out(1,string)+1}]
-	    set cur_col $expect_out(2,string)
-	    term_update_cursor
-	}
-	"^\x1b\\\[H\x1b\\\[J" {
-	    # (clear,cl) Clear screen
-	    term_clear
-	    term_update_cursor
-	}
-	"^\x1b\\\[K" {
-	    # (el,ce) Clear to end of line
-	    term_clear_to_eol
-	    term_update_cursor
-	}
-	"^\x1b\\\[7m" {
-	    # (smso,so) Begin standout mode
-	    set term_standout 1
-	}
-	"^\x1b\\\[m" {
-	    # (rmso,se) End standout mode
-	    set term_standout 0
-	}
-	"^\x1b\\\[?1h\x1b" {
-	    # (smkx,ks) start keyboard-transmit mode
-	    # terminfo invokes these when going in/out of graphics mode
-	    graphicsSet 1
-	}
-	"^\x1b\\\[?1l\x1b>" {
-	    # (rmkx,ke) end keyboard-transmit mode
-	    graphicsSet 0
+	    "^\n" {
+		# (ind,do) Move cursor down one line
+		term_down
+		term_update_cursor
+	    }
+	    "^\b" {
+		# Backspace nondestructively
+		incr cur_col -1
+		term_update_cursor
+	    }
+	    "^\a" {
+		bell
+	    }
+	    "^\t" {
+		# Tab, shouldn't happen
+		set cur_col [expr {( $cur_col + 8 ) & 0xFFF8}]
+		term_update_cursor
+	    }
+	    "^\x1b\\\[A" {
+		# (cuu1,up) Move cursor up one line
+		term_up
+		term_update_cursor
+	    }
+	    "^\x1b\\\[C" {
+		# (cuf1,nd) Non-destructive space
+		incr cur_col
+		term_update_cursor
+	    }
+	    "^\x1b\\\[(\[0-9]*);(\[0-9]*)H" {
+		# (cup,cm) Move to row y col x
+		set cur_row [expr {$expect_out(1,string)+1}]
+		set cur_col $expect_out(2,string)
+		term_update_cursor
+	    }
+	    "^\x1b\\\[H\x1b\\\[J" {
+		# (clear,cl) Clear screen
+		term_clear
+		term_update_cursor
+	    }
+	    "^\x1b\\\[K" {
+		# (el,ce) Clear to end of line
+		term_clear_to_eol
+		term_update_cursor
+	    }
+	    "^\x1b\\\[7m" {
+		# (smso,so) Begin standout mode
+		set term_standout 1
+	    }
+	    "^\x1b\\\[m" {
+		# (rmso,se) End standout mode
+		set term_standout 0
+	    }
+	    "^\x1b\\\[?1h\x1b" {
+		# (smkx,ks) start keyboard-transmit mode
+		# terminfo invokes these when going in/out of graphics mode
+		graphicsSet 1
+	    }
+	    "^\x1b\\\[?1l\x1b>" {
+		# (rmkx,ke) end keyboard-transmit mode
+		graphicsSet 0
+	    }
 	}
     }
 }
@@ -489,7 +504,7 @@ proc term_recv { c } {
 proc Terminal_Data { } {
     variable term_pipe
     variable term_esc
-    set c [read $term_pipe 1]
+    set c [read $term_pipe 128]
     if { "$c" eq "" } {
 	if { [eof $term_pipe] } {
 	    fileevent $term_pipe readable { }
