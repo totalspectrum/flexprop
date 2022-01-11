@@ -673,13 +673,15 @@ proc csv_split {line} {
                    # Pair of quotes is valid.
                    append word $char
                 } else {
-                   # No other characters can legally follow quote.  I think.
-                   error "extra characters after close-quote"
+		   # No other characters can legally follow quote.  I think.
+		   #error "extra characters after close-quote"
+		   return $result 
                 }
                 set quote false
              } elseif {$char eq {}} {
                 # End-of-line inside quotes indicates embedded newline.
-                error "embedded newlines not supported"
+                # error "embedded newlines not supported"
+                return $result 
              } elseif {$char eq "\'"} {
                 # Treat the next character specially.
                 set quote true
