@@ -530,6 +530,8 @@ proc RunInWindow { cmd } {
     if { ![winfo viewable $toplev] } {
 	wm deiconify $toplev
     }
+    set cmd [concat $cmd [list "2>&1"]]
+    #puts "Running: ($cmd)"
     #raise $toplev
     term_clear
     set term_pipe [open |$cmd r+]
@@ -589,7 +591,10 @@ proc doTermBindings {} {
 
     bind $term <Control-space>	{::TkTerm::term_send "\000"}
     bind $term <Control-at>		{::TkTerm::term_send "\000"}
-    bind $term <Control-z>		{::TkTerm::term_send "\x1a"}
+    bind $term <Control-z> {
+	::TkTerm::term_send "\x1a"
+	break
+    }
     bind $term <Control-w> {
 	::TkTerm::force_close_term
 	break
