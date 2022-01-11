@@ -32,7 +32,9 @@ namespace eval IpEntry {
 	grid .ipentry.f.lval  .ipentry.f.eval
 	grid .ipentry.f.ok .ipentry.f.cancel
 
-	#bind .ipentry <Return> ::IpEntry::done
+	bind .ipentry <Return> ::IpEntry::done
+	bind .ipentry.f <Return> ::IpEntry::done
+	bind .ipentry.f.ok <Return> ::IpEntry::done
     }
 
     proc done { } {
