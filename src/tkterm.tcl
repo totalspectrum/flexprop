@@ -386,7 +386,7 @@ proc term_send { c } {
     #puts "term_send: ($c)"
     if { "$term_pipe" ne "" } {
 	if { [eof $term_pipe] } {
-	    close_term
+	    force_close_term
 	} else {
 	    puts -nonewline $term_pipe $c
 	}
@@ -532,7 +532,7 @@ proc RunInWindow { cmd } {
     }
     set cmd [concat $cmd [list "2>&1"]]
     #puts "Running: ($cmd)"
-    #raise $toplev
+    raise $toplev
     term_clear
     set term_pipe [open |$cmd r+]
     fconfigure $term_pipe -blocking 0 -buffering none -translation binary
@@ -541,6 +541,7 @@ proc RunInWindow { cmd } {
 
 proc close_term {} {
     variable term
+    variable toplev
     set pipe $::TkTerm::term_pipe
     if { "$pipe" != "" } {
 	fileevent $pipe readable { }
@@ -549,8 +550,6 @@ proc close_term {} {
     }
     # destroy any debug windows associated with this instance
     ::DebugWin::DestroyWindows
-    # and close the terminal window itself
-    destroy $term
 }
 
 proc force_close_term {} {
@@ -573,7 +572,7 @@ proc doTermBindings {} {
 
     bind $toplev <Destroy> { ::TkTerm::close_term }
 
-    bind $term <Any-Enter> {
+    bind $toplev <Any-Enter> {
 	focus %W
     }
 
@@ -590,16 +589,16 @@ proc doTermBindings {} {
     }
 
     bind $term <Control-space>	{::TkTerm::term_send "\000"}
-    bind $term <Control-at>		{::TkTerm::term_send "\000"}
+    bind $term <Control-at>	{::TkTerm::term_send "\000"}
     bind $term <Control-z> {
 	::TkTerm::term_send "\x1a"
 	break
     }
-    bind $term <Control-w> {
+    bind $toplev <Control-w> {
 	::TkTerm::force_close_term
 	break
     }
-    bind $term <Command-w> {
+    bind $toplev <Command-w> {
 	::TkTerm::force_close_term
 	break
     }
@@ -614,9 +613,16 @@ proc doTermBindings {} {
     bind $term <Control-Left> {::TkTerm::term_send "\033\[1;5D"}
     bind $term <Home> {::TkTerm::term_send "\033\[H"}
     bind $term <End> {::TkTerm::term_send "\033\[F"}
-    bind $term <Return> {::TkTerm::term_send "\r"}
+    bind $term <Return> {::TkTerm::term_send "\x0d"}
+    bind $term <Tab> {
+	::TkTerm::term_send "\t"
+	break
+    }
 
-    bind $term <Insert> {::TkTerm::term_send "\033\[2~"}
+    bind $term <Insert> {
+	::TkTerm::term_send "\033\[2~"
+	break
+    }
     bind $term <Prior> {::TkTerm::term_send "\033\[5~"}
     bind $term <Next> {::TkTerm::term_send "\033\[6~"}
 
