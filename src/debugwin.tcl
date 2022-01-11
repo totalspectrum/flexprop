@@ -84,17 +84,6 @@ namespace eval DebugWin {
 	# convert to a number
 	set r [stringToNum $r]
 	
-	# strip out underscores
-	set r [string map {_ ""} $r]
-
-	if { $ch eq "$" } {
-	    # hex number
-	    set r [scan [string range $r 1 end] %x]
-	} elseif { $ch eq "%" } {
-	    # binary number
-	    set r [scan [string range $r 1 end] %b]
-	}
-
 	#puts " ===> r = ($r) list = $list"
 	return $r
     }
@@ -326,13 +315,14 @@ namespace eval DebugWin {
 	}
 
 	if { [expr ($textstyle >> 3) & 0x1] } {
-	    set underline "true"
+	    set underline [list "underline"]
 	} else {
-	    set underline "false"
+	    set underline [list]
 	}
 	set orient [expr ($textstyle >> 4) & 0xf]
 
-	set font [font create -family $fontName -size $textsize -weight $weight -slant $slant -underline $underline]
+	set font [list $fontName $textsize $weight $slant ]
+	set font [concat $font $underline]
 	return [list $font $style]
     }
     # convert x,y to screen space
@@ -427,7 +417,6 @@ namespace eval DebugWin {
 		    set coords [calcCoords $w $cur_x($w) $cur_y($w)]
 		    set finfo [getFontStyle $size $style]
 		    $w create text [lindex $coords 0] [lindex $coords 1] -font [lindex $finfo 0] -anchor [lindex $finfo 1] -text $msg -fill $text_color($w)
-		    font delete [lindex $finfo 0]
 		}
 		"circle" {
 		    set diameter [fetchnum args 2]
