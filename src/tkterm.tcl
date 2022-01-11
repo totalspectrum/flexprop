@@ -504,7 +504,7 @@ proc term_recv { str } {
 proc Terminal_Data { } {
     variable term_pipe
     variable term_esc
-    set c [read $term_pipe 128]
+    set c [read $term_pipe 1024]
     if { "$c" eq "" } {
 	if { [eof $term_pipe] } {
 	    fileevent $term_pipe readable { }
@@ -538,6 +538,7 @@ proc RunInWindow { cmd } {
 }
 
 proc close_term {} {
+    variable term
     set pipe $::TkTerm::term_pipe
     if { "$pipe" != "" } {
 	fileevent $pipe readable { }
@@ -546,6 +547,13 @@ proc close_term {} {
     }
     # destroy any debug windows associated with this instance
     ::DebugWin::DestroyWindows
+    # and close the terminal window itself
+    destroy $term
+}
+
+proc force_close_term {} {
+    variable toplev
+    destroy $toplev
 }
 
 proc doTermBindings {} {
@@ -581,7 +589,15 @@ proc doTermBindings {} {
 
     bind $term <Control-space>	{::TkTerm::term_send "\000"}
     bind $term <Control-at>		{::TkTerm::term_send "\000"}
-    bind $term <Control-w>		{::TkTerm::close_term}
+    bind $term <Control-z>		{::TkTerm::term_send "\x1a"}
+    bind $term <Control-w> {
+	::TkTerm::force_close_term
+	break
+    }
+    bind $term <Command-w> {
+	::TkTerm::force_close_term
+	break
+    }
 
     bind $term <Up> {::TkTerm::term_send "\033\[A"}
     bind $term <Down> {::TkTerm::term_send "\033\[B"}
@@ -593,6 +609,7 @@ proc doTermBindings {} {
     bind $term <Control-Left> {::TkTerm::term_send "\033\[1;5D"}
     bind $term <Home> {::TkTerm::term_send "\033\[H"}
     bind $term <End> {::TkTerm::term_send "\033\[F"}
+    bind $term <Return> {::TkTerm::term_send "\r"}
 
     bind $term <Insert> {::TkTerm::term_send "\033\[2~"}
     bind $term <Prior> {::TkTerm::term_send "\033\[5~"}
