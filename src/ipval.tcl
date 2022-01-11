@@ -37,10 +37,12 @@ namespace eval IpEntry {
 
     proc done { } {
 	global config
+	global COMPORT
 	variable ipname
 	variable ipval
 	variable entry_callback
 
+	set COMPORT " "
 	set entry [list $ipname $ipval]
 
 	# update savedips with the new entry
@@ -59,6 +61,7 @@ namespace eval IpEntry {
 	}
 	if { "$ipval" ne "" } {
 	    lappend config(savedips) $entry
+	    set COMPORT "-i $ipval"
 	}
 	eval $entry_callback
 	destroy .ipentry
