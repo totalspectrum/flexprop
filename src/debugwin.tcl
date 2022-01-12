@@ -110,28 +110,28 @@ namespace eval DebugWin {
 		return "#FFFFFF"
 	    }
 	    "red" {
-		set pattern "F00"
+		set pattern "FF0000"
 	    }
 	    "green" {
-		set pattern "0F0"
+		set pattern "00FF00"
 	    }
 	    "blue" {
-		set pattern "00F"
+		set pattern "0000FF"
 	    }
 	    "yellow" {
-		set pattern "FF0"
+		set pattern "FFFF00"
 	    }
 	    "cyan" {
-		set pattern "0FF"
+		set pattern "00FFFF"
 	    }
 	    "magenta" {
-		set pattern "F0F"
+		set pattern "FF00FF"
 	    }
 	    "grey" {
-		set pattern "FFF"
+		set pattern "777777"
 	    }
 	    "orange" {
-		set pattern "F70"
+		set pattern "FF7700"
 	    }
 	    default {
 		# assume a number
@@ -141,10 +141,14 @@ namespace eval DebugWin {
 		return $baseColor
 	    }
 	}
-	set scale [fetchnum list "8"]
-
+	set scale [fetchnum list "4"]
+	set halfscale $scale
+	if { $halfscale > 9 } {
+	    set halfscale [string map {10 A 11 B 12 C 13 D 14 E 15 F} $scale]
+	}
+	set scale [expr { $scale * 2 }]
 	# replace all instances of "7" in pattern with "scale/2"
-	set halfscale [expr $scale / 2]
+	#set halfscale [expr $scale / 2]
 	set pattern [string map [list 7 $halfscale] $pattern]
 	# replace F with "scale" (hex version)
 	if { $scale > 9 } {
