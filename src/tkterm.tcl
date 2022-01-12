@@ -543,7 +543,7 @@ proc close_term {} {
     variable term
     variable toplev
     set pipe $::TkTerm::term_pipe
-    if { "$pipe" != "" } {
+    if { "$pipe" ne "" } {
 	fileevent $pipe readable { }
 	close $pipe
 	set ::TkTerm::term_pipe ""
@@ -556,6 +556,12 @@ proc close_term {} {
 
 proc force_close_term {} {
     variable toplev
+    variable term_pipe
+    if { "$term_pipe" ne "" } {
+	flush $term_pipe
+	close $term_pipe
+	set term_pipe ""
+    }
     destroy $toplev
 }
 
@@ -593,10 +599,10 @@ proc doTermBindings {} {
     bind $term <Control-space>	{::TkTerm::term_send "\000"}
     bind $term <Control-at>	{::TkTerm::term_send "\000"}
     bind $term <Control-z> {
-	::TkTerm::term_send "\x1a"
+	::TkTerm::force_close_term
 	break
     }
-    bind $toplev <Control-w> {
+    bind $term <Control-bracketright> {
 	::TkTerm::force_close_term
 	break
     }
