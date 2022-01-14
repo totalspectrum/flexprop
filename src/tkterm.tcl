@@ -530,7 +530,8 @@ proc RunInWindow { cmd } {
     if { ![winfo viewable $toplev] } {
 	wm deiconify $toplev
     }
-    set cmd [concat $cmd [list "2>&1"]]
+    #next line fails for some reason and creates a file called &1
+    set cmd [concat $cmd [list "2>@1"]]
     #puts "Running: ($cmd)"
     raise $toplev
     term_clear
