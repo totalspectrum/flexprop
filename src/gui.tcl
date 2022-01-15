@@ -1371,6 +1371,7 @@ proc rescanPorts { } {
 	    set ipstart [string first "IP:" "$v"]
 	    #puts "for \[$v\] ipstart=$ipstart"
 	    if { $ipstart != -1 } {
+		set comname [string range $v 0 [expr {$ipstart - 1}]]
 		set ipstart [expr $ipstart + 4]
 		set ipstring [string range $v $ipstart end]
 		set ipend [string first "," "$ipstring"]
@@ -1378,7 +1379,7 @@ proc rescanPorts { } {
 		#puts "  for <$comname> ipend=<$ipend>"
 		if { $ipend >= 0 } {
 		    set ipstring [string range $ipstring 0 $ipend]
-		    set portval "-i $ipstring"
+		    set portval "$ipstring"
 		    #puts "  -> portval=$portval"
 		}
 	    }
@@ -1391,7 +1392,7 @@ proc rescanPorts { } {
     # Now add in any explicitly configured IP addresses
     if { [llength $iplist] != 0 } {
 	    .mbar.comport add separator
-    }	
+    }
     foreach v $iplist {
 	set name [lindex $v 0]
 	set portval [lindex $v 1]
@@ -1958,11 +1959,13 @@ proc doJustRun {extraargs} {
 	set cmdstr [concat "$cmdstr" " " "$extraargs"]
     }
     if { $config(internal_term) } {
+	#puts "Internal Running: $runcmd"
 	::TkTerm::RunInWindow $cmdstr
     } else {
-    set runcmd [list exec -ignorestderr]
-    set runcmd [concat $runcmd $cmdstr]
-    lappend runcmd 2>@1
+	set runcmd [list exec -ignorestderr]
+	set runcmd [concat $runcmd $cmdstr]
+	lappend runcmd 2>@1
+	#puts "External Running: $runcmd"
 	if {[catch $runcmd errout options]} {
 	    set status 1
 	}
