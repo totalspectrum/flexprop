@@ -23,9 +23,12 @@ multest.spin:   Test multiply speed on P2
   multiply.spin: routines used by multest.spin2
   multiply.cog.spin: multiply.spin running in its own COG
 rtc.bas:        Simple real-time clock using a COG to keep track of time
+sd_dir.bas:     Example of listing directory on an SD card
 smartpin.spin:  Serial port input and output using smart pins (P2 only)
 textmandel.bas: Display a Mandelbrot set on a terminal 
 timer.c:        Shows use of the 64 bit counter on P2
+
+debug: Samples for the built-in DEBUG window
 
 fileserver: Samples for the loadp2 9P file server
   ls.spin:  list the current directory
