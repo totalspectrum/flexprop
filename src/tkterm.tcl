@@ -623,11 +623,23 @@ proc doTermBindings {} {
     bind $term <Home> {::TkTerm::term_send "\033\[H"}
     bind $term <End> {::TkTerm::term_send "\033\[F"}
     bind $term <Return> {::TkTerm::term_send "\x0d"}
+
     bind $term <Tab> {
 	::TkTerm::term_send "\t"
 	break
     }
-
+    bind $term <Delete> {
+	::TkTerm::term_send "\x7f"
+	break
+    }
+    bind $term <Escape> {
+	::TkTerm::term_send "\033"
+	break
+    }
+    bind $term <BackSpace> {
+	::TkTerm::term_send "\x08"
+	break
+    }
     bind $term <Insert> {
 	::TkTerm::term_send "\033\[2~"
 	break
