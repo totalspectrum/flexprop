@@ -169,8 +169,8 @@ flexprop_base: src/version.tcl src/makepandoc.tcl $(BOARDFILES) $(PDFFILES) $(HT
 	mkdir -p flexprop/board
 	cp -r README.md License.txt samples src flexprop
 ifdef PANDOC_EXISTS
-	cp -r $(PDFFILES) flexprop/doc
-	cp -r $(HTMLFILES) flexprop/doc
+	-cp -r $(PDFFILES) flexprop/doc
+	-cp -r $(HTMLFILES) flexprop/doc
 endif
 	cp -r spin2cpp/doc/* flexprop/doc
 	cp -r spin2cpp/Changelog.txt flexprop/doc/Changelog-compiler.txt
@@ -188,13 +188,13 @@ endif
 
 %.pdf: %.md
 	tclsh src/makepandoc.tcl $< > pandoc.yml
-	$(PANDOC) --metadata-file=pandoc.yml -s --toc -f gfm -t latex -o $@ $<
+	-$(PANDOC) --metadata-file=pandoc.yml -s --toc -f gfm -t latex -o $@ $<
 
 # rules for building PDF files
 
 %.html: %.md
 	tclsh src/makepandoc.tcl $< > pandoc.yml
-	$(PANDOC) --metadata-file=pandoc.yml -s --toc -f gfm -o $@ $<
+	-$(PANDOC) --metadata-file=pandoc.yml -s --toc -f gfm -o $@ $<
 
 # rules for native binaries
 
