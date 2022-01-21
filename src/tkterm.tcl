@@ -62,8 +62,8 @@ set terminfo 1		;# if your applications use terminfo
 #############################################
 # Readable variables of interest
 #############################################
-# cur_row		;# current row where insert marker is
-# cur_col		;# current col where insert marker is
+# cur_row		;# current row where insert marker is; starts at 1
+# cur_col		;# current col where insert marker is; starts at 0
 
 #############################################
 # Procs you may want to initialize before using this:
@@ -182,6 +182,32 @@ proc term_clear_to_eol {} {
     set space_rem_on_line [expr {$cols - $cur_col}]
     term_insert [format %[set space_rem_on_line]s ""]
 
+    # restore current col/row
+    set cur_col $col
+    set cur_row $row
+}
+
+# clear to end of screen
+proc term_clear_to_eos {} {
+    variable cols
+    variable rows
+    variable cur_col
+    variable cur_row
+    
+    # save current col/row
+    set col $cur_col
+    set row $cur_row
+
+    # clear rest of this line
+    set space_rem_on_line [expr {$cols - $cur_col}]
+    term_insert [format %[set space_rem_on_line]s ""]
+
+    # now clear remaining rows
+    set cur_col 0
+    while { $cur_row < $rows } {
+	incr cur_row
+	term_insert [format %set space_rem_on_line]s ""]
+    }
     # restore current col/row
     set cur_col $col
     set cur_row $row
@@ -373,6 +399,31 @@ proc term_update_cursor {} {
     term_cursor_changed
 }
 
+proc term_gotoxy {} {
+    variable cur_row
+    variable cur_col
+    variable cols
+    variable rows
+    variable term
+
+    if { $cur_row < 1 } {
+	set cur_row 1
+    } else {
+	if { $cur_row > $rows } {
+	    set cur_row $rows
+	}
+    }
+    if { $cur_col < 0 } {
+	set cur_col 0
+    } else {
+	if { $cur_col >= $cols } {
+	    set cur_col [expr { $cols - 1 }]
+	}
+    }
+    
+    term_update_cursor
+}
+
 set flush 0
 proc screen_flush {} {
     variable flush
@@ -417,8 +468,80 @@ proc term_newline { } {
     term_update_cursor
 }
 
+# read a numeric argument out of a string
+proc get_one_arg { str default_val } {
+    set n $default_val
+    if { "$str" ne "" } {
+	scan "$str" %d n
+    }
+    return $n
+}
+
 # process an ANSI escape sequence
-proc process_ansi { str } {
+proc process_ansi_csi { args cmd } {
+    variable cur_col
+    variable cur_row
+    variable term
+    variable term_standout
+    switch $cmd {
+	"A" {
+	    set n [get_one_arg $args 1]
+	    set cur_row [expr { $cur_row - $n }]
+	    term_gotoxy
+	}
+	"B" {
+	    set n [get_one_arg $args 1]
+	    incr cur_row $n
+	    term_gotoxy
+	}
+	"C" {
+	    set n [get_one_arg $args 1]
+	    incr cur_row $n
+	    term_gotoxy
+	}
+	"D" {
+	    set n [get_one_arg $args 1]
+	    set cur_row [expr { $cur_row - $n }]
+	    term_gotoxy
+	}
+	"G" {
+	    set cur_col [get_one_arg $args 1]
+	    term_gotoxy
+	}
+	"H" {
+	    if { "$args" eq "" } {
+		set cur_col 0
+		set cur_row 1
+		term_gotoxy
+	    } else {
+		# arguments are 1-based, but our columns are 0 based
+		scan "$args" "%d;%d" cur_col cur_row
+		set cur_col [expr {$cur_col - 1}]
+		term_gotoxy
+	    }
+	}
+	"J" {
+	    # FIXME: technically should parse argument
+	    term_clear_eos
+	}
+	"K" {
+	    # FIXME: technically should parse argument
+	    term_clear_eol
+	}
+	"m" {
+	    # set graphic mode
+	    # for now, only one tag (standout) understood
+	    set n [get_one_arg $args 0]
+	    if { $n == 7 } {
+		set term_standout 1
+	    } else {
+		set term_standout 0
+	    }
+	}
+	default {
+	    # ignore
+	}
+    }
 }
 
 proc term_recv { str } {
@@ -516,12 +639,15 @@ proc term_recv { str } {
 			# ESC
 			if { "$kind" eq "ansi" } {
 			    set cur_state "ansi_gather_escape"
-			    set cur_save_str $c
+			    set cur_save_str ""
 			}
 		    }
 		    "\x01" {
 			if { "$kind" ne "ansi" } {
 			    # PST escape: go to home
+			    set cur_col 0
+			    set cur_row 1
+			    term_gotoxy
 			}
 		    }
 		    "\x02" {
@@ -594,10 +720,19 @@ proc term_recv { str } {
 		}
 	    }
 	    "ansi_gather_escape" {
-		set cur_save_str [concat $cur_save_str $c]
-		if { [string is alpha $c] } {
-		    process_ansi $cur_save_str
+		if { "$c" eq "[" } {
+		    # start of ANSI CSI sequence
+		    set cur_state "ansi_gather_csi"
+		} else {
 		    set cur_state "normal"
+		}
+	    }
+	    "ansi_gather_csi" {
+		if { [string is alpha $c] } {
+		    process_ansi_csi $cur_save_str $c
+		    set cur_state "normal"
+		} else {
+		    set cur_save_str [concat $cur_save_str $c]
 		}
 	    }
 	    "pst_getxy" {
@@ -620,6 +755,8 @@ proc term_recv { str } {
 		set str [string range $str 1 end]
 		set len [string length $str]
 		scan "$c" %c cur_row
+		# make it one based
+		incr cur_row
 		term_update_cursor
 		set cur_state "normal"
 	    }
