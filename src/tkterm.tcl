@@ -192,6 +192,7 @@ proc term_init {} {
     variable cols
     variable cur_row
     variable cur_col
+    variable cur_state
     variable term
     variable rowsDumb
 
@@ -203,7 +204,8 @@ proc term_init {} {
 
     set cur_row 1
     set cur_col 0
-
+    set cur_state "normal"
+    
     $term mark set insert $cur_row.$cur_col
 
     set rowsDumb $rows
@@ -393,109 +395,237 @@ proc term_send { c } {
     }
 }
 
-proc term_recv { str } {
+# process a newline
+proc term_newline { } {
     variable cur_col
     variable cur_row
     variable term
+    
+    # go to start of line
+    screen_flush
+    set old_col $cur_col
+    set cur_col 0
+    # check for debug commands
+    set line [$term get $cur_row.$cur_col $cur_row.end]
+    if { "`" eq [string index $line 0] } {
+	if { $old_col != 0 } {
+	    ::DebugWin::RunCmd [string range $line 1 end]
+	}
+    }
+    # now newline
+    term_down
+    term_update_cursor
+}
+
+# process an ANSI escape sequence
+proc process_ansi { str } {
+}
+
+proc term_recv { str } {
+    variable cur_col
+    variable cur_row
+    variable cur_state
+    variable cur_save_str
+    variable cur_saw_cr
+    variable term
+    global config
+
+    set kind $config(internal_term)
     
     #puts "term_recv: ($str)"
     set len [string length $str]
     while { $len > 0 } {
 	# grab all the printable characters (if any)
 	set c ""
-	regexp "^\[^\x01-\x1f]+" $str c
-	if { $c eq "" } {
-	    # no printable characters, just grab the first one
-	    set c [string range $str 0 0]
-	    set str [string range $str 1 end]
-	} else {
-	    set str [string range $str [string length $c] end]
+	if { "$cur_state" ne "normal" } {
+	    set cur_saw_cr 0
 	}
-	set len [string length $str]
-	switch -regexp "$c" {
-	    "^\[^\x01-\x1f]+" {
-		# Text
-		term_insert $c
-		term_update_cursor
-	    }
-	    "^\x1a" {
-		# ctrl-z
-		term_insert $c
-	    }
-	    "^\r" {
-		# (cr,) Go to beginning of line
-		screen_flush
-		set old_col $cur_col
-		set cur_col 0
-		term_update_cursor
-		# check for debug commands
-		set line [$term get $cur_row.$cur_col $cur_row.end]
-		if { "`" eq [string index $line 0] } {
-		    if { $old_col != 0 } {
-			::DebugWin::RunCmd [string range $line 1 end]
+	switch "$cur_state" {
+	    "normal" {
+		regexp "^\[^\x01-\x1f]+" $str c
+		if { $c eq "" } {
+		    # no printable characters, just grab the first one
+		    set c [string range $str 0 0]
+		    set str [string range $str 1 end]
+		    set len [string length $str]
+		    if { $c ne "\r" } {
+			if { $c ne "\n" } {
+			    set cur_saw_cr 0
+			}
+		    }
+		} else {
+		    set cur_saw_cr 0
+		    term_insert $c
+		    term_update_cursor
+		    set str [string range $str [string length $c] end]
+		    set len [string length $str]
+		    continue
+		}
+		# handle control characters here
+		switch "$c" {
+		    "\x1a" {
+			# ctrl-z
+			term_insert $c
+		    }
+		    "\r" {
+			set cur_saw_cr 1
+			if { "$kind" eq "ansi" } {
+			    # (cr,) Go to beginning of line
+			    screen_flush
+			    set old_col $cur_col
+			    set cur_col 0
+			    term_update_cursor
+			    # check for debug commands
+			    set line [$term get $cur_row.$cur_col $cur_row.end]
+			    if { "`" eq [string index $line 0] } {
+				if { $old_col != 0 } {
+				    ::DebugWin::RunCmd [string range $line 1 end]
+				}
+			    }
+			} else {
+			    term_newline
+			}
+		    }
+		    "\n" {
+			if { "$kind" eq "ansi" } {
+			    # (ind,do) Move cursor down one line
+			    term_down
+			    term_update_cursor
+			} else {
+			    if { $cur_saw_cr } {
+				set cur_saw_cr 0
+			    } else {
+				term_newline
+			    }
+			}
+		    }
+		    "\b" {
+			# Backspace nondestructively
+			incr cur_col -1
+			term_update_cursor
+		    }
+		    "\a" {
+			bell
+		    }
+		    "\t" {
+			# Tab
+			set cur_col [expr {( $cur_col + 8 ) & 0xFFF8}]
+			term_update_cursor
+		    }
+		    "\x1b" {
+			# ESC
+			if { "$kind" eq "ansi" } {
+			    set cur_state "ansi_gather_escape"
+			    set cur_save_str $c
+			}
+		    }
+		    "\x01" {
+			if { "$kind" ne "ansi" } {
+			    # PST escape: go to home
+			}
+		    }
+		    "\x02" {
+			if { "$kind" ne "ansi" } {
+			    # PST escape: cursor XY
+			    set cur_state "pst_getxy"
+			}
+		    }
+		    "\x03" {
+			if { "$kind" ne "ansi" } {
+			    # PST escape: cursor left
+			}
+		    }
+		    "\x04" {
+			if { "$kind" ne "ansi" } {
+			    # PST escape: cursor right
+			    incr cur_col
+			    term_update_cursor
+			}
+		    }
+		    "\x05" {
+			if { "$kind" ne "ansi" } {
+			    # PST escape: cursor up
+			    term_up
+			    term_update_cursor
+			}
+		    }
+		    "\x06" {
+			if { "$kind" ne "ansi" } {
+			    # PST escape: cursor down
+			    term_down
+			    term_update_cursor
+			}
+		    }
+		    "\x0b" {
+			if { "$kind" ne "ansi" } {
+			    # PST escape: clear to end of line
+			    term_clear_to_eol
+			    term_update_cursor
+			}
+		    }
+		    "\x0c" {
+			if { "$kind" ne "ansi" } {
+			    # PST escape: clear to end of screen
+			    term_clear_to_eos
+			    term_update_cursor
+			}
+		    }
+		    "\x0e" {
+			if { "$kind" ne "ansi" } {
+			    # PST escape: get X position
+			    set cur_state "pst_getx"
+			}
+		    }
+		    "\x0f" {
+			if { "$kind" ne "ansi" } {
+			    # PST escape: get Y position
+			    set cur_state "pst_gety"
+			}
+		    }
+		    "\x00" -
+		    "\x10" {
+			if { "$kind" ne "ansi" } {
+			    # PST escape: clear screen
+			    # (clear,cl) Clear screen
+			    term_clear
+			    term_update_cursor
+			}
 		    }
 		}
 	    }
-	    "^\n" {
-		# (ind,do) Move cursor down one line
-		term_down
+	    "ansi_gather_escape" {
+		set cur_save_str [concat $cur_save_str $c]
+		if { [string is alpha $c] } {
+		    process_ansi $cur_save_str
+		    set cur_state "normal"
+		}
+	    }
+	    "pst_getxy" {
+		set c [string range $str 0 0]
+		set str [string range $str 1 end]
+		set len [string length $str]
+		scan "$c" %c cur_col
+		set cur_state "pst_gety"
+	    }
+	    "pst_getx" {
+		set c [string range $str 0 0]
+		set str [string range $str 1 end]
+		set len [string length $str]
+		scan "$c" %c cur_col
 		term_update_cursor
+		set cur_state "normal"
 	    }
-	    "^\b" {
-		# Backspace nondestructively
-		incr cur_col -1
+	    "pst_gety" {
+		set c [string range $str 0 0]
+		set str [string range $str 1 end]
+		set len [string length $str]
+		scan "$c" %c cur_row
 		term_update_cursor
+		set cur_state "normal"
 	    }
-	    "^\a" {
-		bell
-	    }
-	    "^\t" {
-		# Tab, shouldn't happen
-		set cur_col [expr {( $cur_col + 8 ) & 0xFFF8}]
-		term_update_cursor
-	    }
-	    "^\x1b\\\[A" {
-		# (cuu1,up) Move cursor up one line
-		term_up
-		term_update_cursor
-	    }
-	    "^\x1b\\\[C" {
-		# (cuf1,nd) Non-destructive space
-		incr cur_col
-		term_update_cursor
-	    }
-	    "^\x1b\\\[(\[0-9]*);(\[0-9]*)H" {
-		# (cup,cm) Move to row y col x
-		set cur_row [expr {$expect_out(1,string)+1}]
-		set cur_col $expect_out(2,string)
-		term_update_cursor
-	    }
-	    "^\x1b\\\[H\x1b\\\[J" {
-		# (clear,cl) Clear screen
-		term_clear
-		term_update_cursor
-	    }
-	    "^\x1b\\\[K" {
-		# (el,ce) Clear to end of line
-		term_clear_to_eol
-		term_update_cursor
-	    }
-	    "^\x1b\\\[7m" {
-		# (smso,so) Begin standout mode
-		set term_standout 1
-	    }
-	    "^\x1b\\\[m" {
-		# (rmso,se) End standout mode
-		set term_standout 0
-	    }
-	    "^\x1b\\\[?1h\x1b" {
-		# (smkx,ks) start keyboard-transmit mode
-		# terminfo invokes these when going in/out of graphics mode
-		graphicsSet 1
-	    }
-	    "^\x1b\\\[?1l\x1b>" {
-		# (rmkx,ke) end keyboard-transmit mode
-		graphicsSet 0
+	    default {
+		# just throw away the character and go back to normal mode
+		set cur_state "normal"
 	    }
 	}
     }

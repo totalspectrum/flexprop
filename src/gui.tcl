@@ -373,7 +373,9 @@ proc config_open {} {
     if { "$config(font)" eq "" } {
 	set config(font) "TkFixedFont"
     }
-
+    if { "$config(internal_term)" eq "1" } {
+	set config(internal_term) "pst"
+    }
     return 1
 }
 
@@ -1481,7 +1483,9 @@ menu .mbar.options.charset
 #.mbar.options add radiobutton -label "Compress Code" -variable COMPRESS -value "-z1"
 .mbar.options add separator
 .mbar.options add command -label "Editor Options..." -command { doEditorOptions }
-.mbar.options add checkbutton -label "Use internal terminal" -variable config(internal_term)
+.mbar.options add radiobutton -label "Use internal PST terminal" -variable config(internal_term) -value "pst"
+.mbar.options add radiobutton -label "Use internal ANSI terminal" -variable config(internal_term) -value "ansi"
+.mbar.options add radiobutton -label "Use external terminal" -variable config(internal_term) -value "0"
 
 
 .mbar add cascade -menu .mbar.run -label Commands
@@ -1798,7 +1802,7 @@ proc mapPercent {str} {
     set ourcharset $CHARSET
     set runprefix "$WINPREFIX "
 
-    if { $config(internal_term) } {
+    if { $config(internal_term) ne "0" } {
 	set runprefix ""
     }
     if { "$ourwarn" eq "-Wnone" } {
@@ -1958,7 +1962,7 @@ proc doJustRun {extraargs} {
     if { $extraargs ne "" } {
 	set cmdstr [concat "$cmdstr" " " "$extraargs"]
     }
-    if { $config(internal_term) } {
+    if { $config(internal_term) ne "0" } {
 	#puts "Internal Running: $runcmd"
 	::TkTerm::RunInWindow $cmdstr
     } else {
