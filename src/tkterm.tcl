@@ -193,6 +193,7 @@ proc term_clear_to_eos {} {
     variable rows
     variable cur_col
     variable cur_row
+    variable term
     
     # save current col/row
     set col $cur_col
@@ -206,7 +207,8 @@ proc term_clear_to_eos {} {
     set cur_col 0
     while { $cur_row < $rows } {
 	incr cur_row
-	term_insert [format %set space_rem_on_line]s ""]
+	$term delete $cur_row.0 $cur_row.end
+	term_insert [format %[set space_rem_on_line]s ""]
     }
     # restore current col/row
     set cur_col $col
@@ -420,7 +422,7 @@ proc term_gotoxy {} {
 	    set cur_col [expr { $cols - 1 }]
 	}
     }
-    
+    #puts "gotoxy( $cur_col $cur_row )"
     term_update_cursor
 }
 
@@ -515,18 +517,18 @@ proc process_ansi_csi { args cmd } {
 		term_gotoxy
 	    } else {
 		# arguments are 1-based, but our columns are 0 based
-		scan "$args" "%d;%d" cur_col cur_row
+		scan "$args" "%d;%d" cur_row cur_col
 		set cur_col [expr {$cur_col - 1}]
 		term_gotoxy
 	    }
 	}
 	"J" {
 	    # FIXME: technically should parse argument
-	    term_clear_eos
+	    term_clear_to_eos
 	}
 	"K" {
 	    # FIXME: technically should parse argument
-	    term_clear_eol
+	    term_clear_to_eol
 	}
 	"m" {
 	    # set graphic mode
@@ -720,19 +722,26 @@ proc term_recv { str } {
 		}
 	    }
 	    "ansi_gather_escape" {
-		if { "$c" eq "[" } {
+		set c [string range $str 0 0]
+		set str [string range $str 1 end]
+		set len [string length $str]
+		if { "$c" eq "\[" } {
 		    # start of ANSI CSI sequence
 		    set cur_state "ansi_gather_csi"
 		} else {
+		    #puts "got character ($c) (length $len) expected csi start"
 		    set cur_state "normal"
 		}
 	    }
 	    "ansi_gather_csi" {
+		set c [string range $str 0 0]
+		set str [string range $str 1 end]
+		set len [string length $str]
 		if { [string is alpha $c] } {
 		    process_ansi_csi $cur_save_str $c
 		    set cur_state "normal"
 		} else {
-		    set cur_save_str [concat $cur_save_str $c]
+		    set cur_save_str "$cur_save_str$c"
 		}
 	    }
 	    "pst_getxy" {
