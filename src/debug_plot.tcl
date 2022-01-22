@@ -172,6 +172,7 @@ namespace eval DebugWin {
 	variable origin_y
 	variable delayed_updates
 	variable polar_circle
+	global config
 	
 	set top .toplev$name
 
@@ -215,7 +216,7 @@ namespace eval DebugWin {
 		}
 	    }
 	}
-	set wfont [font create -family Courier -size $textsize]
+	set wfont [font create -family [::getDebugFontFamily] -size $textsize]
 	toplevel $top
 	set w $top.p
 	#puts "canvas $w -bg $bgcolor -fg $fgcolor -height $size_h -width $size_w"

@@ -48,6 +48,7 @@ namespace eval DebugWin {
 
     proc CreateTermWindow {name args} {
 	variable delayed_updates
+	global config
 	set top .toplev$name
 
 	if { [winfo exists $top] } {
@@ -99,7 +100,7 @@ namespace eval DebugWin {
 		}
 	    }
 	}
-	set wfont [font create -family Courier -size $textsize]
+	set wfont [font create -family [::getDebugFontFamily] -size $textsize]
 	#puts "text $w.txt -bg $bgcolor -fg $fgcolor -font $wfont -height $size_h -width $size_w"
 	toplevel $top
 	text $top.txt -bg $bgcolor -fg $fgcolor -font $wfont -height $size_h -width $size_w -wrap none

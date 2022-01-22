@@ -5,6 +5,30 @@
 # MIT Licensed
 #
 
+# utility function to get the font family from
+# a font name or specifier
+
+proc getFontFamily { spec } {
+    if { "-family" eq [lindex $spec 0] } {
+	return [lindex $spec 1]
+    }
+    set spec [font actual $spec]
+    if { "-family" eq [lindex $spec 0] } {
+	return [lindex $spec 1]
+    }
+    
+    if { [catch [font configure $spec -family]] } {
+	# perhaps the string has an explicit -family
+	return $spec
+    }
+    return [font configure $spec -family]
+}
+
+proc getDebugFontFamily {} {
+    global config
+    return [getFontFamily $config(term_font)]
+}
+
 source debug_term.tcl
 source debug_plot.tcl
 
@@ -200,7 +224,8 @@ namespace eval DebugWin {
     #   YYXX is orientation, U is underline, I is italic, WW is weight
     
     proc getFontStyle { textsize textstyle } {
-	set fontName "Courier"
+	global config
+	set fontName [::getFontFamily $config(term_font)]
 	set style "center"
 
 	if { [expr ($textstyle & 0x3) > 2] } {
@@ -287,6 +312,14 @@ namespace eval DebugWin {
 		    if { $tmp ne "" } {
 			set debugwin($name) $tmp
 			set debugcmd($name) "::DebugWin::PlotCmd"
+			set cmd_queue($name) [list]
+		    }
+		}
+		"scope" {
+		    set tmp [CreatePlotWindow $name $args]
+		    if { $tmp ne "" } {
+			set debugwin($name) $tmp
+			set debugcmd($name) "::DebugWin::ScopeCmd"
 			set cmd_queue($name) [list]
 		    }
 		}

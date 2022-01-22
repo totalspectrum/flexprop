@@ -143,13 +143,15 @@ proc term_create {} {
     variable cols
     variable rows
     variable sb
+    global config
     
     toplevel $toplev
     wm title $toplev "FlexProp Terminal"
     
     text $term \
 	-yscroll "$sb set" \
-	-relief sunken -bd 1 -width $cols -height $rows -wrap none -setgrid 1
+	-relief sunken -bd 1 -width $cols -height $rows -wrap none -setgrid 1 \
+	-font $config(term_font)
 
     # define scrollbars
     scrollbar $sb -command "$term yview"
