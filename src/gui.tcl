@@ -1351,6 +1351,7 @@ proc rescanPorts { } {
     global PROP_VERSION
     global EXE
     global config
+    global ROOTDIR
     set iplist $config(savedips)
     
     # search for serial ports using serial::listports (src/checkserial.tcl)
@@ -1365,7 +1366,7 @@ proc rescanPorts { } {
 
     # look for WIFI devices
     #if { $PROP_VERSION eq "P1" } {
-	set wifis [exec -ignorestderr bin/proploader$EXE -W]
+	set wifis [exec -ignorestderr $ROOTDIR/bin/proploader$EXE -W]
 	set wifis [split $wifis "\n"]
 	foreach v $wifis {
 	    set comname "$v"
