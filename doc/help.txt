@@ -60,7 +60,9 @@ The "Save session on exit" option, if enabled, causes the editor to reload any p
 
 #### Use Internal Terminal
 
-Older versions of FlexProp ran the loader with an external terminal program, such as cmd.exe on Windows. If "Use Internal Terminal" is checked, FlexProp will use a built-in terminal window instead. This built in window is still experimental and probably does not correctly interpret ANSI escape sequences. However, it is able to detect and parse some of the Spin2 DEBUG commands, such as those to open a TERM or PLOT window.
+Older versions of FlexProp ran the loader with an external terminal program, such as cmd.exe on Windows. This is still an option, but there are also two built in (internal) terminal windows supported by FlexProp, an ANSI compatible one and a PST compatible one. They differ in what codes are used to control the cursor.
+
+The built in terminals are still experimental and probably does not correctly interpret all escape sequences. However, they are able to detect and parse some of the Spin2 DEBUG commands, such as those to open a TERM or PLOT window.
 
 ### Commands
 
