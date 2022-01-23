@@ -29,8 +29,8 @@ proc getDebugFontFamily {} {
     return [getFontFamily $config(term_font)]
 }
 
-source debug_term.tcl
-source debug_plot.tcl
+source $ROOTDIR/src/debug_term.tcl
+source $ROOTDIR/src/debug_plot.tcl
 
 namespace eval DebugWin {
     namespace export RunCmd
