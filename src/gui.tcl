@@ -37,6 +37,7 @@ catch {tcl_endOfWord}
 # change it
 set tcl_wordchars {[[:alnum:]_]}
 set tcl_nonwordchars {[^[:alnum:]_]}
+
 #
 # global variables
 # ROOTDIR was set by our caller to be the directory from which all other
@@ -76,6 +77,28 @@ if { $tcl_platform(platform) == "windows" } {
     set WINPREFIX "/etc/alternatives/x-terminal-emulator -T \"Propeller Output\" -e"
 } else {
     set WINPREFIX "xterm -fs 14 -T \"Propeller Output\" -e"
+}
+
+#
+# Create some useful fonts
+#
+font create InternalTermFont -family Courier -size 10
+font create BottomCmdFont -family Courier -size 10
+
+proc resetTerminalFont {w} {
+    global config
+    set fnt [font actual $w]
+    set config(term_font) $fnt
+    set cmd [concat [list font configure InternalTermFont] $fnt]
+    eval $cmd
+}
+
+proc resetBottomFont {w} {
+    global config
+    set fnt [font actual $w]
+    set config(botfont) $fnt
+    set cmd [concat [list font configure BottomCmdFont] $fnt]
+    eval $cmd
 }
 
 # config file name
@@ -373,9 +396,17 @@ proc config_open {} {
     if { "$config(font)" eq "" } {
 	set config(font) "TkFixedFont"
     }
+    if { "$config(botfont)" eq "" } {
+	set config(botfont) "TkFixedFont"
+    }
+    if { "$config(term_font)" eq "" } {
+	set config(term_font) "TkFixedFont"
+    }
     if { "$config(internal_term)" eq "1" } {
 	set config(internal_term) "pst"
     }
+
+    resetTerminalFont $config(term_font)
     return 1
 }
 
@@ -1561,7 +1592,7 @@ grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun .toolbar.configmsg 
 
 scrollbar .p.bot.v -orient vertical -command {.p.bot.txt yview}
 scrollbar .p.bot.h -orient horizontal -command {.p.bot.txt xview}
-text .p.bot.txt -wrap none -xscroll {.p.bot.h set} -yscroll {.p.bot.v set} -height 10 -font $config(botfont)
+text .p.bot.txt -wrap none -xscroll {.p.bot.h set} -yscroll {.p.bot.v set} -height 10 -font BottomCmdFont
 label .p.bot.label -background DarkGrey -foreground white -text "Compiler Output" -font TkSmallCaptionFont -relief flat -pady 0 -borderwidth 0
 
 grid .p.bot.label      -sticky nsew
@@ -1648,7 +1679,7 @@ proc doSelectFont {} {
 
 proc doSelectBottomFont {} {
     global config
-    set curfont $config(font)
+    set curfont $config(botfont)
     set version [info tclversion]
     
     if { $version > 8.5 } {
@@ -1657,9 +1688,24 @@ proc doSelectBottomFont {} {
     } else {
 	set fnt [choosefont $curfont "Command output font"]
 	if { "$fnt" ne "" } {
-	    set config(botfont) $fnt
-	    .p.bot.txt configure -font $fnt
-	    .editopts.bot.lb configure -font $fnt
+	    resetBottomFont $fnt
+	}
+    }
+}
+
+proc doSelectTerminalFont {} {
+    global config
+    set curfont $config(term_font)
+    set version [info tclversion]
+    
+    if { $version > 8.5 } {
+	tk fontchooser configure -parent . -font "$config(term_font)" -command resetTerminalFont
+	tk fontchooser show
+    } else {
+	set fnt [choosefont $curfont "Command output font"]
+	if { "$fnt" ne "" } {
+	    set config(term_font) $fnt
+#	    .editopts.term.lb configure -font $fnt
 	}
     }
 }
@@ -1670,14 +1716,6 @@ proc resetFont {w} {
     set config(font) $fnt
     setnbfonts $fnt
     .editopts.font.lb configure -font $fnt
-}
-
-proc resetBottomFont {w} {
-    global config
-    set fnt [font actual $w]
-    set config(botfont) $fnt
-    .p.bot.txt configure -font $fnt
-    .editopts.bot.lb configure -font $fnt
 }
 
 proc doShowLinenumbers {} {
@@ -1724,7 +1762,8 @@ proc doEditorOptions {} {
     toplevel .editopts
     frame .editopts.top
     ttk::labelframe .editopts.font -text "Source code"
-    ttk::labelframe .editopts.bot -text "\n Compiler output \n"
+    ttk::labelframe .editopts.bot -text "\n Compiler output"
+    ttk::labelframe .editopts.term -text "\n Terminal Options"
     frame .editopts.end
 
     label .editopts.top.l -text "\n  Editor Options  \n"
@@ -1743,8 +1782,11 @@ proc doEditorOptions {} {
     checkbutton .editopts.font.savewindows -text "Save session on exit" -variable config(savesession)
     ttk::button .editopts.end.ok -text " OK " -command doneAppearance
 
-    label .editopts.bot.lb -text "Compiler output font " -font $config(botfont)
+    label .editopts.bot.lb -text "Compiler output font " -font BottomCmdFont
     ttk::button .editopts.bot.change -text " Change... " -command doSelectBottomFont
+
+    label .editopts.term.lb -text "Terminal font " -font InternalTermFont
+    ttk::button .editopts.term.change -text " Change... " -command doSelectTerminalFont
 
     grid columnconfigure .editopts 0 -weight 1
     grid rowconfigure .editopts 0 -weight 1
@@ -1752,6 +1794,7 @@ proc doEditorOptions {} {
     grid .editopts.top -sticky nsew
     grid .editopts.font -sticky nsew
     grid .editopts.bot -sticky nsew
+    grid .editopts.term -sticky nsew
     grid .editopts.end -sticky nsew
 
     grid .editopts.top.l -sticky nsew 
@@ -1764,6 +1807,7 @@ proc doEditorOptions {} {
     grid .editopts.font.autoreload
     grid .editopts.font.savewindows
     grid .editopts.bot.lb .editopts.bot.change
+    grid .editopts.term.lb .editopts.term.change
     
     grid .editopts.end.ok -sticky nsew
 
