@@ -1504,6 +1504,10 @@ menu .mbar.options.charset
 .mbar.options.charset add radiobutton -label "Latin-1" -variable CHARSET -value "--charset=latin1"
 .mbar.options.charset add radiobutton -label "Parallax OEM" -variable CHARSET -value "--charset=parallax"
 
+.mbar.options add separator
+.mbar.options add command -label "Editor Options..." -command { doEditorOptions }
+.mbar.options add separator
+
 .mbar.options add radiobutton -label "Use IEEE floating point" -variable FIXEDREAL -value "--floatreal"
 .mbar.options add radiobutton -label "Use 16.16 fixed point in place of floats" -variable FIXEDREAL -value "--fixedreal"
 .mbar.options add separator
@@ -1514,7 +1518,6 @@ menu .mbar.options.charset
 #.mbar.options add radiobutton -label "No Compression" -variable COMPRESS -value "-z0"
 #.mbar.options add radiobutton -label "Compress Code" -variable COMPRESS -value "-z1"
 .mbar.options add separator
-.mbar.options add command -label "Editor Options..." -command { doEditorOptions }
 .mbar.options add radiobutton -label "Use internal PST terminal" -variable config(internal_term) -value "pst"
 .mbar.options add radiobutton -label "Use internal ANSI terminal" -variable config(internal_term) -value "ansi"
 .mbar.options add radiobutton -label "Use external terminal" -variable config(internal_term) -value "0"
