@@ -45,7 +45,7 @@ namespace eval TkTerm {
 # Variables that must be initialized before using this:
 #############################################
     
-set rows 24		;# number of rows in term
+set rows 25		;# number of rows in term
 set rowsDumb $rows	;# number of rows in term when in dumb mode - this can
 			;# increase during runtime
 set cols 80		;# number of columns in term
@@ -206,15 +206,11 @@ proc term_clear_to_eos {} {
     term_insert [format %[set space_rem_on_line]s ""]
 
     # now clear remaining rows
-    set cur_col 0
-    while { $cur_row < $rows } {
-	incr cur_row
-	$term delete $cur_row.0 $cur_row.end
-	term_insert [format %[set space_rem_on_line]s ""]
+    set blankline [format %*s $cols ""]\n
+    for {set i [expr {$cur_row + 1}]} {$i <= $cols} {incr i} {
+	$term delete $i.0 $i.end
+	$term insert $i.0 $blankline
     }
-    # restore current col/row
-    set cur_col $col
-    set cur_row $row
 }
 
 proc term_init {} {
@@ -424,7 +420,6 @@ proc term_gotoxy {} {
 	    set cur_col [expr { $cols - 1 }]
 	}
     }
-    #puts "gotoxy( $cur_col $cur_row )"
     term_update_cursor
 }
 
@@ -440,7 +435,6 @@ proc screen_flush {} {
 
 proc term_send { c } {
     variable term_pipe
-    #puts "term_send: ($c)"
     if { "$term_pipe" ne "" } {
 	if { [eof $term_pipe] } {
 	    force_close_term
@@ -485,6 +479,8 @@ proc get_one_arg { str default_val } {
 proc process_ansi_csi { args cmd } {
     variable cur_col
     variable cur_row
+    variable cols
+    variable rows
     variable term
     variable term_standout
     switch $cmd {
@@ -500,12 +496,12 @@ proc process_ansi_csi { args cmd } {
 	}
 	"C" {
 	    set n [get_one_arg $args 1]
-	    incr cur_row $n
+	    incr cur_col $n
 	    term_gotoxy
 	}
 	"D" {
 	    set n [get_one_arg $args 1]
-	    set cur_row [expr { $cur_row - $n }]
+	    set cur_col [expr { $cur_col - $n }]
 	    term_gotoxy
 	}
 	"G" {
