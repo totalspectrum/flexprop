@@ -118,7 +118,7 @@ set config(term_font) "TkFixedFont"
 set config(term_w) 79
 set config(term_h) 24
 set config(sash) ""
-set config(tabwidth) 4
+set config(tabwidth) 8
 set config(autoreload) 0
 set config(internal_term) 0
 set COMPORT " "

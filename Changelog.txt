@@ -4,9 +4,10 @@ Major updates in this version, including:
 
 - Added menu options for configuring IP address
 - Made proploader (with Wifi support) the default loader for P2
-- Added an option to use a built in terminal emulator, instead of
+- Added options to use a built in terminal emulator, instead of
   relying on an external one
 - Added support for a few graphical DEBUG commands (TEXT and PLOT related)
+- Made the default tab width 8 instead of 4
 
 Version 5.9.6
 - Made the Help menu items use the .md files if HTML files are not available
