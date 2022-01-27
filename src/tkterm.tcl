@@ -151,7 +151,7 @@ proc term_create {} {
     text $term \
 	-yscroll "$sb set" \
 	-relief sunken -bd 1 -width $cols -height $rows -wrap none -setgrid 1 \
-	-font $config(term_font)
+	-font InternalTermFont
 
     # define scrollbars
     scrollbar $sb -command "$term yview"
@@ -781,7 +781,7 @@ proc Terminal_Data { } {
     set c [read $term_pipe 1024]
     if { "$c" eq "" } {
 	if { [eof $term_pipe] } {
-	    fileevent $term_pipe readable { }
+	    close_term
 	}
     } else {
 	term_recv $c
