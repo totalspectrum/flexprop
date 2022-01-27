@@ -28,17 +28,17 @@ CON
   
 ' now comes the actual code
 DAT
-	org 0
+        org 0
 #ifdef DEBUGPIN
-	drvl	DEBUGPIN
+        drvl    DEBUGPIN
 #endif
 loop
-	drvnot	#led_pin	' toggle the led
-	waitx	##delay		' delay
-	jmp	#loop		' and repeat
-'	jmp	loop		' what happens if we forget the #?
-'	jmp	indirect	' but this will not give a warning
+        drvnot  #led_pin        ' toggle the led
+        waitx   ##delay         ' delay
+        jmp     #loop           ' and repeat
+'       jmp     loop            ' what happens if we forget the #?
+'       jmp     indirect        ' but this will not give a warning
 
 ' the stuff below is just for testing purposes
 indirect
-	long	loop		' label for indirect jump
+        long    loop            ' label for indirect jump

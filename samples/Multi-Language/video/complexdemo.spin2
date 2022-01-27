@@ -7,158 +7,158 @@ CON
   _clkfreq = 108_000_000
 
 ' adjust pins accordingly
-	VGA_BASE_PIN       = 48
-	VGA_VSYNC_PIN      = VGA_BASE_PIN+4
-	DVI_BASE_PIN       = 24
-	SVIDEO_BASE_PIN    = 8
-	COMPONENT_BASE_PIN = 8
+        VGA_BASE_PIN       = 48
+        VGA_VSYNC_PIN      = VGA_BASE_PIN+4
+        DVI_BASE_PIN       = 24
+        SVIDEO_BASE_PIN    = 8
+        COMPONENT_BASE_PIN = 8
 
-	LINEBUFSIZE = 1920 * 4 ' enough room for a scanline at full colour bit depth
+        LINEBUFSIZE = 1920 * 4 ' enough room for a scanline at full colour bit depth
 
 VAR
-	long first[13]
-	long second[13]
-	long third[13]
-	long fourth[13]
-	long display1[14]
-	long display2[14]
+        long first[13]
+        long second[13]
+        long third[13]
+        long fourth[13]
+        long display1[14]
+        long display2[14]
 
 OBJ
- 	vid: "p2videodrv.spin2"
+        vid: "p2videodrv.spin2"
 
 PUB start
-	coginit(cogid, demo, @stack)
+        coginit(cogid, demo, @stack)
 
 PUB demo | w, x, y, z, timing
 
         clkset(_clkmode, _clkfreq) ' setup default startup clock
 
-	repeat y from 0 to 49
-	   repeat x from 0 to 79
-		word[@screenbuf1][y*80 + x] := x + (x&$f)<<8 | ((y<<1)&$f)<<12
-		word[@screenbuf2][y*80 + x] := x + (((x&$f)<<8) | ((y<<1)&$f)<<12)
+        repeat y from 0 to 49
+           repeat x from 0 to 79
+                word[@screenbuf1][y*80 + x] := x + (x&$f)<<8 | ((y<<1)&$f)<<12
+                word[@screenbuf2][y*80 + x] := x + (((x&$f)<<8) | ((y<<1)&$f)<<12)
 
 
-	' obtain the VGA's timing for a given resolution
- 	'timing := vid.getTiming(VID#RES_1024x768) 
- 	'timing := vid.getTiming(VID#RES_800x600) 
- 	timing := vid.getTiming(VID#RES_640x480) 
+        ' obtain the VGA's timing for a given resolution
+        'timing := vid.getTiming(VID#RES_1024x768) 
+        'timing := vid.getTiming(VID#RES_800x600) 
+        timing := vid.getTiming(VID#RES_640x480) 
 
-	' create a VGA display
-	vid.initDisplay(@display1, VID#VGA, VGA_BASE_PIN, VGA_VSYNC_PIN, VID#RGBHV, @lineBuffer1, LINEBUFSIZE, timing)
+        ' create a VGA display
+        vid.initDisplay(@display1, VID#VGA, VGA_BASE_PIN, VGA_VSYNC_PIN, VID#RGBHV, @lineBuffer1, LINEBUFSIZE, timing)
 
-	' or turn one of these other video outputs...
-	'vid.initDisplay(@display1, VID#COMPONENT_SDTV, COMPONENT_BASE_PIN, 0, VID#PROGRESSIVE+VID#PAL, @lineBuffer1, LINEBUFSIZE, 0)	
-	'vid.initDisplay(@display1, VID#COMPONENT_HDTV, COMPONENT_BASE_PIN, 0, VID#PROGRESSIVE, @lineBuffer1, LINEBUFSIZE, 0)	
-	'vid.initDisplay(@display1, VID#SVIDEO_CVBS, SVIDEO_BASE_PIN, 0, VID#INTERLACED+VID#NTSC, @lineBuffer1, LINEBUFSIZE, 0)
-	'vid.initDisplay(@display1, VID#CVBS, SVIDEO_BASE_PIN+2, 0, VID#INTERLACED+VID#NTSC, @lineBuffer1, LINEBUFSIZE, 0)
-	'vid.initDisplay(@display1, VID#SVIDEO, SVIDEO_BASE_PIN, 0, VID#PROGRESSIVE+VID#NTSC, @lineBuffer1, LINEBUFSIZE, 0)
-	'vid.initDisplay(@display1, VID#DVI, DVI_BASE_PIN, 0, VID#DVI_NORMAL, @lineBuffer2, LINEBUFSIZE, 0)	' create a VGA display over DVI
-	
-	' setup some regions
-	vid.initRegion(@first,  VID#TEXT,  64, VID#FLASH_TEXT, @vgapalette, @fontcga8, 8, @screenbuf1, 0)
-'	vid.initRegion(@first,  VID#TEXT,  100, VID#FLASH_TEXT+VID#DOUBLE_WIDE, @vgapalette, @fontvga16, 16, @screenbuf1, 0)
-	vid.initRegion(@second, VID#RGB16, 200,                0, @vgapalette, @fontcga8, 8, @framebuf1, 0)
-	vid.initRegion(@third,  VID#TEXT,  96,                0, @vgapalette, @fontvga16, 16,  @screenbuf2, 0)
-	vid.initRegion(@fourth, VID#RGBI,    0,                0, @vgapalette, @fontcga8,  8,  @framebuf2, 0)
+        ' or turn one of these other video outputs...
+        'vid.initDisplay(@display1, VID#COMPONENT_SDTV, COMPONENT_BASE_PIN, 0, VID#PROGRESSIVE+VID#PAL, @lineBuffer1, LINEBUFSIZE, 0)   
+        'vid.initDisplay(@display1, VID#COMPONENT_HDTV, COMPONENT_BASE_PIN, 0, VID#PROGRESSIVE, @lineBuffer1, LINEBUFSIZE, 0)   
+        'vid.initDisplay(@display1, VID#SVIDEO_CVBS, SVIDEO_BASE_PIN, 0, VID#INTERLACED+VID#NTSC, @lineBuffer1, LINEBUFSIZE, 0)
+        'vid.initDisplay(@display1, VID#CVBS, SVIDEO_BASE_PIN+2, 0, VID#INTERLACED+VID#NTSC, @lineBuffer1, LINEBUFSIZE, 0)
+        'vid.initDisplay(@display1, VID#SVIDEO, SVIDEO_BASE_PIN, 0, VID#PROGRESSIVE+VID#NTSC, @lineBuffer1, LINEBUFSIZE, 0)
+        'vid.initDisplay(@display1, VID#DVI, DVI_BASE_PIN, 0, VID#DVI_NORMAL, @lineBuffer2, LINEBUFSIZE, 0)     ' create a VGA display over DVI
+        
+        ' setup some regions
+        vid.initRegion(@first,  VID#TEXT,  64, VID#FLASH_TEXT, @vgapalette, @fontcga8, 8, @screenbuf1, 0)
+'       vid.initRegion(@first,  VID#TEXT,  100, VID#FLASH_TEXT+VID#DOUBLE_WIDE, @vgapalette, @fontvga16, 16, @screenbuf1, 0)
+        vid.initRegion(@second, VID#RGB16, 200,                0, @vgapalette, @fontcga8, 8, @framebuf1, 0)
+        vid.initRegion(@third,  VID#TEXT,  96,                0, @vgapalette, @fontvga16, 16,  @screenbuf2, 0)
+        vid.initRegion(@fourth, VID#RGBI,    0,                0, @vgapalette, @fontcga8,  8,  @framebuf2, 0)
 
-	' chain together
-	vid.linkRegion(@first, @second)	
-	vid.linkRegion(@second, @third)
-	vid.linkRegion(@third, @fourth)
+        ' chain together
+        vid.linkRegion(@first, @second) 
+        vid.linkRegion(@second, @third)
+        vid.linkRegion(@third, @fourth)
 
-	'vid.setSkew(@second, 1280-1600)
-	
-	' setup optional border
-	vid.setDisplayBorderSizes(@display1, 15, 15, 16) 					
-	vid.setDisplayBorderColour(@display1, $AA_00_00)
+        'vid.setSkew(@second, 1280-1600)
+        
+        ' setup optional border
+        vid.setDisplayBorderSizes(@display1, 15, 15, 16)                                        
+        vid.setDisplayBorderColour(@display1, $AA_00_00)
 
-	' setup a local region mouse
-	vid.setRegionMouse(@first, 120, 30)
-	vid.setMouseImage(@first, @mouse4bpp, 0, 0)  ' choose right mouse sprite type for region depth!
-	vid.showMouse(@first, 1) 
+        ' setup a local region mouse
+        vid.setRegionMouse(@first, 120, 30)
+        vid.setMouseImage(@first, @mouse4bpp, 0, 0)  ' choose right mouse sprite type for region depth!
+        vid.showMouse(@first, 1) 
 
-	'vid.setTextFontStart(@second, 4)
-	vid.setCursorColour(@first, 0, 15)
-	vid.setCursorFlags(@first, 0, VID#CURS_ENABLE)   
-	vid.setCursorColour(@third, 0, 15)
-	vid.setCursorFlags(@third, 0, VID#CURS_ENABLE)   
+        'vid.setTextFontStart(@second, 4)
+        vid.setCursorColour(@first, 0, 15)
+        vid.setCursorFlags(@first, 0, VID#CURS_ENABLE)   
+        vid.setCursorColour(@third, 0, 15)
+        vid.setCursorFlags(@third, 0, VID#CURS_ENABLE)   
 
-	'enable display list
-	vid.setDisplayRegions(@display1, @first)
+        'enable display list
+        vid.setDisplayRegions(@display1, @first)
 
-	vid.setTextContext(@display1, @third, $1F) '!!!!! MUST SET THIS BEFORE ANY TEXT PRINTING STARTS OR IT COULD HANG !!!!
+        vid.setTextContext(@display1, @third, $1F) '!!!!! MUST SET THIS BEFORE ANY TEXT PRINTING STARTS OR IT COULD HANG !!!!
 
-	vid.printStr(@features)
+        vid.printStr(@features)
 
-	vid.setCursorFlags(@third, 0, 0)
+        vid.setCursorFlags(@third, 0, 0)
 
-	vid.setTextContext(@display1, @first, $8A) '!!!!! MUST SET THIS BEFORE ANY TEXT PRINTING STARTS OR IT CAN CRASH !!!!
+        vid.setTextContext(@display1, @first, $8A) '!!!!! MUST SET THIS BEFORE ANY TEXT PRINTING STARTS OR IT CAN CRASH !!!!
 
-	vid.printStr(@msg)
-	'vid.dec(vid.getFontHeight(@first))
-	'vid.crlf
-	'vid.dec(vid.getCurrentRows(@first))
-	'vid.crlf
-	'vid.dec(vid.getCurrentColumns(@first, @display1))	
+        vid.printStr(@msg)
+        'vid.dec(vid.getFontHeight(@first))
+        'vid.crlf
+        'vid.dec(vid.getCurrentRows(@first))
+        'vid.crlf
+        'vid.dec(vid.getCurrentColumns(@first, @display1))      
 
-	x:=0
-	y:=1
-	z:=0
+        x:=0
+        y:=1
+        z:=0
         w:=0
-	repeat 
-		vid.waitForVsync(@display1)
-		
-		vid.setCursorPos(@first, 0, 0, 70)
-		vid.setTextContext(@display1, @first, x)
-		vid.hex(vid.getFieldCount(@display1), 2)
+        repeat 
+                vid.waitForVsync(@display1)
+                
+                vid.setCursorPos(@first, 0, 0, 70)
+                vid.setTextContext(@display1, @first, x)
+                vid.hex(vid.getFieldCount(@display1), 2)
 
-		if w < 2000
-			z:=z+y
-		else
-			vid.setTextContext(@display1, @third, $1F)
-			vid.out(byte[@features][w-2000])
+                if w < 2000
+                        z:=z+y
+                else
+                        vid.setTextContext(@display1, @third, $1F)
+                        vid.out(byte[@features][w-2000])
 
-		if z == 16
-			z:= 0
-			vid.setSource(@third, vid.getSource(@third) + y*80*2)
-		if z == -1
-			z:= 15
-			vid.setSource(@third, vid.getSource(@third) + y*80*2)
-		vid.setTextScanStart(@third, z)
-		vid.setSource(@second, vid.getSource(@second) + 4)
-		vid.setSource(@fourth, vid.getSource(@fourth) - 4)
-		vid.setRegionMouse(@first, x, 30)
-		if (w < 2000)
-			x+=y
-			if (x > 300) 
-				y:= -1
- 			if (x == 0)
-				y:= 1
-		'	vid.setDisplayBorderSizes(@display1, x, x, 16) ' enable to go crazy
-		vid.setDisplayBorderColour(@display1, x*$0111)
-		w++
-		if w // 1000 == 0
-			vid.setMode(@fourth, (vid.getMode(@fourth) + 1) & $f)
-		if w == 1000
-			vid.setFlags(@first, VID#DOUBLE_WIDE+VID#FLASH_TEXT)
-		if w == 2000
-			vid.setFlags(@first, VID#DOUBLE_HIGH+VID#FLASH_TEXT)
-		if w == 3000
-			vid.setFlags(@first, VID#DOUBLE_HIGH + VID#DOUBLE_WIDE+VID#FLASH_TEXT)
-		if w == 4000
-			vid.setFlags(@first, VID#FLASH_TEXT)
-			vid.setSize(@second, vid.getSize(@second)-112)
-			vid.setSize(@third, vid.getSize(@third)+112)
-		if w == 5670
-			vid.setSize(@second, vid.getSize(@second)+112)
-			vid.setSize(@third, vid.getSize(@third)-112)
-			w:=0
+                if z == 16
+                        z:= 0
+                        vid.setSource(@third, vid.getSource(@third) + y*80*2)
+                if z == -1
+                        z:= 15
+                        vid.setSource(@third, vid.getSource(@third) + y*80*2)
+                vid.setTextScanStart(@third, z)
+                vid.setSource(@second, vid.getSource(@second) + 4)
+                vid.setSource(@fourth, vid.getSource(@fourth) - 4)
+                vid.setRegionMouse(@first, x, 30)
+                if (w < 2000)
+                        x+=y
+                        if (x > 300) 
+                                y:= -1
+                        if (x == 0)
+                                y:= 1
+                '       vid.setDisplayBorderSizes(@display1, x, x, 16) ' enable to go crazy
+                vid.setDisplayBorderColour(@display1, x*$0111)
+                w++
+                if w // 1000 == 0
+                        vid.setMode(@fourth, (vid.getMode(@fourth) + 1) & $f)
+                if w == 1000
+                        vid.setFlags(@first, VID#DOUBLE_WIDE+VID#FLASH_TEXT)
+                if w == 2000
+                        vid.setFlags(@first, VID#DOUBLE_HIGH+VID#FLASH_TEXT)
+                if w == 3000
+                        vid.setFlags(@first, VID#DOUBLE_HIGH + VID#DOUBLE_WIDE+VID#FLASH_TEXT)
+                if w == 4000
+                        vid.setFlags(@first, VID#FLASH_TEXT)
+                        vid.setSize(@second, vid.getSize(@second)-112)
+                        vid.setSize(@third, vid.getSize(@third)+112)
+                if w == 5670
+                        vid.setSize(@second, vid.getSize(@second)+112)
+                        vid.setSize(@third, vid.getSize(@third)-112)
+                        w:=0
 DAT
-	orgh
+        orgh
 
-stack 		long 0[300]
-msg	byte	" Hello World! ", 13, 10, 0
+stack           long 0[300]
+msg     byte    " Hello World! ", 13, 10, 0
 
 vgapalette
             long    $00_00_00_00   ' 0 = black          
@@ -529,12 +529,12 @@ fontcga8    file    "fontcga8"
 linebuffer1 long    0[3840]
 linebuffer2 long    0[3840]
 
-features	
+features        
             file    "features.txt"
-	    long    0
+            long    0
 screenbuf1  word    0[4000]
 screenbuf2  word    0[4000]
 
 framebuf1
 framebuf2
-	    file   "birds.bmp"
+            file   "birds.bmp"

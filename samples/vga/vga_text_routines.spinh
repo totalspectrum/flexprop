@@ -113,8 +113,8 @@ PUB tx(c) | fg, bg
          set_position(curx-1, cury)
       elseif (c == 10) ' line feed
          if cury == scroll_last
-	   scroll_up
-	 else
+           scroll_up
+         else
            cury++
       elseif (c == 13) ' carriage return
          curx := 0
@@ -129,12 +129,12 @@ PUB tx(c) | fg, bg
            fg,bg := bg,fg  ' swap
          glyphat(curx, cury, c, fg, bg, char_effects & $FF)
          curx++
-	 if curx == COLS
-	   curx := 0
-	   if cury == scroll_last
-	     scroll_up
-	   else
-	     cury++
+         if curx == COLS
+           curx := 0
+           if cury == scroll_last
+             scroll_up
+           else
+             cury++
    elseif (state == STATE_ESCAPE)
       handle_esc(c)
    elseif (state == STATE_START_CSI)

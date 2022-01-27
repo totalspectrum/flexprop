@@ -58,10 +58,10 @@ PUB demo | x, y, fgcol, bgcol, ch, grey, col1, col2, idx
         bgcol := (grey<<24) | (grey<<16) | (grey<<8)
         repeat x from 0 to scrn#COLS-1
           grey := (x & 15)
-	  idx := x / 16
+          idx := x / 16
           col1 := democolors[idx]
-	  col2 := democolors[idx+1]
-	  fgcol := colorblend(col1, col2, (grey<<4) + grey)
+          col2 := democolors[idx+1]
+          fgcol := colorblend(col1, col2, (grey<<4) + grey)
           scrn.glyphat(x, y, ch++, fixupcol(fgcol), fixupcol(bgcol), $20)
     waitms(10000)
     runtext

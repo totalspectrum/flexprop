@@ -7,47 +7,47 @@ CON
   _clkfreq = 108_000_000
 
 ' adjust pins accordingly
-'	VGA_BASE_PIN       = 8
-	VGA_BASE_PIN       = 48
-	VGA_VSYNC_PIN      = VGA_BASE_PIN+4
+'       VGA_BASE_PIN       = 8
+        VGA_BASE_PIN       = 48
+        VGA_VSYNC_PIN      = VGA_BASE_PIN+4
 
-	LINEBUFSIZE = 80*4 
-	SCREENSIZE = 80*30
+        LINEBUFSIZE = 80*4 
+        SCREENSIZE = 80*30
 
 VAR
-	long region[12]
-	long display[14]
+        long region[12]
+        long display[14]
 
 OBJ
- 	vid: "p2videodrv.spin2"
+        vid: "p2videodrv.spin2"
 
 PUB start
-	coginit(cogid, demo, @stack)
+        coginit(cogid, demo, @stack)
 
 PUB demo | timing
 
         clkset(_clkmode, _clkfreq) ' setup default startup clock
 
-	wordfill(@screenbuf, $1F20, SCREENSIZE)
+        wordfill(@screenbuf, $1F20, SCREENSIZE)
 
-	' obtain the VGA's timing for a given resolution
- 	timing := vid.getTiming(VID#RES_640x480) 
+        ' obtain the VGA's timing for a given resolution
+        timing := vid.getTiming(VID#RES_640x480) 
 
-	' create a VGA display
-	vid.initDisplay(@display, VID#VGA, VGA_BASE_PIN, VGA_VSYNC_PIN, VID#RGBHV, @lineBuffer1, LINEBUFSIZE, timing)
-	
-	' setup and attach a single region
-	vid.initRegion(@region,  VID#TEXT,  0, VID#FLASH_TEXT, @vgapalette, @fontvga16, 16, @screenbuf, @display)
+        ' create a VGA display
+        vid.initDisplay(@display, VID#VGA, VGA_BASE_PIN, VGA_VSYNC_PIN, VID#RGBHV, @lineBuffer1, LINEBUFSIZE, timing)
+        
+        ' setup and attach a single region
+        vid.initRegion(@region,  VID#TEXT,  0, VID#FLASH_TEXT, @vgapalette, @fontvga16, 16, @screenbuf, @display)
 
-	vid.setTextContext(@display, @region, $1F) '!!!!! MUST SET THIS BEFORE ANY TEXT PRINTING STARTS OR IT COULD HANG !!!!
-	vid.printStr(@features)
+        vid.setTextContext(@display, @region, $1F) '!!!!! MUST SET THIS BEFORE ANY TEXT PRINTING STARTS OR IT COULD HANG !!!!
+        vid.printStr(@features)
 
-	repeat
+        repeat
 
 DAT
-	orgh
+        orgh
 
-stack 		long 0[300]
+stack           long 0[300]
 
 vgapalette
             long    $00_00_00_00   ' 0 = black          
@@ -313,6 +313,6 @@ fontvga16   file    "fontvga16"
 linebuffer1 long    0[LINEBUFSIZE]
 linebuffer2 long    0[LINEBUFSIZE]
 screenbuf   word    0[SCREENSIZE]
-features	
+features        
             file    "features.txt"
-	    long    0
+            long    0

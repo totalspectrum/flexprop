@@ -2,8 +2,8 @@
 '' command line: /home/ersmith/Parallax/spin2cpp/build/fastspin -w -2 multiply.spin 
 
 con
-	__MBOX_SIZE = 6
-	__STACK_SIZE = 1
+        __MBOX_SIZE = 6
+        __STACK_SIZE = 1
 var
   long __mbox[__MBOX_SIZE]   ' mailbox for communicating with remote COG
   long __objmem[0]          ' space for hub data in COG code
@@ -142,195 +142,195 @@ pub swmul(a, b) : r0, r1, r2
 '--------------------------------------------------
 
 dat
-	cogid	$1d0
-	coginit	$1d0,##$400
-	orgh	$10
-	long	160000000 ' clock frequency
-	long	$10c3f04 ' clock mode
-	orgh	$400
-	org	0
+        cogid   $1d0
+        coginit $1d0,##$400
+        orgh    $10
+        long    160000000 ' clock frequency
+        long    $10c3f04 ' clock mode
+        orgh    $400
+        org     0
 entry
-	mov	mboxptr, ptra
-	add	mboxptr, #8
-	rdlong	objptr, mboxptr
-	add	mboxptr, #4
-	rdlong	ptra, mboxptr
-	sub	mboxptr, #8
-	wrlong	#0, mboxptr
+        mov     mboxptr, ptra
+        add     mboxptr, #8
+        rdlong  objptr, mboxptr
+        add     mboxptr, #4
+        rdlong  ptra, mboxptr
+        sub     mboxptr, #8
+        wrlong  #0, mboxptr
 waitloop
-	rdlong	mboxcmd, mboxptr wz
- if_e	jmp	#waitloop
-	add	mboxptr, #4
-	rdlong	arg01, mboxptr
-	add	mboxptr, #4
-	rdlong	arg02, mboxptr
-	sub	mboxptr, #4
-	shr	mboxcmd, #2
-	calla	mboxcmd
-	wrlong	result1, mboxptr
-	add	mboxptr, #4
-	wrlong	result2, mboxptr
-	add	mboxptr, #4
-	wrlong	result3, mboxptr
-	sub	mboxptr, #12
-	mov	arg01, #0
-	wrlong	arg01, mboxptr
-	jmp	#waitloop
+        rdlong  mboxcmd, mboxptr wz
+ if_e   jmp     #waitloop
+        add     mboxptr, #4
+        rdlong  arg01, mboxptr
+        add     mboxptr, #4
+        rdlong  arg02, mboxptr
+        sub     mboxptr, #4
+        shr     mboxcmd, #2
+        calla   mboxcmd
+        wrlong  result1, mboxptr
+        add     mboxptr, #4
+        wrlong  result2, mboxptr
+        add     mboxptr, #4
+        wrlong  result3, mboxptr
+        sub     mboxptr, #12
+        mov     arg01, #0
+        wrlong  arg01, mboxptr
+        jmp     #waitloop
 
 pasm_builtinmul
 _builtinmul
-	getct	result1
-	mov	_builtinmul_t, result1
-	mov	muldiva_, arg01
-	mov	muldivb_, arg02
-	calla	#multiply_
-	getct	result1
-	sub	result1, _builtinmul_t
-	mov	result3, result1
-	mov	result1, muldiva_
-	mov	result2, muldivb_
+        getct   result1
+        mov     _builtinmul_t, result1
+        mov     muldiva_, arg01
+        mov     muldivb_, arg02
+        calla   #multiply_
+        getct   result1
+        sub     result1, _builtinmul_t
+        mov     result3, result1
+        mov     result1, muldiva_
+        mov     result2, muldivb_
 _builtinmul_ret
-	reta
+        reta
 
 pasm_cordicmul
 _cordicmul
-	getct	result1
-	mov	_cordicmul_t, result1
-	qmul	arg01, arg02
-	getqx	_cordicmul_lo
-	getqy	result2
-	getct	result1
-	sub	result1, _cordicmul_t
-	mov	result3, result1
-	mov	result1, _cordicmul_lo
+        getct   result1
+        mov     _cordicmul_t, result1
+        qmul    arg01, arg02
+        getqx   _cordicmul_lo
+        getqy   result2
+        getct   result1
+        sub     result1, _cordicmul_t
+        mov     result3, result1
+        mov     result1, _cordicmul_lo
 _cordicmul_ret
-	reta
+        reta
 
 pasm_hwmul
 _hwmul
-	getct	result1
-	mov	_hwmul_t, result1
-	mov	_hwmul_ahi, arg01
-	shr	_hwmul_ahi, #16
-	mov	_hwmul_bhi, arg02
-	shr	_hwmul_bhi, #16
-	mov	_hwmul_lo, arg01
-	mov	result2, _hwmul_ahi
-	mul	_hwmul_lo, arg02
-	mul	result2, _hwmul_bhi
-	mul	_hwmul_ahi, arg02
-	mul	_hwmul_bhi, arg01
-	mov	_hwmul_a, _hwmul_ahi
-	shl	_hwmul_a, #16
-	shr	_hwmul_ahi, #16
-	mov	_hwmul_b, _hwmul_bhi
-	shl	_hwmul_b, #16
-	shr	_hwmul_bhi, #16
-	add	_hwmul_lo, _hwmul_a wc
-	addx	result2, _hwmul_ahi
-	add	_hwmul_lo, _hwmul_b wc
-	addx	result2, _hwmul_bhi
-	getct	result1
-	sub	result1, _hwmul_t
-	mov	result3, result1
-	mov	result1, _hwmul_lo
+        getct   result1
+        mov     _hwmul_t, result1
+        mov     _hwmul_ahi, arg01
+        shr     _hwmul_ahi, #16
+        mov     _hwmul_bhi, arg02
+        shr     _hwmul_bhi, #16
+        mov     _hwmul_lo, arg01
+        mov     result2, _hwmul_ahi
+        mul     _hwmul_lo, arg02
+        mul     result2, _hwmul_bhi
+        mul     _hwmul_ahi, arg02
+        mul     _hwmul_bhi, arg01
+        mov     _hwmul_a, _hwmul_ahi
+        shl     _hwmul_a, #16
+        shr     _hwmul_ahi, #16
+        mov     _hwmul_b, _hwmul_bhi
+        shl     _hwmul_b, #16
+        shr     _hwmul_bhi, #16
+        add     _hwmul_lo, _hwmul_a wc
+        addx    result2, _hwmul_ahi
+        add     _hwmul_lo, _hwmul_b wc
+        addx    result2, _hwmul_bhi
+        getct   result1
+        sub     result1, _hwmul_t
+        mov     result3, result1
+        mov     result1, _hwmul_lo
 _hwmul_ret
-	reta
+        reta
 
 pasm_swmul
 _swmul
-	getct	result1
-	mov	_swmul_t, result1
-	mov	_swmul_lo, #0
-	mov	_swmul_hi, #0
-	mov	_swmul_bhi, #0
-	cmp	arg01, #0 wz
- if_e	jmp	#LR__0002
+        getct   result1
+        mov     _swmul_t, result1
+        mov     _swmul_lo, #0
+        mov     _swmul_hi, #0
+        mov     _swmul_bhi, #0
+        cmp     arg01, #0 wz
+ if_e   jmp     #LR__0002
 LR__0001
-	test	arg01, #1 wz
- if_ne	add	_swmul_lo, arg02 wc
- if_ne	addx	_swmul_hi, _swmul_bhi
-	add	arg02, arg02 wc
-	addx	_swmul_bhi, _swmul_bhi
-	shr	arg01, #1 wz
- if_ne	jmp	#LR__0001
+        test    arg01, #1 wz
+ if_ne  add     _swmul_lo, arg02 wc
+ if_ne  addx    _swmul_hi, _swmul_bhi
+        add     arg02, arg02 wc
+        addx    _swmul_bhi, _swmul_bhi
+        shr     arg01, #1 wz
+ if_ne  jmp     #LR__0001
 LR__0002
-	getct	result1
-	sub	result1, _swmul_t
-	mov	result3, result1
-	mov	result1, _swmul_lo
-	mov	result2, _swmul_hi
+        getct   result1
+        sub     result1, _swmul_t
+        mov     result3, result1
+        mov     result1, _swmul_lo
+        mov     result2, _swmul_hi
 _swmul_ret
-	reta
+        reta
 
 multiply_
-	mov	itmp2_, muldiva_
-	xor	itmp2_, muldivb_
-	abs	muldiva_, muldiva_
-	abs	muldivb_, muldivb_
-	qmul	muldiva_, muldivb_
-	getqx	muldiva_
-	getqy	muldivb_
-	shr	itmp2_, #31 wz
- if_nz	neg	muldivb_, muldivb_
- if_nz	neg	muldiva_, muldiva_ wz
- if_nz	sub	muldivb_, #1
-	reta
+        mov     itmp2_, muldiva_
+        xor     itmp2_, muldivb_
+        abs     muldiva_, muldiva_
+        abs     muldivb_, muldivb_
+        qmul    muldiva_, muldivb_
+        getqx   muldiva_
+        getqy   muldivb_
+        shr     itmp2_, #31 wz
+ if_nz  neg     muldivb_, muldivb_
+ if_nz  neg     muldiva_, muldiva_ wz
+ if_nz  sub     muldivb_, #1
+        reta
 
 itmp1_
-	long	0
+        long    0
 itmp2_
-	long	0
+        long    0
 mboxcmd
-	long	0
+        long    0
 mboxptr
-	long	0
+        long    0
 objptr
-	long	0
+        long    0
 result1
-	long	0
+        long    0
 result2
-	long	0
+        long    0
 result3
-	long	0
+        long    0
 COG_BSS_START
-	fit	496
-	orgh
-	org	COG_BSS_START
+        fit     496
+        orgh
+        org     COG_BSS_START
 _builtinmul_t
-	res	1
+        res     1
 _cordicmul_lo
-	res	1
+        res     1
 _cordicmul_t
-	res	1
+        res     1
 _hwmul_a
-	res	1
+        res     1
 _hwmul_ahi
-	res	1
+        res     1
 _hwmul_b
-	res	1
+        res     1
 _hwmul_bhi
-	res	1
+        res     1
 _hwmul_lo
-	res	1
+        res     1
 _hwmul_t
-	res	1
+        res     1
 _swmul_bhi
-	res	1
+        res     1
 _swmul_hi
-	res	1
+        res     1
 _swmul_lo
-	res	1
+        res     1
 _swmul_t
-	res	1
+        res     1
 arg01
-	res	1
+        res     1
 arg02
-	res	1
+        res     1
 muldiva_
-	res	1
+        res     1
 muldivb_
-	res	1
-	fit	496
+        res     1
+        fit     496
 __fixup_ptr
-	long	0
+        long    0
