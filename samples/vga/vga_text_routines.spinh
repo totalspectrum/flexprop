@@ -56,9 +56,9 @@ VAR
   byte saved_cursor_data
   byte cursor_mask
   
-PRI init_terminal
-  reset_graphics_state
-  cls
+PRI init_terminal()
+  reset_graphics_state()
+  cls()
   cursor_visible := 0
   cursor_enabled := 1
   if CELL_SIZE => 4
@@ -72,7 +72,7 @@ PRI init_terminal
   scroll_first := 0
   scroll_last:= ROWS-1
 
-PRI reset_graphics_state
+PRI reset_graphics_state()
   bgcolor := 0
   fgcolor := (CELL_SIZE == 8) ? $FFFFFF00 : 7
   char_effects := 0
@@ -83,7 +83,7 @@ PRI copy_line(dest, src) | linelen
   src := @screen_buffer + src*linelen
   bytemove(dest, src, linelen)
   
-PRI scroll_up | last, i
+PRI scroll_up() | last, i
   i := scroll_first
   last := scroll_last
   repeat while i < last
@@ -91,7 +91,7 @@ PRI scroll_up | last, i
     i := i+1
   clear(COLS*last, COLS*(last+1) - 1)
   
-PRI scroll_down | first, i
+PRI scroll_down() | first, i
   i := scroll_last
   first := scroll_first
   repeat while i > first
@@ -99,22 +99,22 @@ PRI scroll_down | first, i
     i := i-1
   clear(COLS*first, COLS*(first+1)-1)
 
-PRI BOUND(low, x, high)
+PRI BOUND(low, x, high) : r
   return (low #> x) <# high
   
 PUB set_position(x, y)
   curx := BOUND(0, x, COLS-1)
   cury := BOUND(0, y, ROWS-1)
   
-PUB tx(c) | fg, bg
-   concealCursor
+PUB tx(c) : r | fg, bg
+   concealCursor()
    if (state == STATE_NORMAL)
       if (c == 8) ' backspace
          set_position(curx-1, cury)
       elseif (c == 10) ' line feed
          if cury == scroll_last
-           scroll_up
-         else
+	   scroll_up()
+	 else
            cury++
       elseif (c == 13) ' carriage return
          curx := 0
@@ -129,12 +129,12 @@ PUB tx(c) | fg, bg
            fg,bg := bg,fg  ' swap
          glyphat(curx, cury, c, fg, bg, char_effects & $FF)
          curx++
-         if curx == COLS
-           curx := 0
-           if cury == scroll_last
-             scroll_up
-           else
-             cury++
+	 if curx == COLS
+	   curx := 0
+	   if cury == scroll_last
+	     scroll_up()
+	   else
+	     cury++
    elseif (state == STATE_ESCAPE)
       handle_esc(c)
    elseif (state == STATE_START_CSI)
@@ -143,7 +143,7 @@ PUB tx(c) | fg, bg
       handle_csi(c)
    elseif (state == STATE_IN_PRIV)
       handle_priv(c)
-   revealCursor
+   revealCursor()
    return 1
    
 PRI handle_esc(c) | i
@@ -154,21 +154,21 @@ PRI handle_esc(c) | i
     state := STATE_START_CSI
   elseif (c == "D")
     if cury == scroll_last
-      scroll_up
+      scroll_up()
     else
       cury++
   elseif (c == "M")
     if cury == scroll_first
-      scroll_down
+      scroll_down()
     else
       --cury
   elseif (c == "c")
-    init_terminal
+    init_terminal()
   else
     state := STATE_NORMAL
 
-PRI defaultval(arg, v)
-  return (arg) ? arg : v
+PRI defaultval(arg, v) : r
+  r := (arg) ? arg : v
 
 ' first character of control sequence
 ' if it is '?' it's a private control sequence
@@ -280,7 +280,7 @@ PUB glyphat(x, y, ch, fgcol, bgcol, effect=0) | bufptr
   else
      byte[bufptr] := ch & $ff
      
-PRI setCursorVisible(yesno) | bufptr, x, y
+PRI setCursorVisible(yesno) : oldstate | bufptr, x, y
   if cursor_visible == yesno
     return yesno
 
@@ -318,54 +318,54 @@ PRI setCursorVisible(yesno) | bufptr, x, y
   ' return old cursor state
   return (yesno) ? 0 : 1
 
-PRI concealCursor
+PRI concealCursor()
   setCursorVisible(0)
 
-PRI revealCursor
+PRI revealCursor()
   setCursorVisible(cursor_enabled)
   
 '' globals: force cursor on or off
-PUB showCursor
+PUB showCursor()
   cursor_enabled := 1
   setCursorVisible(cursor_enabled)
   
-PUB hideCursor
+PUB hideCursor()
   cursor_enabled := 0
   setCursorVisible(0)
 
-PUB cls
+PUB cls()
    clear(0, COLS*ROWS-1)
 
 ' clear from position a to position b (inclusive)
 ' a and b are in character offsets (so they have to be scaled appropriately)
 
-PRI clear(a, b) | ptr, cnt, temp
+PRI clear(a, b) | ptr, cntr, temp
   ptr := @screen_buffer + CELL_SIZE*a
-  cnt := b-a
+  cntr := b-a
   if (CELL_SIZE == 1)
-    repeat while cnt => 0
+    repeat while cntr => 0
       byte[ptr] := 0
       ptr += 1
-      --cnt
+      --cntr
   elseif (CELL_SIZE == 2)
     temp := ((fgcolor&$f) | ((bgcolor&$7) << 4))<<8
-    repeat while cnt => 0
+    repeat while cntr => 0
       word[ptr] := temp
       ptr += 2
-      --cnt
+      --cntr
   elseif (CELL_SIZE == 4)
     temp := fgcolor | (bgcolor << 8)
-    repeat while cnt => 0
+    repeat while cntr => 0
       long[ptr] := temp
       ptr += 4
-      --cnt
+      --cntr
   else
-    repeat while cnt => 0
+    repeat while cntr => 0
       long[ptr] := fgcolor
       ptr += 4
       long[ptr] := bgcolor
       ptr += 4
-      --cnt
+      --cntr
 
 ' clear from cursor to end of display (if n==0) or from start of screen to cursor (n == 1)
 ' n==2 clears whole display and resets cursor to top
@@ -394,13 +394,13 @@ PRI clear_in_line(n) | startpix, endpix
   clear(startpix, endpix)
 
 ' get an argument that's already been set up, return -1 if not valid
-PRI fetcharg(i)
+PRI fetcharg(i) : n
   if i => argidx
     return -1
   return args[i]
 
 ' debug routine
-PRI hexdig(i)
+PRI hexdig(i) : n
    if i =< 10
      return i + "0"
    return (i-10) + "A"
@@ -410,9 +410,16 @@ PRI set_graphic_rendition(i) | code
     return
   code := fetcharg(i++)
 
+{{  
+  a := hexdig(code & $F)
+  b := hexdig((code >> 4) & $F)
+  glyphat(41, 10, b, $ffffff00, $00202000)
+  glyphat(42, 10, a, $ffffff00, $00202000)
+  pausems(1000)
+}}
   case code
     0:
-      reset_graphics_state
+      reset_graphics_state()
     1:
       char_effects |= CHAR_BOLD
     4:
@@ -459,7 +466,7 @@ colortab
   long $0000FF00, $FF00FF00, $00FFFF00, $FFFFFF00
 
 ' look up an ANSI color from the color table
-PRI AnsiColor(n) | ptr
+PRI AnsiColor(n) : retval | ptr
   if char_effects & CHAR_BOLD
     n |= 8
   if CELL_SIZE =< 4
@@ -468,7 +475,7 @@ PRI AnsiColor(n) | ptr
   return long[ptr + 4*n]
 
 ' calculate an RGB color from a 6,6,6 encoded 8 bit color
-PRI SixColor(x) | r, g, b
+PRI SixColor(x) : retval | r, g, b
   b := x // 6
   x := x / 6
   g := x // 6
@@ -479,12 +486,12 @@ PRI SixColor(x) | r, g, b
   return (r<<24) | (g<<16) | b
 
 ' calculate a color value from an r,g,b triple
-PUB getrgbcolor(r, g, b)
+PUB getrgbcolor(r, g, b) : color
   if CELL_SIZE =< 4
-      r := 16 + 36*(r/51) + 6*(g/51) + (b/51)
+      color := 16 + 36*(r/51) + 6*(g/51) + (b/51)
   else
-      r := (r<<24 | g<<16 | b<<8)
-  return r
+      color := (r<<24 | g<<16 | b<<8)
+  return color
    
 ' get a color out of arguments
 PRI GetArgColor(i) : col, newi | r, g, b, code
@@ -519,7 +526,7 @@ PRI GetArgColor(i) : col, newi | r, g, b, code
 '
 CON PIXSHIFT = 31
 
-PRI calcscale(a, b) | shiftcnt
+PRI calcscale(a, b) : scale | shiftcnt
   shiftcnt := PIXSHIFT
   ' remove factors of 5 (will be pretty common)
   repeat while 0 == (a // 5) and 0 == (b // 5)
