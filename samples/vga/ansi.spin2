@@ -4,14 +4,14 @@
 
 '' first, select the desired resolution by uncommenting the appriate timing below
 OBJ
-  vt: "timing640x480"
-'  vt: "timing800x600"
+'  vt: "timing640x480"
+  vt: "timing800x600"
 '  vt: "timing1024x768"
 
 '' next, select the font to use
 '   fnt: "unscii-8"   ' 8x8 font
    fnt: "unscii-16"  ' 8x16 font
-'   fnt: "p1font"     ' 16x32 font
+'   fnt: "spleen-32"     ' 16x32 font
 
 CON
 '' next, select the cell size (bytes needed per character)
