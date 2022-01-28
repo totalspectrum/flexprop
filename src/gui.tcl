@@ -59,7 +59,10 @@ if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/flexspin.mac"] 
     set EXE ".mac"
 }
 
-if { [file exists "$ROOTDIR/.flexprop.config"] } {
+# base name for config file
+set DOT_CONFIG ".flexprop6.config"
+
+if { [file exists "$ROOTDIR/$DOT_CONFIG"] } {
     # portable installation
     set CONFIGDIR $ROOTDIR
 } elseif { [info exists ::env(HOME) ] && [file isdirectory $::env(HOME)] } {    
@@ -102,7 +105,7 @@ proc resetBottomFont {w} {
 }
 
 # config file name
-set CONFIG_FILE "$CONFIGDIR/.flexprop.config"
+set CONFIG_FILE "$CONFIGDIR/$DOT_CONFIG"
 
 # default configuration variables
 # the config() array is written to the config file and read
@@ -173,7 +176,6 @@ proc setShadowP1Defaults {} {
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
     set shadow(runcmd) "\"%D/bin/proploader$EXE\" -D baud-rate=%r %P \"%B\" -r \"-9%b\" -k -q"
-    set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -D baud-rate=%r %P \"%B\" -e -k"
     set shadow(baud) 115200
 }
@@ -188,7 +190,6 @@ proc setShadowP1BytecodeDefaults {} {
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --interp=rom --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
     set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -D baud-rate=%r %P \"%B\" -r -t -k -q"
-    set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -D baud-rate=%r %P \"%B\" -e -k"
     set shadow(baud) 115200
     if { $config(note_bcversion) != $bcversion } {
@@ -202,9 +203,8 @@ proc setShadowP2aDefaults {} {
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2a -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -2 %P -D baud-rate=%r -D loader-baud-rate=%r \"%B\" \"-9%b\" -r -t -k -q"
-    set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
-    set shadow(flashcmd) "%#\"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
+    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -2 %P -D baud-rate=%r \"%B\" \"-9%b\" -r -t -k -q"
+    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -2 -D baud-rate=%r %P \"%B\" -e -k"
     set shadow(baud) 230400
 }
 proc setShadowP2bDefaults {} {
@@ -214,8 +214,7 @@ proc setShadowP2bDefaults {} {
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
     set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -2 %P -D baud-rate=%r -D loader-baud-rate=%r \"%B\" \"-9%b\" -r -t -k -q"
-    set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
-    set shadow(flashcmd) "%#\"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
+    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -2 -D baud-rate=%r %P \"%B\" -e -k"
     set shadow(baud) 230400
 }
 proc setShadowP2NuDefaults {} {
@@ -228,8 +227,7 @@ proc setShadowP2NuDefaults {} {
 
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2nu -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
     set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -2 %P -D baud-rate=%r -D loader-baud-rate=%r \"%B\" \"-9%b\" -r -t -k -q"
-    set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
-    set shadow(flashcmd) "%#\"%D/bin/loadp2$EXE\" %P -b%r \"@0=%F,@8000+%B\" -t -k"
+    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -2 -D baud-rate=%r %P \"%B\" -e -k"
     set shadow(baud) 230400
 
     if { $config(note_nuversion) != $nuversion } {
@@ -243,7 +241,6 @@ proc copyShadowToConfig {} {
     set config(compilecmd) $shadow(compilecmd)
     set config(runcmd) $shadow(runcmd)
     set config(flashcmd) $shadow(flashcmd)
-    set config(flashprogram) $shadow(flashprogram)
     set config(baud) $shadow(baud)
     checkPropVersion
 }
@@ -1498,6 +1495,11 @@ menu .mbar.options.warn
 .mbar.options.warn add radiobutton -label "No extra warnings" -variable WARNFLAGS -value "-Wnone"
 .mbar.options.warn add radiobutton -label "Enable compatibility warnings" -variable WARNFLAGS -value "-Wall"
 
+menu .mbar.options.float
+.mbar.options add cascade -menu .mbar.options.float -label "Floating Point"
+.mbar.options.float add radiobutton -label "Use IEEE floating point" -variable FIXEDREAL -value "--floatreal"
+.mbar.options.float add radiobutton -label "Use 16.16 fixed point in place of floats" -variable FIXEDREAL -value "--fixedreal"
+
 menu .mbar.options.charset
 .mbar.options add cascade -menu .mbar.options.charset -label "Runtime character set"
 .mbar.options.charset add radiobutton -label "UTF-8 (Unicode)" -variable CHARSET -value "--charset=utf8"
@@ -1508,9 +1510,6 @@ menu .mbar.options.charset
 .mbar.options add command -label "Editor Options..." -command { doEditorOptions }
 .mbar.options add separator
 
-.mbar.options add radiobutton -label "Use IEEE floating point" -variable FIXEDREAL -value "--floatreal"
-.mbar.options add radiobutton -label "Use 16.16 fixed point in place of floats" -variable FIXEDREAL -value "--fixedreal"
-.mbar.options add separator
 .mbar.options add radiobutton -label "Debug disabled" -variable DEBUG_OPT -value "-gnone"
 .mbar.options add radiobutton -label "Print debug" -variable DEBUG_OPT -value "-g"
 .mbar.options add radiobutton -label "BRK based debug" -variable DEBUG_OPT -value "-gbrk"
@@ -1532,7 +1531,7 @@ menu .mbar.options.charset
 .mbar.run add command -label "Flash binary file..." -command { doLoadFlash }
 .mbar.run add separator
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
-.mbar.run add command -label "Choose P2 flash program..." -command { pickFlashProgram }
+#.mbar.run add command -label "Choose P2 flash program..." -command { pickFlashProgram }
 
 .mbar add cascade -menu .mbar.comport -label Ports
 .mbar.comport add radiobutton -label "115200 baud" -variable config(baud) -value 115200
@@ -1876,7 +1875,7 @@ proc mapPercent {str} {
     } else {
 	set srcfile "undefined"
     }
-    set percentmap [ list "%%" "%" "%#" $runprefix "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%F" $config(flashprogram) "%r" $config(baud) "%t" $config(tabwidth)]
+    set percentmap [ list "%%" "%" "%#" $runprefix "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%r" $config(baud) "%t" $config(tabwidth)]
     set result [string map $percentmap $str]
     return $result
 }
@@ -2025,11 +2024,11 @@ proc doJustRun {extraargs} {
 }
 
 set flashMsg "
-Note that many boards require jumpers or switches
-to be set before programming flash and/or
-before booting from it.
-
-Please ensure your board is configured for flash
+Note that many boards require jumpers or switches \
+to be set before programming flash and/or \
+before booting from it. \n\
+\n\
+Please ensure your board is configured for flash \
 programming.
 "
 
