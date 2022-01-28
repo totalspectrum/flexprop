@@ -19,7 +19,7 @@ dim c as class using "charlieplex_text.spin"
 ' start up the charlieplex driver
 if c.start() == 0 then
   print "cannot start charlieplex driver"
-  cogstop(cogid())
+  cpustop(cpuid())
 endif
 
 ' open a handle for it
