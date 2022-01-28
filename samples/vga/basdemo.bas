@@ -14,8 +14,7 @@
 #define CLKFREQ 160_000_000
 
 '' create a Spin VGA text class with the name 'vga'
-'dim vga as class using "vgatext_800x600.spin"
-dim vga as class using "vgatext_640x480.spin"
+dim vga as class using "ansi.spin2"
 
 '' some useful variables
 dim x, y as integer
