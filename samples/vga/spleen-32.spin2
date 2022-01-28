@@ -1,0 +1,16 @@
+{{
+  definitions for Spleen 16x32 font for use with ansi.spin2
+}}
+
+CON
+  FONT_WIDTH = 16
+  FONT_HEIGHT = 32
+
+DAT
+
+fontdata
+  file "spleen-16x32.fnt"
+
+PUB getfont()
+  return @fontdata
+

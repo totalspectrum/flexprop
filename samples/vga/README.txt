@@ -15,7 +15,7 @@ BASIC demos
 
 Files
 -----
-vga_tile_driver.spin is the low level driver the drives the VGA. It
+vga_tile_driver.spin2 is the low level driver the drives the VGA. It
 takes most of its parameters (including the pins to use) in a
 parameter block that is passed in when it starts up. See below for
 details of this parameter block. Since the pin set to use is a
@@ -28,24 +28,16 @@ codes and writing data into memory.
 std_text_routines.spinh are utility functions to provide things like
 printing strings or numbers in hex and decimal.
 
-There are a number of sample drivers:
-
-vgatext_640x480.spin is the 640x480 version, supporting 80x30 characters
-vgatext_800x600.spin is the 800x600 version, supporting 100x40 characters
-
-These basically just define some constants, set up the font to
-use, and then include the vga_text_routines.spinh to provide the
-actual driver code.
+ansi.spin2 is the main screen driver object. To use it, edit
+ansi.spin2 and select the timing resolution to use, the font
+to use, and the CELL size (bytes used per character). 
 
 Operation
 ---------
 Tiles must always be either 8 or 16 pixels wide. Theoretically they can be any
 height, but the demos use 16 pixels (15 for the 800x600, which is
-achieved by just ignoring the first row of an 8x16 font). The code has
-been tested with 8x8 and 16x32 font. The font data must be laid out as
-an image that is FONT_WIDTH*256 pixels wide and FONT_HEIGHT pixels
-high. (This is somewhat unusual; many other programs assume a layout
-that's FONT_WIDTH wide and FONT_HEIGHT*256 high.)
+achieved by just ignoring the first row of an 8x16 font). There are
+some 8x8 fonts provided too, and a 16x32 font.
 
 The character data is ROWS*COLS*CELL_SIZE bytes long. CELL_SIZE is
 the number of bytes each character takes, and may be either 1, 2, 4 or 8.
@@ -71,8 +63,8 @@ character (so only the standard ASCII characters are supported).
 
 DEMOS
 -----
-The Spin demo (demo.spin) is the most complete example of how to use
-the libraries. There is also some really simple examples in BASIC
+The Spin demo (demo.spin2) is the most complete example of how to use
+the libraries. There is also a really simple example in BASIC
 (basdemo.bas).
 
 HOW IT WORKS
@@ -125,48 +117,24 @@ from most fonts:
 
 (1) The characters are all placed in one row in the bitmap; that is,
 byte 0 is the first row of character 0, byte 1 is the first row of
-character 1, and so on, until we get to byte 256 (512 for 16 pixel
-wide fonts) which is the second row of character 0. This is because we
-have to keep the data we need for all characters in COG memory, but
-we'll only ever need the data for one font row at a time. This data is
-read during the horizontal sync and blanking period.
+character 1, and so on, until we get to byte 256 which is the second row
+of character 0. This is because we have to keep the data we need for all
+characters in COG memory, but we'll only ever need the data for one font
+row at a time. This data is read during the horizontal sync and blanking
+period.
 
 (2) The rows are output bit 0 first, then bit 1, and so on, so the
 individual characters are "reversed" from how most fonts store them.
 This is due to the way the streamer works in immediate mode.
+
+The fonts provided are unscii, a public domain Unicode font (in several
+variants) and spleen-16x32, a BSD licensed 16x32 font.
 
 CREDITS
 -------
 The VGA code itself is heavily based on earlier P2 work by Rayman and
 Cluso99, and of course Chip's original VGA driver.
 
-The unscii 8x16 font is from http://pelulamu.net/unscii/. It is in the
-public domain.
+The unscii font is from http://pelulamu.net/unscii/
 
-The spleen 16x32 font is from https://github.com/fcambus/spleen/, and
-is distributed under the BSD license:
-
-Copyright (c) 2018-2020, Frederic Cambus
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-  * Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
-
-  * Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
-BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
+The spleen font is from https://github.com/fcambus/spleen/
