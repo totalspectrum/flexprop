@@ -2,7 +2,7 @@ CON _clkfreq = 10_000_000
 
 PUB go() | i
 
-  debug(`TERM MyTerm SIZE 9 1 TEXTSIZE 40)
+  debug(`TERM MyTerm SIZE 9 1 TEXTSIZE 40 COLOR blue)
   debug(`TERM t2 SIZE 40 10 TEXTSIZE 12 TITLE 'Second Window')
   repeat
     repeat i from 50 to 60
