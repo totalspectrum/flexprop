@@ -81,7 +81,7 @@ For Mac OS X, it's recommended to run the `flexprop` program from a command line
 
 ## Installation on Linux
 
-Pre-built binaries are included for Linux x64, as `flexprop.linux`. For other architectures, build from source (see directions below).
+At the moment you'll have to build from source on Linux. Instructions are given below.
 
 ## Building from source
 
