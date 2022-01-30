@@ -175,8 +175,8 @@ proc setShadowP1Defaults {} {
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
-    set shadow(runcmd) "\"%D/bin/proploader$EXE\" -D baud-rate=%r %P \"%B\" -r \"-9%b\" -k -q"
-    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -D baud-rate=%r %P \"%B\" -e -k"
+    set shadow(runcmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -r \"-9%b\" -q"
+    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -e"
     set shadow(baud) 115200
 }
 # provide some default settings
@@ -189,8 +189,8 @@ proc setShadowP1BytecodeDefaults {} {
     global bcMsg
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --interp=rom --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
-    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -D baud-rate=%r %P \"%B\" -r -t -k -q"
-    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -D baud-rate=%r %P \"%B\" -e -k"
+    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -r -t -q"
+    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -e"
     set shadow(baud) 115200
     if { $config(note_bcversion) != $bcversion } {
 	set config(note_bcversion) $bcversion
@@ -203,8 +203,8 @@ proc setShadowP2aDefaults {} {
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2a -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -2 %P -D baud-rate=%r \"%B\" \"-9%b\" -r -t -k -q"
-    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -2 -D baud-rate=%r %P \"%B\" -e -k"
+    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -k -2 %P -D baud-rate=%r \"%B\" \"-9%b\" -r -t -q"
+    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e"
     set shadow(baud) 230400
 }
 proc setShadowP2bDefaults {} {
@@ -213,8 +213,8 @@ proc setShadowP2bDefaults {} {
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -2 %P -D baud-rate=%r -D loader-baud-rate=%r \"%B\" \"-9%b\" -r -t -k -q"
-    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -2 -D baud-rate=%r %P \"%B\" -e -k"
+    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -k -2 %P -D baud-rate=%r -D loader-baud-rate=%r \"%B\" \"-9%b\" -r -t -q"
+    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e"
     set shadow(baud) 230400
 }
 proc setShadowP2NuDefaults {} {
@@ -226,8 +226,8 @@ proc setShadowP2NuDefaults {} {
     global nuMsg
 
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2nu -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -2 %P -D baud-rate=%r -D loader-baud-rate=%r \"%B\" \"-9%b\" -r -t -k -q"
-    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -2 -D baud-rate=%r %P \"%B\" -e -k"
+    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -k -2 %P -D baud-rate=%r -D loader-baud-rate=%r \"%B\" \"-9%b\" -r -t -q"
+    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e"
     set shadow(baud) 230400
 
     if { $config(note_nuversion) != $nuversion } {
