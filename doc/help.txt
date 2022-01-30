@@ -70,7 +70,7 @@ The Commands menu allow you to compile, run a binary, or both compile and run. T
 
 "Run Binary on device..." allows you to choose a binary that you compiled off-line (or that was compiled earlier) and run it on the device.
 
-"Compile and Flash" and "Flash binary file..." are like the run options, but program the binary into the device. The default is to program the device's SPI flash. For P2 boards, the exact program to use for flashing may be selected with the "Choose P2 flash program..."  menu. For example, choosing "P2ES_sdcard.bin" will cause the binary to be placed on an SD card instead of in the SPI flash.
+"Compile and Flash" and "Flash binary file..." are like the run options, but program the binary into the device.
 
 ### Ports
 
@@ -118,12 +118,12 @@ You can change the commands used for compiling and running programs. Since the c
 Config File
 -----------
 
-Settings for flexprop are saved in a file called `.flexprop.config`. This is searched for in the following places (in this order):
+Settings for flexprop are saved in a file called `.flexprop6.config`. This is searched for in the following places (in this order):
 
-(1) If a file called `.flexprop.config` already exists in the directory containing the `flexprop` executable, then that file is used. This provides an easy way to make a "portable" installation of FlexProp on a USB stick; just provide an empty `.flexprop.config` next to `flexprop.exe`.
+(1) If a file called `.flexprop6.config` already exists in the directory containing the `flexprop` executable, then that file is used. This provides an easy way to make a "portable" installation of FlexProp on a USB stick; just provide an empty `.flexprop6.config` next to `flexprop.exe`.
 
-(2) Otherwise, if an environment variable called HOME exists then the config file is `$HOME/.flexprop.config`.
+(2) Otherwise, if an environment variable called HOME exists then the config file is `$HOME/.flexprop6.config`.
 
-(3) If no HOME environment variable is found, the directory where `flexprop.exe` is installed is used as the home for `.flexprop.config`.
+(3) If no HOME environment variable is found, the directory where `flexprop.exe` is installed is used as the home for `.flexprop6.config`.
 
-If something gets really messed up, deleting the `.flexprop.config` file will restore flexprop to its default state.
+If something gets really messed up, deleting the `.flexprop6.config` file will restore flexprop to its default state.

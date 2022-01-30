@@ -8,6 +8,8 @@ Major updates in this version, including:
   relying on an external one
 - Added support for a few graphical DEBUG commands (TEXT and PLOT related)
 - Made the default tab width 8 instead of 4
+- Renamed the config file to `.flexprop6.config`; this makes sure
+  everyone starts with a fresh config, and allows older flexprop to coexist
 
 Version 5.9.6
 - Made the Help menu items use the .md files if HTML files are not available
