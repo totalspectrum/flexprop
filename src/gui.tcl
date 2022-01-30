@@ -2038,9 +2038,20 @@ proc doJustFlash {} {
     global flashMsg
     
     set answer [tk_messageBox -icon info -type okcancel -message "Flash Binary" -detail $flashMsg]
-    if { $answer eq "ok" } {
-	set cmdstr [mapPercent $config(flashcmd)]
-	doJustRunCmd $cmdstr ""
+    
+    if { $answer ne "ok" } {
+	return
+    }
+    set cmdstr [mapPercent $config(flashcmd)]
+    if { $config(internal_term) ne "0" } {
+	::TkTerm::RunInWindow $cmdstr
+    } else {
+	set runcmd [list exec -ignorestderr]
+	set runcmd [concat $runcmd $cmdstr]
+	lappend runcmd 2>@1
+	if {[catch $runcmd errout options]} {
+	    set status 1
+	}
     }
 }
 
