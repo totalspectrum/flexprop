@@ -826,7 +826,7 @@ proc close_term {} {
     # destroy any debug windows associated with this instance
     ::DebugWin::DestroyWindows
     # and destroy the terminal itself
-    destroy $term
+    #destroy $term
 }
 
 proc force_close_term {} {
