@@ -123,7 +123,7 @@ set config(term_h) 24
 set config(sash) ""
 set config(tabwidth) 8
 set config(autoreload) 0
-set config(internal_term) 0
+set config(internal_term) "ansi"
 set COMPORT " "
 set OPT "-O1"
 set COMPRESS "-z0"
@@ -1512,7 +1512,7 @@ menu .mbar.options.charset
 
 .mbar.options add radiobutton -label "Debug disabled" -variable DEBUG_OPT -value "-gnone"
 .mbar.options add radiobutton -label "Print debug" -variable DEBUG_OPT -value "-g"
-.mbar.options add radiobutton -label "BRK based debug" -variable DEBUG_OPT -value "-gbrk"
+.mbar.options add radiobutton -label "BRK debug (P2 only)" -variable DEBUG_OPT -value "-gbrk"
 #.mbar.options add separator
 #.mbar.options add radiobutton -label "No Compression" -variable COMPRESS -value "-z0"
 #.mbar.options add radiobutton -label "Compress Code" -variable COMPRESS -value "-z1"
