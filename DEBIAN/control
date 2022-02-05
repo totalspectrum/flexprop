@@ -1,6 +1,6 @@
 Package: flexprop
-Version: 5.1-0
-Section: base
+Version: 5.9.8
+Section: devel
 Priority: optional
 Architecture: amd64
 Depends: libc6 (>=2.2.5), tk8.6 (>= 8.6.0)
