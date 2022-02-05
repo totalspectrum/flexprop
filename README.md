@@ -94,14 +94,13 @@ mkdir -p src
 cd src
 sudo apt-get update
 sudo apt-get install build-essential
-sudo apt-get install bison
-sudo apt-get install git
-sudo apt-get install tk8.6-dev
-sudo apt-get install texlive-latex-recommended
-sudo apt-get install pandoc
+sudo apt-get install bison git tk8.6-dev
+sudo apt-get install texlive-latex-recommended pandoc
 git clone --recursive https://github.com/totalspectrum/flexprop
 cd flexprop
-make install
+make install INSTALL=~/flexprop
+cd ~/flexprop
+./flexprop
 ```
 
 Once the build is finished, the final flexprop installation will be in $HOME/flexprop. You can change this to another directory by adding an `INSTALL=<dir>` in the `make install` step, e.g.
