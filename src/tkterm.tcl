@@ -144,9 +144,14 @@ proc term_create {} {
     variable rows
     variable sb
     global config
-    
+
+    if { $config(internal_term) eq "ansi" } {
+	set kind "ANSI"
+    } else {
+	set kind "PST"
+    }
     toplevel $toplev
-    wm title $toplev "FlexProp Terminal"
+    wm title $toplev "FlexProp $kind Terminal"
     
     text $term \
 	-yscroll "$sb set" \
