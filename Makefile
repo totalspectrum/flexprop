@@ -72,6 +72,7 @@ TCLROOT ?= /home/ersmith/src/Tcl
 # the .pdfs
 PANDOC := pandoc
 PANDOC_EXISTS := $(shell $(PANDOC) --version 2>/dev/null)
+TCLSH := tclsh8.6
 
 WINGCC = i686-w64-mingw32-gcc
 WINRC = i686-w64-mingw32-windres
@@ -186,13 +187,13 @@ endif
 # rules for building PDF files
 
 %.pdf: %.md
-	tclsh src/makepandoc.tcl $< > pandoc.yml
+	$(TCLSH) src/makepandoc.tcl $< > pandoc.yml
 	-$(PANDOC) --metadata-file=pandoc.yml -s --toc -f gfm -t latex -o $@ $<
 
 # rules for building PDF files
 
 %.html: %.md
-	tclsh src/makepandoc.tcl $< > pandoc.yml
+	$(TCLSH) src/makepandoc.tcl $< > pandoc.yml
 	-$(PANDOC) --metadata-file=pandoc.yml -s --toc -f gfm -o $@ $<
 
 # rules for native binaries
