@@ -2006,6 +2006,7 @@ proc doJustRunCmd {cmdstr extraargs} {
 proc doJustRun {extraargs} {
     global config
     global BINFILE
+    global WINPREFIX
     
     set cmdstr [mapPercent $config(runcmd)]
     if { $extraargs ne "" } {
@@ -2039,6 +2040,7 @@ proc doJustFlash {} {
     global config
     global BINFILE
     global flashMsg
+    global WINPREFIX
     
     set answer [tk_messageBox -icon info -type okcancel -message "Flash Binary" -detail $flashMsg]
     
