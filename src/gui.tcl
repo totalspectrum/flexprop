@@ -124,6 +124,7 @@ set config(sash) ""
 set config(tabwidth) 8
 set config(autoreload) 0
 set config(internal_term) "ansi"
+set config(reset) "dtr"
 set COMPORT " "
 set OPT "-O1"
 set COMPRESS "-z0"
@@ -176,7 +177,7 @@ proc setShadowP1Defaults {} {
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
     set shadow(runcmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -r \"-9%b\" -q"
-    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -e"
+    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -e"
     set shadow(baud) 115200
 }
 # provide some default settings
@@ -189,8 +190,8 @@ proc setShadowP1BytecodeDefaults {} {
     global bcMsg
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --interp=rom --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
-    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -r -t -q"
-    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -e"
+    set shadow(runcmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -r -t -q"
+    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -e"
     set shadow(baud) 115200
     if { $config(note_bcversion) != $bcversion } {
 	set config(note_bcversion) $bcversion
@@ -203,8 +204,8 @@ proc setShadowP2aDefaults {} {
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2a -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -k -2 %P -D baud-rate=%r \"%B\" \"-9%b\" -r -t -q"
-    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e"
+    set shadow(runcmd) "\"%D/bin/proploader$EXE\" -k -2 %P -D baud-rate=%r \"%B\" \"-9%b\" -r -t -q"
+    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e"
     set shadow(baud) 230400
 }
 proc setShadowP2bDefaults {} {
@@ -213,8 +214,8 @@ proc setShadowP2bDefaults {} {
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -k -2 %P -D baud-rate=%r -D loader-baud-rate=%r \"%B\" \"-9%b\" -r -t -q"
-    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e"
+    set shadow(runcmd) "\"%D/bin/proploader$EXE\" -k -2 %P -D baud-rate=%r -D loader-baud-rate=%r \"%B\" \"-9%b\" -r -t -q"
+    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e"
     set shadow(baud) 230400
 }
 proc setShadowP2NuDefaults {} {
@@ -226,8 +227,8 @@ proc setShadowP2NuDefaults {} {
     global nuMsg
 
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2nu -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "%#\"%D/bin/proploader$EXE\" -k -2 %P -D baud-rate=%r -D loader-baud-rate=%r \"%B\" \"-9%b\" -r -t -q"
-    set shadow(flashcmd) "%#\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e"
+    set shadow(runcmd) "\"%D/bin/proploader$EXE\" -k -2 %P -D baud-rate=%r -D loader-baud-rate=%r \"%B\" \"-9%b\" -r -t -q"
+    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e"
     set shadow(baud) 230400
 
     if { $config(note_nuversion) != $nuversion } {
@@ -1538,6 +1539,9 @@ menu .mbar.options.charset
 .mbar.comport add radiobutton -label "230400 baud" -variable config(baud) -value 230400
 .mbar.comport add radiobutton -label "921600 baud" -variable config(baud) -value 921600
 .mbar.comport add radiobutton -label "2000000 baud" -variable config(baud) -value 2000000
+#.mbar.comport add separator
+#.mbar.comport add radiobutton -label "Use DTR for reset" -variable config(reset) -value "dtr"
+#.mbar.comport add radiobutton -label "Use RTS for reset" -variable config(reset) -value "rts"
 .mbar.comport add separator
 .mbar.comport add command -label "Scan for ports" -command rescanPorts
 .mbar.comport add command -label "Add IP address..." -command { ::IpEntry::addIpAddress rescanPorts }
@@ -1847,11 +1851,9 @@ proc mapPercent {str} {
     set ourdebug $DEBUG_OPT
     set ourfixed $FIXEDREAL
     set ourcharset $CHARSET
-    set runprefix "$WINPREFIX "
-
-    if { $config(internal_term) ne "0" } {
-	set runprefix ""
-    }
+    #set runprefix "$WINPREFIX "
+    set runprefix ""
+    
     if { "$ourwarn" eq "-Wnone" } {
 	set ourwarn ""
     }
@@ -2014,6 +2016,7 @@ proc doJustRun {extraargs} {
 	::TkTerm::RunInWindow $cmdstr
     } else {
 	set runcmd [list exec -ignorestderr]
+	set cmdstr [concat $WINPREFIX $cmdstr]
 	set runcmd [concat $runcmd $cmdstr]
 	lappend runcmd 2>@1
 	#puts "External Running: $runcmd"
@@ -2047,6 +2050,7 @@ proc doJustFlash {} {
 	::TkTerm::RunInWindow $cmdstr
     } else {
 	set runcmd [list exec -ignorestderr]
+	set cmdstr [concat $WINPREFIX $cmdstr]
 	set runcmd [concat $runcmd $cmdstr]
 	lappend runcmd 2>@1
 	if {[catch $runcmd errout options]} {
@@ -2112,7 +2116,6 @@ set cmddialoghelptext {
     %r = Replace with current baud rate
     %S = Replace with current source file name
     %t = Replace with tab width
-    %# = Replace with external terminal program
     %% = Insert a % character
 }
 proc copyShadowClose {w} {
