@@ -74,13 +74,15 @@ The Commands menu allow you to compile, run a binary, or both compile and run. T
 
 ### Ports
 
-Presents a menu of serial port speeds and ports that may be selected.  The default is to tell the loader program (loadp2 or proploader) to scan for a port to use. But you may override this by selecting a specific serial port.
+Presents a menu of serial ports that may be selected.  The default is to tell the loader program (loadp2 or proploader) to scan for a port to use. But you may override this by selecting a specific serial port.
 
 If for some reason the port you wish to use is not listed (this may happen on Mac OS X, for example) then you can still override the port by configuring the command manually (using the Commands > Configure Commands... menu). In the "Run command" replace `%P` with `-p COM20` or `-p /dev/tty.usbmodem123` (or whatever the port you wish to use is).
 
-The "Scan for ports" option also looks for WX WiFi modules on the local network. You may also explicitly add an IP address to the list with the "Add IP Address..." menu entry.
+The "Baud" submenu selects the speed to use. This defaults to 115200 baud for P1 and 230400 for P2.
 
-To delete an existing IP address, enter its name with a blank address field. To replace one, just re-enter it with the same name but a new address.
+The "Scan for ports" option checks for newly plugged in USB serial ports, and also looks for WX WiFi modules on the local network.
+
+The "Add IP Address..." menu entry allows you to  explicitly add the IP address of a WiFi module. This may be either a numeric address or a symbolic one. To delete an existing IP address, enter its name with a blank address field. To replace one, just re-enter it with the same name but a new address.
 
 ### Special
 

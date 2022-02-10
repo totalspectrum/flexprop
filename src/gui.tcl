@@ -1535,14 +1535,16 @@ menu .mbar.options.charset
 #.mbar.run add command -label "Choose P2 flash program..." -command { pickFlashProgram }
 
 .mbar add cascade -menu .mbar.comport -label Ports
-.mbar.comport add radiobutton -label "115200 baud" -variable config(baud) -value 115200
-.mbar.comport add radiobutton -label "230400 baud" -variable config(baud) -value 230400
-.mbar.comport add radiobutton -label "921600 baud" -variable config(baud) -value 921600
-.mbar.comport add radiobutton -label "2000000 baud" -variable config(baud) -value 2000000
+menu .mbar.comport.baud
+.mbar.comport add cascade -menu .mbar.comport.baud -label "Baud"
+.mbar.comport.baud add radiobutton -label "115200 baud" -variable config(baud) -value 115200
+.mbar.comport.baud add radiobutton -label "230400 baud" -variable config(baud) -value 230400
+.mbar.comport.baud add radiobutton -label "921600 baud" -variable config(baud) -value 921600
+.mbar.comport.baud add radiobutton -label "2000000 baud" -variable config(baud) -value 2000000
 #.mbar.comport add separator
 #.mbar.comport add radiobutton -label "Use DTR for reset" -variable config(reset) -value "dtr"
 #.mbar.comport add radiobutton -label "Use RTS for reset" -variable config(reset) -value "rts"
-.mbar.comport add separator
+#.mbar.comport add separator
 .mbar.comport add command -label "Scan for ports" -command rescanPorts
 .mbar.comport add command -label "Add IP address..." -command { ::IpEntry::addIpAddress rescanPorts }
 .mbar.comport add separator
