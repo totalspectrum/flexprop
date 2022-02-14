@@ -55,7 +55,7 @@ if { [tk windowingsystem] == "aqua" } {
 # have to explicitly specify it
 
 set EXE ""
-if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/flexspin.mac"] && [file exists "$ROOTDIR/bin/loadp2.mac"] } {
+if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/flexspin.mac"] && [file exists "$ROOTDIR/bin/proploader.mac"] } {
     set EXE ".mac"
 }
 
