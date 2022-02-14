@@ -60,7 +60,7 @@ if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/flexspin.mac"] 
 }
 
 # base name for config file
-set DOT_CONFIG ".flexprop6.config"
+set DOT_CONFIG ".flexprop.config.0"
 
 if { [file exists "$ROOTDIR/$DOT_CONFIG"] } {
     # portable installation
@@ -205,7 +205,7 @@ proc setShadowP2aDefaults {} {
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2a -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
     set shadow(runcmd) "\"%D/bin/proploader$EXE\" -k -2 %P -D baud-rate=%r \"%B\" \"-9%b\" -r -t -q"
-    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e"
+    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e -t"
     set shadow(baud) 230400
 }
 proc setShadowP2bDefaults {} {
@@ -215,7 +215,7 @@ proc setShadowP2bDefaults {} {
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
     set shadow(runcmd) "\"%D/bin/proploader$EXE\" -k -2 %P -D baud-rate=%r -D loader-baud-rate=%r \"%B\" \"-9%b\" -r -t -q"
-    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e"
+    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e -t"
     set shadow(baud) 230400
 }
 proc setShadowP2NuDefaults {} {
@@ -228,7 +228,7 @@ proc setShadowP2NuDefaults {} {
 
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2nu -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
     set shadow(runcmd) "\"%D/bin/proploader$EXE\" -k -2 %P -D baud-rate=%r -D loader-baud-rate=%r \"%B\" \"-9%b\" -r -t -q"
-    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e"
+    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e -t"
     set shadow(baud) 230400
 
     if { $config(note_nuversion) != $nuversion } {
