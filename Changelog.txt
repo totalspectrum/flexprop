@@ -1,6 +1,6 @@
 Version 5.9.9
 
-- Updated PropLoader to try to fix some of the loading problems
+- Updated PropLoader to try to fix some of the loading problems and to support 2000000 baud
 - Moved baud rate changes to a sub-menu
 
 Version 5.9.7
