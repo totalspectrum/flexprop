@@ -1,7 +1,7 @@
 # Name: tkterm - terminal emulator using Expect and Tk text widget, v3.0
 # Author: Don Libes, July '94
 # Modified by: Eric R. Smith, Jan '22
-# Last updated: Jan '22
+# Last updated: Feb '22
 
 # Adapted by ERS to be a terminal emulator, so many of the useful
 # testing code has been stripped out.
@@ -532,6 +532,18 @@ proc process_ansi_csi { args cmd } {
 	"K" {
 	    # FIXME: technically should parse argument
 	    term_clear_to_eol
+	}
+	"f" {
+	    if { "$args" eq "" } {
+		set cur_col 0
+		set cur_row 1
+		term_gotoxy
+	    } else {
+		# arguments are 1-based, but our columns are 0 based
+		scan "$args" "%d;%d" cur_row cur_col
+		set cur_col [expr {$cur_col - 1}]
+		term_gotoxy
+	    }
 	}
 	"m" {
 	    # set graphic mode
