@@ -261,12 +261,12 @@ spin2cpp/build-win32/flexcc.exe:
 
 ifneq ($(OS),msys)
 proploader-msys-build/bin/proploader.exe:
-	make -C PropLoader CROSS=win32
+	make -C PropLoader CROSS=win32 SPINCMP="`pwd`/bin/flexspin"
 endif
 
 ifneq ($(OS),macosx)
 proploader-macosx-build/bin/proploader:
-	make -C PropLoader CROSS=macosx
+	make -C PropLoader CROSS=macosx SPINCMP="`pwd`/bin/flexspin"
 endif
 
 ifneq ($(OS),msys)
