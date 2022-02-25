@@ -3,6 +3,11 @@
 # Distributed under the terms of the MIT license;
 # see License.txt for details.
 #
+
+# base name for config file
+# change this if an incompatible change to config info is made
+set DOT_CONFIG ".flexprop.config.1"
+
 #
 # The guts of the IDE GUI
 #
@@ -58,9 +63,6 @@ set EXE ""
 if { $tcl_platform(os) == "Darwin" && [file exists "$ROOTDIR/bin/flexspin.mac"] && [file exists "$ROOTDIR/bin/proploader.mac"] } {
     set EXE ".mac"
 }
-
-# base name for config file
-set DOT_CONFIG ".flexprop.config.0"
 
 if { [file exists "$ROOTDIR/$DOT_CONFIG"] } {
     # portable installation
@@ -175,9 +177,10 @@ proc setShadowP1Defaults {} {
     global ROOTDIR
     global EXE
     
-    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
-    set shadow(runcmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -r \"-9%b\" -q"
+    set shadow(serialcmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -r \"-9%b\" -q"
+    set shadow(wificmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -r \"-9%b\" -q"
     set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -e"
+    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
     set shadow(baud) 115200
 }
 # provide some default settings
@@ -188,35 +191,39 @@ proc setShadowP1BytecodeDefaults {} {
     global config
     global bcversion
     global bcMsg
-    
+
+    # set up normal defaults
+    setShadowP1Defaults
+
+    # override compile command
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --interp=rom --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
-    set shadow(runcmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -r -t -q"
-    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -e"
-    set shadow(baud) 115200
     if { $config(note_bcversion) != $bcversion } {
 	set config(note_bcversion) $bcversion
 	tk_messageBox -icon warning -type ok -message $bcMsg
     }
 }
-proc setShadowP2aDefaults {} {
-    global shadow
-    global ROOTDIR
-    global EXE
-    
-    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2a -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "\"%D/bin/proploader$EXE\" -k -2 %P -D baud-rate=%r \"%B\" \"-9%b\" -r -t -q"
-    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e -t"
-    set shadow(baud) 230400
-}
-proc setShadowP2bDefaults {} {
+proc setShadowP2Defaults {} {
     global shadow
     global ROOTDIR
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "\"%D/bin/proploader$EXE\" -k -2 %P -D baud-rate=%r -D loader-baud-rate=%r \"%B\" \"-9%b\" -r -t -q"
-    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e -t"
+    set shadow(serialcmd) "\"%D/bin/loadp2$EXE\" -k %P -b%r \"%B\" \"-9%b\" -t"
+    set shadow(wificmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -r \"-9%b\" -q"
+    set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" -k %P -b%r \"@0=%F,@8000+%B\" -t"
+    set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(baud) 230400
+}
+proc setShadowP2aDefaults {} {
+    global shadow
+    global ROOTDIR
+    global EXE
+
+    # set up regular defaults
+    setShadowP2Defaults
+
+    # and adjust for P2 rev A defaults
+    set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2a -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
 }
 proc setShadowP2NuDefaults {} {
     global config
@@ -226,10 +233,11 @@ proc setShadowP2NuDefaults {} {
     global nuversion
     global nuMsg
 
+    # set up regular defaults
+    setShadowP2Defaults
+
+    # and adjust for nucode compilation
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2nu -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(runcmd) "\"%D/bin/proploader$EXE\" -k -2 %P -D baud-rate=%r -D loader-baud-rate=%r \"%B\" \"-9%b\" -r -t -q"
-    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e -t"
-    set shadow(baud) 230400
 
     if { $config(note_nuversion) != $nuversion } {
 	set config(note_nuversion) $nuversion
@@ -240,8 +248,10 @@ proc copyShadowToConfig {} {
     global config
     global shadow
     set config(compilecmd) $shadow(compilecmd)
-    set config(runcmd) $shadow(runcmd)
+    set config(serialcmd) $shadow(serialcmd)
+    set config(wificmd) $shadow(wificmd)
     set config(flashcmd) $shadow(flashcmd)
+    set config(flashprogram) $shadow(flashprogram)
     set config(baud) $shadow(baud)
     checkPropVersion
 }
@@ -267,7 +277,7 @@ proc checkPropVersion {} {
     }
 }
 
-setShadowP2bDefaults
+setShadowP2Defaults
 copyShadowToConfig
 
 #
@@ -371,7 +381,7 @@ proc config_open {} {
 		set DEBUG_OPT [lindex $data 1]
 	    }
 	    comport {
-		# set optimize level
+		# set default port level
 		set COMPORT [lindex $data 1]
 		# convert old COMPORT entries
 		if { $COMPORT ne " " && [string index "$COMPORT" 0] ne "-" } {
@@ -1532,7 +1542,7 @@ menu .mbar.options.charset
 .mbar.run add command -label "Flash binary file..." -command { doLoadFlash }
 .mbar.run add separator
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
-#.mbar.run add command -label "Choose P2 flash program..." -command { pickFlashProgram }
+.mbar.run add command -label "Choose P2 flash program..." -command { pickFlashProgram }
 
 .mbar add cascade -menu .mbar.comport -label Ports
 menu .mbar.comport.baud
@@ -1879,7 +1889,7 @@ proc mapPercent {str} {
     } else {
 	set srcfile "undefined"
     }
-    set percentmap [ list "%%" "%" "%#" $runprefix "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%r" $config(baud) "%t" $config(tabwidth)]
+    set percentmap [ list "%%" "%" "%#" $runprefix "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%F" $config(flashprogram) "%r" $config(baud) "%t" $config(tabwidth)]
     set result [string map $percentmap $str]
     return $result
 }
@@ -2009,8 +2019,18 @@ proc doJustRun {extraargs} {
     global config
     global BINFILE
     global WINPREFIX
+    global COMPORT
     
-    set cmdstr [mapPercent $config(runcmd)]
+    if { [string first "-i " $COMPORT] != -1 } {
+	set PORT_IS_WIFI 1
+    } else {
+	set PORT_IS_WIFI 0
+    }
+    if { $PORT_IS_WIFI } {
+	set cmdstr [mapPercent $config(wificmd)]
+    } else {
+	set cmdstr [mapPercent $config(serialcmd)]
+    }
     if { $extraargs ne "" } {
 	set cmdstr [concat "$cmdstr" " " "$extraargs"]
     }
@@ -2043,13 +2063,33 @@ proc doJustFlash {} {
     global BINFILE
     global flashMsg
     global WINPREFIX
+    global COMPORT
+    global PROP_VERSION
+
+    set flashcmd $config(flashcmd)
     
+    if { [string first "-i " $COMPORT] != -1 } {
+	set PORT_IS_WIFI 1
+    } else {
+	set PORT_IS_WIFI 0
+    }
+    if { $PORT_IS_WIFI } {
+	if { $PROP_VERSION ne "P1" } {
+	    set answer [tk_messageBox -icon warning -type okcancel -default cancel -message "Flashing over Wifi is not supported on P2"]
+	    if { $answer ne "ok" } {
+		return
+	    }
+	    if { [string first "loadp2" $flashcmd]  != -1 } {
+		set flashcmd "\"%D/bin/proploader$EXE\" -2 -k -D baud-rate=%r %P \"%B\" -e"
+	    }
+	}
+    }
     set answer [tk_messageBox -icon info -type okcancel -message "Flash Binary" -detail $flashMsg]
     
     if { $answer ne "ok" } {
 	return
     }
-    set cmdstr [mapPercent $config(flashcmd)]
+    set cmdstr [mapPercent $flashcmd]
     if { $config(internal_term) ne "0" } {
 	::TkTerm::RunInWindow $cmdstr
     } else {
@@ -2133,7 +2173,8 @@ proc doRunOptions {} {
     global cmddialoghelptext
     
     set shadow(compilecmd) $config(compilecmd)
-    set shadow(runcmd) $config(runcmd)
+    set shadow(serialcmd) $config(serialcmd)
+    set shadow(wificmd) $config(wificmd)
     set shadow(flashcmd) $config(flashcmd)
 
     if {[winfo exists .runopts]} {
@@ -2150,8 +2191,10 @@ proc doRunOptions {} {
     ttk::labelframe .runopts.a -text "Compile command"
     entry .runopts.a.compiletext -width 40 -textvariable shadow(compilecmd)
 
-    ttk::labelframe .runopts.b -text "Run command"
-    entry .runopts.b.runtext -width 40 -textvariable shadow(runcmd)
+    ttk::labelframe .runopts.b -text "Serial run command"
+    entry .runopts.b.runtext -width 40 -textvariable shadow(serialcmd)
+    ttk::labelframe .runopts.b2 -text "Wifi run command"
+    entry .runopts.b2.wifitext -width 40 -textvariable shadow(wificmd)
 
     ttk::labelframe .runopts.c -text "Flash command"
     entry .runopts.c.flashtext -width 40 -textvariable shadow(flashcmd)
@@ -2160,7 +2203,7 @@ proc doRunOptions {} {
     frame .runopts.end
 
 #    ttk::button .runopts.change.p2a -text "P2a defaults" -command setShadowP2aDefaults
-    ttk::button .runopts.change.p2b -text "P2 defaults" -command setShadowP2bDefaults
+    ttk::button .runopts.change.p2b -text "P2 defaults" -command setShadowP2Defaults
     ttk::button .runopts.change.p2nu -text "P2 Bytecode defaults" -command setShadowP2NuDefaults
     ttk::button .runopts.change.p1 -text "P1 defaults" -command setShadowP1Defaults
     ttk::button .runopts.change.p1bc -text "P1 Bytecode defaults" -command setShadowP1BytecodeDefaults
@@ -2171,12 +2214,14 @@ proc doRunOptions {} {
     grid .runopts.toplabel -sticky nsew
     grid .runopts.a -sticky nsew
     grid .runopts.b -sticky nsew
+    grid .runopts.b2 -sticky nsew
     grid .runopts.c -sticky nsew
     grid .runopts.change -sticky nsew
     grid .runopts.end -sticky nsew
 
     grid .runopts.a.compiletext -sticky nsew
     grid .runopts.b.runtext -sticky nsew
+    grid .runopts.b2.wifitext -sticky nsew
     grid .runopts.c.flashtext -sticky nsew
 
     grid .runopts.change.p2b .runopts.change.p2nu .runopts.change.p1 .runopts.change.p1bc -sticky nsew
@@ -2184,6 +2229,7 @@ proc doRunOptions {} {
     
     grid columnconfigure .runopts.a 0 -weight 1
     grid columnconfigure .runopts.b 0 -weight 1
+    grid columnconfigure .runopts.b2 0 -weight 1
     grid columnconfigure .runopts.c 0 -weight 1
     grid rowconfigure .runopts 0 -weight 1
     grid columnconfigure .runopts 0 -weight 1
