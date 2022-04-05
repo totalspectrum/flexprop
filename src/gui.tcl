@@ -124,7 +124,7 @@ set config(term_w) 79
 set config(term_h) 24
 set config(sash) ""
 set config(tabwidth) 8
-set config(autoreload) 0
+set config(autoreload) 1
 set config(internal_term) "ansi"
 set config(reset) "dtr"
 set COMPORT " "
