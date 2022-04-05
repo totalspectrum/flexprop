@@ -136,6 +136,30 @@ void do_copy(const char *src, const char *dest)
     if (dest) fclose(outf);
 }
 
+// mount SD
+void do_mount(const char *dirname)
+{
+    int r;
+//    if ( strcmp(dirname, "/sd") != 0 ) {
+//        printf("ERROR: only /sd may be mounted (not %s)\n", dirname);
+//        return;
+//    }
+    r = mount(dirname, _vfs_open_sdcard());
+    if (r != 0) {
+        printf("ERROR: got error %d during mount\n", r);
+    }
+}
+
+// unmount SD
+void do_umount(const char *dirname)
+{
+    int r;
+    r = _umount(dirname);
+    if (r != 0) {
+        printf("ERROR: got error %d during un-mount of %s\n", r, dirname);
+    }
+}
+
 // show the help text
 void do_help(void)
 {
@@ -150,6 +174,8 @@ void do_help(void)
     printf("mkdir <d>     :  create new directory d\n");
     printf("rmdir <d>     :  remove directory d\n");
     printf("type <f>      :  type file on console\n");
+    printf("umount /sd    :  unmount SD card\n");
+    printf("mount  /sd    :  remount SD card\n");
 }
 
 // parse a command line into the command and up to 2 optional arguments
@@ -260,6 +286,10 @@ void main()
             if (r) perror(arg1);
         } else if (!strcmp(cmd, "type") || !strcmp(cmd, "cat")) {
             do_copy(arg1, NULL);  // print to stdout
+        } else if (!strcmp(cmd, "mount")) {
+            do_mount(arg1);  // print to stdout
+        } else if (!strcmp(cmd, "umount") || !strcmp(cmd, "unmount")) {
+            do_umount(arg1);  // print to stdout
         } else {
             printf("Unknown command: %s\n", cmd);
             do_help();
