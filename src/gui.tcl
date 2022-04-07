@@ -523,6 +523,7 @@ proc loadFileToWindow { fname win } {
     $win mark set insert 1.0
     set filetimes($fname) [file mtime $fname]
     setHighlightingForFile $win $fname
+    $win edit reset
     focus $win
 }
 
@@ -736,6 +737,16 @@ proc setupFramedText {w} {
 
     bind $w.txt <$CTRL_PREFIX-f> $searchcmd
     bind $w.txt <$CTRL_PREFIX-k> $replacecmd
+    bind $w.txt <$CTRL_PREFIX-z> {
+	event generate [focus] <<Undo>>
+	break
+    }
+    bind $w.txt <$CTRL_PREFIX-y> {
+	event generate [focus] <<Redo>>
+	break
+    }
+
+    
     bind $w.txt <Return> {do_indent %W; break}
     
     # for some reason on my linux system the selection doesn't show
