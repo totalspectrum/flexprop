@@ -733,6 +733,7 @@ proc setupFramedText {w} {
     grid $w.h -sticky nsew
     grid rowconfigure $w $w.txt -weight 1
     grid columnconfigure $w $w.txt -weight 1
+
     bind $w.txt <$CTRL_PREFIX-f> $searchcmd
     bind $w.txt <$CTRL_PREFIX-k> $replacecmd
     bind $w.txt <Return> {do_indent %W; break}
@@ -1634,8 +1635,8 @@ bind . <$CTRL_PREFIX-q> { exitProgram }
 bind . <$CTRL_PREFIX-r> { doCompileRun }
 bind . <$CTRL_PREFIX-e> { doCompileFlash }
 bind . <$CTRL_PREFIX-l> { doListing }
-bind . <$CTRL_PREFIX-f> { searchrep [focus] 0 }
-bind . <$CTRL_PREFIX-k> { searchrep [focus] 1 }
+#bind . <$CTRL_PREFIX-f> { searchrep [focus] 0 } # done in setupFramedText
+#bind . <$CTRL_PREFIX-k> { searchrep [focus] 1 }
 bind . <$CTRL_PREFIX-w> { closeTab }
 
 set toolTipScript [list tabHelp %W %x %y]
