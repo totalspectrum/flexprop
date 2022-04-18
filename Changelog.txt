@@ -1,5 +1,6 @@
 Version 5.9.10
 
+- Added right-click popup cut/copy/paste menu to terminal windows
 - Made "Auto Reload Files if changed externally" the default.
 
 Version 5.9.9

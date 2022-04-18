@@ -136,6 +136,12 @@ proc graphicsSet {mode} {
     }
 }
 
+# now set up the menus and widgets
+menu .popup_term -tearoff 0
+.popup_term add command -label "Cut" -command {event generate [focus] <<Cut>>}
+.popup_term add command -label "Copy" -command {event generate [focus] <<Copy>>}
+.popup_term add command -label "Paste" -command {event generate [focus] <<Paste>>}
+
 # this shouldn't be needed if Ousterhout fixes text bug
 proc term_create {} {
     variable toplev
@@ -158,6 +164,14 @@ proc term_create {} {
 	-relief sunken -bd 1 -width $cols -height $rows -wrap none -setgrid 1 \
 	-font InternalTermFont
 
+    # bind right mouse click to popup menu
+    if {[tk windowingsystem]=="aqua"} {
+	bind $term <2> "tk_popup .popup_term %X %Y"
+	bind $term <Control-1> "tk_popup .popup_term %X %Y"
+    } else {
+	bind $term <3> "tk_popup .popup_term %X %Y"
+    }
+    
     # define scrollbars
     scrollbar $sb -command "$term yview"
 
