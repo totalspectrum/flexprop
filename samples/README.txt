@@ -14,6 +14,7 @@ c_time.c:       C program to illustrate settimeofday/gettimeofday
 fibo.bas:       Recursive Fibonacci in BASIC
 fibo.spin:      Recursive Fibonacci in Spin
 hello.spin:     Print "Hello world" on the terminal
+host_write.spin2:  Writes data to the host file system from Spin2  
 interact_pin.bas:  Interactive pin setter, in BASIC
 led_server_asm.c:  Run an LED blinker in another COG (with C style assembly)
 led_server_pasm.c: Run an LED blinker in another COG (with Spin style assembly)
@@ -24,6 +25,7 @@ multest.spin:   Test multiply speed on P2
   multiply.cog.spin: multiply.spin running in its own COG
 rtc.bas:        Simple real-time clock using a COG to keep track of time
 sd_dir.bas:     Example of listing directory on an SD card
+sd_write.bas:   Example of writing data to an SD card
 smartpin.spin:  Serial port input and output using smart pins (P2 only)
 textmandel.bas: Display a Mandelbrot set on a terminal 
 timer.c:        Shows use of the 64 bit counter on P2

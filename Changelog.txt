@@ -1,3 +1,7 @@
+Version 5.9.12
+
+- Added a few more examples
+
 Version 5.9.10
 
 - Added right-click popup cut/copy/paste menu to terminal windows

@@ -1,0 +1,17 @@
+'
+' demo for file I/O in Spin2 using libc
+'
+CON
+  _clkfreq = 180_000_000
+  
+ OBJ
+   c: "libc.a"
+   
+ PUB main() | f
+   ' due to a quirk of FlexProp's internal parsing, we cannot use c.mount() directly,
+   ' but we can use the underlying file system function _mount
+   _mount(@"/dir", c._vfs_open_host())
+   f := c.fopen(@"/dir/hello.txt", @"w")
+   c.fprintf(f, string("Hello from Spin 2!", 13, 10))
+   c.fclose(f)
+   c.printf(@"All done!")
