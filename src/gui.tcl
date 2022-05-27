@@ -1528,6 +1528,7 @@ menu .mbar.options.charset
 .mbar.options.charset add radiobutton -label "UTF-8 (Unicode)" -variable CHARSET -value "--charset=utf8"
 .mbar.options.charset add radiobutton -label "Latin-1" -variable CHARSET -value "--charset=latin1"
 .mbar.options.charset add radiobutton -label "Parallax OEM" -variable CHARSET -value "--charset=parallax"
+.mbar.options.charset add radiobutton -label "Shift-JIS" -variable CHARSET -value "--charset=shiftjis"
 
 .mbar.options add separator
 .mbar.options add command -label "Editor Options..." -command { doEditorOptions }
