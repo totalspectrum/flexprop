@@ -1511,6 +1511,7 @@ menu .mbar.options.opt
 .mbar.options add cascade -menu .mbar.options.opt -label "Optimization"
 .mbar.options.opt add radiobutton -label "No Optimization" -variable OPT -value "-O0"
 .mbar.options.opt add radiobutton -label "Default Optimization" -variable OPT -value "-O1"
+.mbar.options.opt add radiobutton -label "Size Optimization" -variable OPT -value "-Os"
 .mbar.options.opt add radiobutton -label "Full Optimization" -variable OPT -value "-O2"
 
 menu .mbar.options.warn
