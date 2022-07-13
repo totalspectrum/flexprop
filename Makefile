@@ -33,7 +33,7 @@ errmessage:
 	@echo
 	@echo "Usage:"
 	@echo "  make install"
-	@echo "  make zip SIGN=signscript"
+	@echo "  make zip SIGNPC=signscript SIGNMAC=signscript"
 	@echo
 	@echo "make install copies flexprop to the INSTALL directory (default is $(HOME)/flexprop)"
 	@echo "for example to install in /opt/flexprop do:"
@@ -112,14 +112,15 @@ endif
 #
 BOARDFILES=board/P2ES_flashloader.bin board/P2ES_flashloader.spin2 board/P2ES_sdcard.bin
 
-# the script used for signing executables:
-#    $(SIGN) bin/foo
+# the script used for signing Windows executables:
+#    $(SIGNPC) bin/foo
 # produces bin/foo.signed.exe from bin/foo.exe
 #
 # to just do a regular build, do "make"
-# for a signed build, do "make SIGN=my_signing_script"
+# for a signed build, do "make SIGNPC=my_signing_script"
 
-SIGN ?= ./spin2cpp/sign.dummy.sh
+SIGNPC ?= ./spin2cpp/sign.dummy.sh
+SIGNMAC ?= /bin/echo
 
 flexprop.zip: flexprop_base flexprop.exe flexprop.bin $(WIN_BINARIES)
 	cp -r flexprop.exe flexprop/
@@ -135,7 +136,7 @@ flexprop.bin: src/flexprop_native.c
 
 flexprop.exe: src/flexprop_win.c $(RESOBJ)
 	$(WINGCC) $(WINCFLAGS) -o flexprop.exe src/flexprop_win.c $(WINTK_INC) $(WINTK_LIBS)
-	$(SIGN) flexprop
+	$(SIGNPC) flexprop
 	mv flexprop.signed.exe flexprop.exe
 
 #
@@ -232,12 +233,12 @@ loadp2/build/loadp2: bin/flexspin
 bin/flexspin.exe: spin2cpp/build-win32/flexspin.exe
 	mkdir -p bin
 	cp $< $@
-	$(SIGN) bin/flexspin
+	$(SIGNPC) bin/flexspin
 	mv bin/flexspin.signed.exe bin/flexspin.exe
 bin/flexcc.exe: spin2cpp/build-win32/flexcc.exe
 	mkdir -p bin
 	cp $< $@
-	$(SIGN) bin/flexcc
+	$(SIGNPC) bin/flexcc
 	mv bin/flexcc.signed.exe bin/flexcc.exe
 
 bin/proploader.exe: proploader-msys-build/bin/proploader.exe
@@ -247,11 +248,12 @@ bin/proploader.exe: proploader-msys-build/bin/proploader.exe
 bin/proploader.mac: proploader-macosx-build/bin/proploader
 	mkdir -p bin
 	cp $< $@
+	$(SIGNMAC) $@
 
 bin/loadp2.exe: loadp2/build-win32/loadp2.exe
 	mkdir -p bin
 	cp $< $@
-	$(SIGN) bin/loadp2
+	$(SIGNPC) bin/loadp2
 	mv bin/loadp2.signed.exe bin/loadp2.exe
 
 spin2cpp/build-win32/flexspin.exe:
@@ -285,13 +287,17 @@ bin/mac_terminal.sh: mac_scripts/mac_terminal.sh
 bin/loadp2.mac: loadp2/build-macosx/loadp2
 	mkdir -p bin
 	cp $< $@
+	$(SIGNMAC) $@
 
 bin/flexspin.mac: spin2cpp/build-macosx/flexspin
 	mkdir -p bin
 	cp $< $@
+	$(SIGNMAC) $@
+
 bin/flexcc.mac: spin2cpp/build-macosx/flexcc
 	mkdir -p bin
 	cp $< $@
+	$(SIGNMAC) $@
 
 spin2cpp/build-macosx/flexspin:
 	make -C spin2cpp CROSS=macosx
