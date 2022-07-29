@@ -837,6 +837,7 @@ proc loadFileToTab {w filename title} {
     set filenames($w) $filename
     set filetimes($filename) [file mtime $filename]
 }
+    
 
 proc findFileOnPath { filename startdir } {
     global config
@@ -930,6 +931,52 @@ proc pickFlashProgram {} {
 	return
     }
     set config(flashprogram) $filename
+}
+
+# check to see if a file has changed externally; if so, re-load it
+proc checkFilesForChanges {} {
+    global filenames
+    global filetimes
+    global config
+    set t [.p.nb tabs]
+    set i 0
+    set w [lindex $t $i]
+    while { $w ne "" } {
+	set s $filenames($w)
+	set needRead "no"
+	if { $s ne "" } {
+	    if { [file exists $s] } {
+		set disktime [file mtime $s]
+	        if {$disktime > $filetimes($s)} {
+		    set needRead "yes"
+		}
+	    }
+	    set answer $config(autoreload)
+	    if { ! $answer  } {
+		set answer [tk_messageBox -icon question -type yesno -message "File $s has changed on disk. Reload it?" -default yes]
+	    }
+	    if { $answer } {
+		loadFileToWindow $s $w.txt
+	    }
+	}
+	incr i
+	set w [lindex $t $i]
+    }
+}
+
+#
+# code for handling focus in/out events
+# allows us to re-check for modified files
+# Only re-check when the whole application loses/gains focus
+#
+proc checkFocusOut {w} {
+    #puts "FocusOut: $w"
+}
+proc checkFocusIn {w} {
+    #puts "FocusIn: $w"
+    if { $w eq "." } {
+	checkFilesForChanges
+    }
 }
 
 # maybe save the current file; used for compilation
@@ -1659,6 +1706,9 @@ append tabLeaveScript \n [list after 200 [list destroy .balloonHelp]]
 
 bind .p.nb <Enter> $tabEnterScript
 bind .p.nb <Leave> $tabLeaveScript
+
+bind . <FocusIn> { checkFocusIn %W }
+bind . <FocusOut> { checkFocusOut %W }
 
 # bind to right mouse button on Linux and Windows
 

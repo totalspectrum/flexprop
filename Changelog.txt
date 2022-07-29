@@ -1,3 +1,7 @@
+Version 5.9.15
+
+- Modified file change code to check for external files change whenever we gain/lose focus
+
 Version 5.9.12
 
 - Added a few more examples
