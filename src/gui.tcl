@@ -536,6 +536,7 @@ proc saveFileFromWindow { fname win } {
     if { [file exists $fname] } {
         set disktime [file mtime $fname]
         if { $disktime > $filetimes($fname) } {
+	    set filetimes($fname) $disktime
 	    set answer $config(autoreload)
 	    if { ! $answer } {
 		set answer [tk_messageBox -icon question -type yesno -message "File $fname has changed on disk; overwrite it?" -default no]
@@ -938,6 +939,7 @@ proc checkFilesForChanges {} {
     global filenames
     global filetimes
     global config
+
     set t [.p.nb tabs]
     set i 0
     set w [lindex $t $i]
@@ -951,12 +953,16 @@ proc checkFilesForChanges {} {
 		    set needRead "yes"
 		}
 	    }
-	    set answer $config(autoreload)
-	    if { ! $answer  } {
-		set answer [tk_messageBox -icon question -type yesno -message "File $s has changed on disk. Reload it?" -default yes]
-	    }
-	    if { $answer } {
-		loadFileToWindow $s $w.txt
+	    if { $needRead eq "yes" } {
+		set answer $config(autoreload)
+		#puts "disktime-$disktime filetime=$filetimes($s)"
+		set filetimes($s) $disktime
+		if { ! $answer  } {
+		    set answer [tk_messageBox -icon question -type yesno -message "File $s has changed on disk. Reload it?" -default yes]
+		}
+		if { $answer } {
+		    loadFileToWindow $s $w.txt
+		}
 	    }
 	}
 	incr i
@@ -973,9 +979,12 @@ proc checkFocusOut {w} {
     #puts "FocusOut: $w"
 }
 proc checkFocusIn {w} {
+    global config
     #puts "FocusIn: $w"
     if { $w eq "." } {
-	checkFilesForChanges
+	if { $config(autoreload) } {
+	    checkFilesForChanges
+	}
     }
 }
 
