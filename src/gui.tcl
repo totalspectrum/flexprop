@@ -1725,6 +1725,16 @@ append tabLeaveScript \n [list after 200 [list destroy .balloonHelp]]
 bind .p.nb <Enter> $tabEnterScript
 bind .p.nb <Leave> $tabLeaveScript
 
+proc NotebookChanged {} {
+    set idx [.p.nb index current]
+    set win [lindex [.p.nb tabs] $idx]
+    raise $win
+}
+
+if { [tk windowingsystem] == "aqua" } {
+    bind .p.nb <<NotebookTabChanged>> NotebookChanged
+}
+
 bind . <FocusIn> { checkFocusIn %W }
 bind . <FocusOut> { checkFocusOut %W }
 
