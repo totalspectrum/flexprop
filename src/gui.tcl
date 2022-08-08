@@ -755,6 +755,15 @@ proc setupFramedText {w} {
     if { [tk windowingsystem] == "x11" } {
 	$w.txt configure -selectbackground blue -selectforeground white
     }
+
+    # bind popup menu to right mouse button on Linux and Windows
+
+    if {[tk windowingsystem]=="aqua"} {
+	bind $w.txt <2> "tk_popup .popup1 %X %Y"
+	bind $w.txt <Control-1> "tk_popup .popup1 %X %Y"
+    } else {
+	bind $w.txt <3> "tk_popup .popup1 %X %Y"
+    }
 }
 
 #
@@ -1718,15 +1727,6 @@ bind .p.nb <Leave> $tabLeaveScript
 
 bind . <FocusIn> { checkFocusIn %W }
 bind . <FocusOut> { checkFocusOut %W }
-
-# bind to right mouse button on Linux and Windows
-
-if {[tk windowingsystem]=="aqua"} {
-    bind . <2> "tk_popup .popup1 %X %Y"
-    bind . <Control-1> "tk_popup .popup1 %X %Y"
-} else {
-    bind . <3> "tk_popup .popup1 %X %Y"
-}
 
 proc setHyperLinkResponse { w func } {
     set textcurs [::ttk::cursor text]

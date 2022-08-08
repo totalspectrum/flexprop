@@ -1,6 +1,7 @@
 Version 5.9.15
 
 - Modified file change code to check for external files change whenever we gain/lose focus
+- Modified right click popup menu to only happen inside the editor pane
 - Removed blinking quoted text highlighting in the editor
 
 Version 5.9.12
