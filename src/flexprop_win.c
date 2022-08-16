@@ -38,6 +38,8 @@ extern Tcl_PackageInitProc Dde_SafeInit;
 static void setargv(int *argcPtr, TCHAR ***argvPtr);
 #endif
 
+extern int P2Debug_Init(Tcl_Interp *interp);
+
 /*
  * Forward declarations for procedures defined later in this file:
  */
@@ -227,6 +229,9 @@ Tcl_AppInit(
      * should have the same entry-point name.)
      */
 
+    if (P2Debug_Init(interp) == TCL_ERROR) {
+        return TCL_ERROR;
+    }
     /*
      * Call Tcl_CreateObjCommand for application-specific commands, if they
      * weren't already created by the init procedures called above.

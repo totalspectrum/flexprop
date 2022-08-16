@@ -131,11 +131,11 @@ flexprop.zip: flexprop_base flexprop.exe flexprop.bin $(WIN_BINARIES)
 	rm -f flexprop.zip
 	zip -r flexprop.zip flexprop
 
-flexprop.bin: src/flexprop_native.c
-	$(CC) $(CFLAGS) -o flexprop.bin src/flexprop_native.c $(NATIVETK_INC) $(NATIVETK_LIBS)
+flexprop.bin: src/flexprop_native.c src/p2debug.c
+	$(CC) $(CFLAGS) -o flexprop.bin src/flexprop_native.c src/p2debug.c $(NATIVETK_INC) $(NATIVETK_LIBS)
 
-flexprop.exe: src/flexprop_win.c $(RESOBJ)
-	$(WINGCC) $(WINCFLAGS) -o flexprop.exe src/flexprop_win.c $(WINTK_INC) $(WINTK_LIBS)
+flexprop.exe: src/flexprop_win.c src/p2debug.c $(RESOBJ)
+	$(WINGCC) $(WINCFLAGS) -o flexprop.exe src/flexprop_win.c src/p2debug.c $(WINTK_INC) $(WINTK_LIBS)
 	$(SIGNPC) flexprop
 	mv flexprop.signed.exe flexprop.exe
 
