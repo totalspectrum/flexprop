@@ -159,7 +159,7 @@ The scripts used are in the `src` subdirectory, so you can customize them to you
 
 # Supporting FlexProp development
 
-If you find FlexProp useful, please contribute to support its development. Contributions of code, documentation, and other suggestions are welcome. Monetary donations are also very welcome. The generous donations of our supporters on Patreon have enabled us to provide a signed Windows binary.
+If you find FlexProp useful, please contribute to support its development. Contributions of code, documentation, and other suggestions are welcome. Monetary donations are also very welcome. The generous donations of our supporters on Patreon have enabled us to provide signed binaries for Windows and Mac.
 
 To support FlexProp on Patreon: https://patreon.com/totalspectrum
 To support FlexProp on Paypal:  https://paypal.me/totalspectrum
