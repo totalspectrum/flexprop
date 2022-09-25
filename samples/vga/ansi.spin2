@@ -45,11 +45,11 @@ PUB start(pinbase) | x, fontptr, fontheight
     fontptr += 256 * FONT_WIDTH / 8  ' skip a row
 
   params[00] := pinbase
-  params[01] := @screen_buffer	' screen buffer
+  params[01] := @screen_buffer  ' screen buffer
   params[02] := COLS           ' screen columns
   params[03] := ROWS           ' screen rows
-  params[04] := fontptr	' font data: skip first row
-  params[05] := FONT_WIDTH	' font width
+  params[04] := fontptr ' font data: skip first row
+  params[05] := FONT_WIDTH      ' font width
   params[06] := FONT_HEIGHT    ' font height
   vt.gettiming(@params + 7*4)
   params[15] := CELL_SIZE
@@ -177,8 +177,8 @@ PUB tx(c) : r | fg, bg
          set_position(curx-1, cury)
       elseif (c == 10) ' line feed
          if cury == scroll_last
-	   scroll_up()
-	 else
+           scroll_up()
+         else
            cury++
       elseif (c == 13) ' carriage return
          curx := 0
@@ -193,12 +193,12 @@ PUB tx(c) : r | fg, bg
            fg,bg := bg,fg  ' swap
          glyphat(curx, cury, c, fg, bg, char_effects & $FF)
          curx++
-	 if curx == COLS
-	   curx := 0
-	   if cury == scroll_last
-	     scroll_up()
-	   else
-	     cury++
+         if curx == COLS
+           curx := 0
+           if cury == scroll_last
+             scroll_up()
+           else
+             cury++
    elseif (state == STATE_ESCAPE)
       handle_esc(c)
    elseif (state == STATE_START_CSI)
@@ -640,8 +640,8 @@ PUB Num(val, base, signflag, digitsNeeded) | i, digit, r1, q1
   if (signflag)
       if (val < 0)
         signflag := "-"
-	val := -val
-	
+        val := -val
+        
   '' make sure we will not overflow our buffer
   if (digitsNeeded > 32)
     digitsNeeded := 32
@@ -660,7 +660,7 @@ PUB Num(val, base, signflag, digitsNeeded) | i, digit, r1, q1
       val := 2*(q1 / base)
       if (digit >= base)
         val++
-	digit -= base
+        digit -= base
     else
       digit := val // base
       val := val / base
