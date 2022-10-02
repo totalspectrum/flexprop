@@ -24,7 +24,7 @@ FlexProp is distributed under the MIT license; see the file License.txt for deta
 
 ### Spin enhancements
 
-The original Spin language is supported, with some enhancements from Spin2:
+The original Spin (Spin1) language is supported, with some enhancements from Spin2:
 
 * Generates optimized PASM instead of bytecode
 * `case_fast` to force `case` to produce a jump table
@@ -38,6 +38,8 @@ The original Spin language is supported, with some enhancements from Spin2:
 * Default parameter values for functions
 * Optional type specifiers for function parameters and return values
 * Automatic passing of strings as pointers in some cases
+
+If the file name ends in `.spin2`, then the standard Spin2 language is assumed, with some legacy features from Spin1 supported.
 
 See `doc/spin.md` for more details.
 
