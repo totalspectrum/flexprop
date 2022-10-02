@@ -1,3 +1,7 @@
+Version 5.9.18
+
+- Fixed some color issues in dark mode.
+
 Version 5.9.15
 
 - Modified file change code to check for external files change whenever we gain/lose focus
