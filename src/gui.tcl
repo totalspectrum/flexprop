@@ -728,8 +728,8 @@ proc setupFramedText {w} {
     set replacecmd "searchrep $w.txt 1"
 
     ctext $w.txt -wrap none -yscrollcommand $yscmd -xscroll $xscmd -tabstyle wordprocessor -linemap $config(showlinenumbers) -undo 1
-    scrollbar $w.v -orient vertical -command $yvcmd
-    scrollbar $w.h -orient horizontal -command $xvcmd
+    ttk::scrollbar $w.v -orient vertical -command $yvcmd
+    ttk::scrollbar $w.h -orient horizontal -command $xvcmd
 
     grid $w.txt $w.v -sticky nsew
     grid $w.h -sticky nsew
@@ -1687,8 +1687,8 @@ checkPropVersion
 
 grid .toolbar.compile .toolbar.runBinary .toolbar.compileRun .toolbar.configmsg -sticky nsew
 
-scrollbar .p.bot.v -orient vertical -command {.p.bot.txt yview}
-scrollbar .p.bot.h -orient horizontal -command {.p.bot.txt xview}
+ttk::scrollbar .p.bot.v -orient vertical -command {.p.bot.txt yview}
+ttk::scrollbar .p.bot.h -orient horizontal -command {.p.bot.txt xview}
 text .p.bot.txt -wrap none -xscroll {.p.bot.h set} -yscroll {.p.bot.v set} -height 10 -font BottomCmdFont
 label .p.bot.label -background DarkGrey -foreground white -text "Compiler Output" -font TkSmallCaptionFont -relief flat -pady 0 -borderwidth 0
 
