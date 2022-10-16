@@ -149,7 +149,7 @@ set config(savedips) [ list ]
 # start the version off at 0, and provide a popup when we find the
 # current note version is > the version
 
-set config(note_nuversion) 0
+set config(note_nuversion) 1
 set config(note_bcversion) 0
 
 #
