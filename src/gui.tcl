@@ -1663,6 +1663,7 @@ set comport_last [.mbar.comport index end]
 .mbar.help add separator
 .mbar.help add command -label "Parallax P1 documentation" -command { launchBrowser "https://www.parallax.com/download/propeller-1-documentation/" }
 .mbar.help add command -label "Parallax P2 documentation" -command { launchBrowser "https://www.parallax.com/propeller-2/documentation" }
+.mbar.help add command -label "IRQsoft P2 documentation" -command { launchBrowser "https://p2docs.github.io" }
 .mbar.help add separator
 .mbar.help add command -label "About..." -command { doAbout }
 
