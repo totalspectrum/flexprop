@@ -1,3 +1,7 @@
+Version 5.9.20
+
+- Added link to Ada's hyperlinked P2 documentation
+
 Version 5.9.18
 
 - Fixed some color issues in dark mode.
