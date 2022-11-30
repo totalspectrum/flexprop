@@ -218,9 +218,9 @@ bin/loadp2: loadp2/build/loadp2
 	cp $< $@
 
 spin2cpp/build/flexspin:
-	make -C spin2cpp
+	make -C spin2cpp OPT=-O1
 spin2cpp/build/flexcc:
-	make -C spin2cpp
+	make -C spin2cpp OPT=-O1
 
 proploader-$(OS)-build/bin/proploader: bin/flexspin
 	make -C PropLoader OS=$(OS) SPINCMP="`pwd`/bin/flexspin"
