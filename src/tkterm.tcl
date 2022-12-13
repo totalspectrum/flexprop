@@ -835,6 +835,9 @@ proc RunInWindow { cmd } {
 	"shiftjis" {
 	    set enc "shiftjis"
 	}
+	"parallax" {
+	    set enc "parallax"
+	}
 	default {
 	    set enc "binary"
 	}

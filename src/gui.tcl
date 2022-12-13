@@ -2487,3 +2487,6 @@ if { $::argc > 0 } {
 }
 
 rescanPorts
+set dirlist [encoding dirs]
+set dirlist [linsert $dirlist 0 "$ROOTDIR/tcl_library/tcl8.6/encoding"] 
+encoding dirs $dirlist
