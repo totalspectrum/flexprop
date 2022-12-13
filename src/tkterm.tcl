@@ -823,6 +823,22 @@ proc RunInWindow { cmd } {
     variable toplev
     variable term
     variable term_pipe
+    global CHARSET
+
+    switch $CHARSET {
+	"utf8" {
+	    set enc "utf-8"
+	}
+	"latin1" {
+	    set enc "iso8859-1"
+	}
+	"shiftjis" {
+	    set enc "shiftjis"
+	}
+	default {
+	    set enc "binary"
+	}
+    }
     if { "$term_pipe" != "" } {
 	close $term_pipe
 	set term_pipe ""
@@ -841,7 +857,7 @@ proc RunInWindow { cmd } {
     raise $toplev
     term_clear
     set term_pipe [open |$cmd r+]
-    fconfigure $term_pipe -blocking 0 -buffering none -translation binary
+    fconfigure $term_pipe -blocking 0 -buffering none -translation binary -encoding $enc
     fileevent $term_pipe readable { ::TkTerm::Terminal_Data }
 }
 

@@ -133,7 +133,7 @@ set COMPRESS "-z0"
 set WARNFLAGS "-Wnone"
 set FIXEDREAL "--floatreal"
 set DEBUG_OPT "-gnone"
-set CHARSET "--charset=utf8"
+set CHARSET "utf8"
 set PROP_VERSION ""
 set OPENFILES ""
 set config(showlinenumbers) 1
@@ -371,6 +371,9 @@ proc config_open {} {
 	    runtime_charset {
 		# set warning flags
 		set CHARSET [lindex $data 1]
+		if { [string equal -length 10 $CHARSET "--charset="] } {
+		    set CHARSET [string range $CHARSET 10 end]
+		}
 	    }
 	    fixedreal {
 		# set warning flags
@@ -1591,10 +1594,10 @@ menu .mbar.options.float
 
 menu .mbar.options.charset
 .mbar.options add cascade -menu .mbar.options.charset -label "Runtime character set"
-.mbar.options.charset add radiobutton -label "UTF-8 (Unicode)" -variable CHARSET -value "--charset=utf8"
-.mbar.options.charset add radiobutton -label "Latin-1" -variable CHARSET -value "--charset=latin1"
-.mbar.options.charset add radiobutton -label "Parallax OEM" -variable CHARSET -value "--charset=parallax"
-.mbar.options.charset add radiobutton -label "Shift-JIS" -variable CHARSET -value "--charset=shiftjis"
+.mbar.options.charset add radiobutton -label "UTF-8 (Unicode)" -variable CHARSET -value "utf8"
+.mbar.options.charset add radiobutton -label "Latin-1" -variable CHARSET -value "latin1"
+.mbar.options.charset add radiobutton -label "Parallax OEM" -variable CHARSET -value "parallax"
+.mbar.options.charset add radiobutton -label "Shift-JIS" -variable CHARSET -value "shiftjis"
 
 .mbar.options add separator
 .mbar.options add command -label "Editor Options..." -command { doEditorOptions }
@@ -1946,7 +1949,11 @@ proc mapPercent {str} {
     set ourwarn $WARNFLAGS
     set ourdebug $DEBUG_OPT
     set ourfixed $FIXEDREAL
-    set ourcharset $CHARSET
+    if { "$CHARSET" ne "" } {
+	set ourcharset "--charset=$CHARSET"
+    } else {
+	set ourcharset ""
+    }
     #set runprefix "$WINPREFIX "
     set runprefix ""
     

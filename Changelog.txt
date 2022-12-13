@@ -1,3 +1,8 @@
+Version 5.9.22
+
+- Make the built in terminal use the runtime character set encoding
+  set specified in Options
+
 Version 5.9.20
 
 - Added link to Ada's hyperlinked P2 documentation
