@@ -120,6 +120,7 @@ proc term_cursor_changed {} {
 set term_standout 0	;# if in standout mode or not
 set term_strikethru 0   ;# if in strikethrough mode or not
 set term_underline 0    ;# if in underline mode or not
+set term_isblink   0    ;# if in blink mode or not
 set term_pipe ""        ;# I/O with remote
 
 proc graphicsGet {} {
@@ -152,6 +153,7 @@ proc term_create {} {
     variable cols
     variable rows
     variable sb
+    variable term_blink_on
     global config
 
     if { $config(internal_term) eq "ansi" } {
@@ -186,6 +188,9 @@ proc term_create {} {
     $term tag configure standout -background  black -foreground white
     $term tag configure strikethru -overstrike true
     $term tag configure underline -underline true
+
+    set term_blink_on 1
+    term_timer
 }
 
 proc term_clear {} {
@@ -345,6 +350,8 @@ proc term_insert {s} {
     variable term_standout
     variable term_strikethru
     variable term_underline
+    variable term_isblink
+    
     set tag_list {}
     
     set chars_rem_to_write [string length $s]
@@ -358,6 +365,9 @@ proc term_insert {s} {
     }
     if {$term_strikethru} {
 	set tag_list [lappend $tag_list "strikethru"]
+    }
+    if {$term_isblink} {
+	set tag_list [lappend $tag_list "blink"]
     }
 
     ##################
@@ -514,6 +524,7 @@ proc process_ansi_csi { args cmd } {
     variable term_standout
     variable term_strikethru
     variable term_underline
+    variable term_isblink
     
     switch $cmd {
 	"A" {
@@ -574,20 +585,25 @@ proc process_ansi_csi { args cmd } {
 	}
 	"m" {
 	    # set graphic mode
-	    # for now, only one tag (standout) understood
+	    # for now, only one tag understood at a time
 	    set n [get_one_arg $args 0]
 	    if { $n == 0 } {
 		set term_standout 0
 		set term_strikethru 0
 		set term_underline 0
+		set term_isblink 0
 	    } elseif { $n == 4 } {
 		set term_underline 1
+	    } elseif { $n == 5 } {
+		set term_isblink 1
 	    } elseif { $n == 7 } {
 		set term_standout 1
 	    } elseif { $n == 9 } {
 		set term_strikethru 1
 	    } elseif { $n == 24 } {
 		set term_underline 0
+	    } elseif { $n == 25 } {
+		set term_isblink 0
 	    } elseif { $n == 27 } {
 		set term_standout 0
 	    } elseif { $n == 29 } {
@@ -1005,6 +1021,26 @@ proc doTermBindings {} {
     bind $term <F7> {::TkTerm::term_send "\033OV"}
     bind $term <F8> {::TkTerm::term_send "\033OW"}
     bind $term <F9> {::TkTerm::term_send "\033OX"}
+}
+
+proc term_timer {} {
+    variable toplev
+    variable term
+    variable term_blink_on
+
+    if { [winfo exists $toplev] } {
+	if { $term_blink_on } {
+	    set term_blink_on 0
+	    $term tag configure blink -foreground black
+	    puts "blink on"
+	} else {
+	    set term_blink_on 1
+	    $term tag configure blink -foreground white
+	    puts "blink off"
+	}
+	after 1000 ::TkTerm::term_timer
+	update idle
+    }
 }
 
 }
