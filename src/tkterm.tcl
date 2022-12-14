@@ -358,18 +358,18 @@ proc term_insert {s} {
     set space_rem_on_line [expr {$cols - $cur_col}]
 
     if {$term_standout} {
-	set tag_list [lappend $tag_list "standout"]
+	lappend tag_list "standout"
     }
     if {$term_underline} {
-	set tag_list [lappend $tag_list "underline"]
+	lappend tag_list "underline"
     }
     if {$term_strikethru} {
-	set tag_list [lappend $tag_list "strikethru"]
+	lappend tag_list "strikethru"
     }
     if {$term_isblink} {
-	set tag_list [lappend $tag_list "blink"]
+	lappend tag_list "blink"
     }
-
+    
     ##################
     # write first line
     ##################
@@ -585,29 +585,34 @@ proc process_ansi_csi { args cmd } {
 	}
 	"m" {
 	    # set graphic mode
+	    set sgr_args [split $args ";"]
+	    
 	    # for now, only one tag understood at a time
-	    set n [get_one_arg $args 0]
-	    if { $n == 0 } {
-		set term_standout 0
-		set term_strikethru 0
-		set term_underline 0
-		set term_isblink 0
-	    } elseif { $n == 4 } {
-		set term_underline 1
-	    } elseif { $n == 5 } {
-		set term_isblink 1
-	    } elseif { $n == 7 } {
-		set term_standout 1
-	    } elseif { $n == 9 } {
-		set term_strikethru 1
-	    } elseif { $n == 24 } {
-		set term_underline 0
-	    } elseif { $n == 25 } {
-		set term_isblink 0
-	    } elseif { $n == 27 } {
-		set term_standout 0
-	    } elseif { $n == 29 } {
-		set term_strikethru 0
+	    while { [llength $sgr_args] > 0 } {
+		set n [lindex $sgr_args 0]
+		set sgr_args [lrange $sgr_args 1 end]
+		if { $n == 0 } {
+		    set term_standout 0
+		    set term_strikethru 0
+		    set term_underline 0
+		    set term_isblink 0
+		} elseif { $n == 4 } {
+		    set term_underline 1
+		} elseif { $n == 5 } {
+		    set term_isblink 1
+		} elseif { $n == 7 } {
+		    set term_standout 1
+		} elseif { $n == 9 } {
+		    set term_strikethru 1
+		} elseif { $n == 24 } {
+		    set term_underline 0
+		} elseif { $n == 25 } {
+		    set term_isblink 0
+		} elseif { $n == 27 } {
+		    set term_standout 0
+		} elseif { $n == 29 } {
+		    set term_strikethru 0
+		}
 	    }
 	}
 	default {
