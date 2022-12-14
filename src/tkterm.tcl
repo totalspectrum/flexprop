@@ -59,6 +59,7 @@ set terminfo 1		;# if your applications use terminfo
 			;# (you can use both, but note that
 			;# starting terminfo is slow)
 
+    
 #############################################
 # Readable variables of interest
 #############################################
@@ -117,6 +118,8 @@ proc term_cursor_changed {} {
 #############################################
 
 set term_standout 0	;# if in standout mode or not
+set term_strikethru 0   ;# if in strikethrough mode or not
+set term_underline 0    ;# if in underline mode or not
 set term_pipe ""        ;# I/O with remote
 
 proc graphicsGet {} {
@@ -181,6 +184,8 @@ proc term_create {} {
     grid columnconfigure $toplev 1 -weight 1
 
     $term tag configure standout -background  black -foreground white
+    $term tag configure strikethru -overstrike true
+    $term tag configure underline -underline true
 }
 
 proc term_clear {} {
@@ -338,14 +343,21 @@ proc term_insert {s} {
     variable cur_row
     variable term
     variable term_standout
-
+    variable term_strikethru
+    variable term_underline
+    set tag_list {}
+    
     set chars_rem_to_write [string length $s]
     set space_rem_on_line [expr {$cols - $cur_col}]
 
     if {$term_standout} {
-	set tag_action "add"
-    } else {
-	set tag_action "remove"
+	set tag_list [lappend $tag_list "standout"]
+    }
+    if {$term_underline} {
+	set tag_list [lappend $tag_list "underline"]
+    }
+    if {$term_strikethru} {
+	set tag_list [lappend $tag_list "strikethru"]
     }
 
     ##################
@@ -363,9 +375,7 @@ proc term_insert {s} {
     $term delete $cur_row.$cur_col $cur_row.[expr {$cur_col + $chars_to_write}]
     $term insert $cur_row.$cur_col [
 				    string range $s 0 [expr {$space_rem_on_line-1}]
-				   ]
-
-    $term tag $tag_action standout $cur_row.$cur_col $cur_row.[expr {$cur_col + $chars_to_write}]
+				   ] $tag_list
 
     # discard first line already written
     incr chars_rem_to_write -$chars_to_write
@@ -383,8 +393,8 @@ proc term_insert {s} {
     ##################
     while {$chars_rem_to_write >= $cols} {
 	$term delete $cur_row.0 $cur_row.end
-	$term insert $cur_row.0 [string range $s 0 [expr {$cols-1}]]
-	$term tag $tag_action standout $cur_row.0 $cur_row.end
+	$term insert $cur_row.0 [string range $s 0 [expr {$cols-1}]] $tag_list
+	#$term tag $tag_action standout $cur_row.0 $cur_row.end
 
 	# discard line from buffer
 	set s [string range $s $cols end]
@@ -400,8 +410,8 @@ proc term_insert {s} {
 
     if {$chars_rem_to_write} {
 	$term delete $cur_row.0 $cur_row.$chars_rem_to_write
-	$term insert $cur_row.0 $s
-	$term tag $tag_action standout $cur_row.0 $cur_row.$chars_rem_to_write
+	$term insert $cur_row.0 $s $tag_list
+#	$term tag $tag_action standout $cur_row.0 $cur_row.$chars_rem_to_write
 	set cur_col $chars_rem_to_write
     }
 
@@ -502,6 +512,9 @@ proc process_ansi_csi { args cmd } {
     variable rows
     variable term
     variable term_standout
+    variable term_strikethru
+    variable term_underline
+    
     switch $cmd {
 	"A" {
 	    set n [get_one_arg $args 1]
@@ -563,10 +576,22 @@ proc process_ansi_csi { args cmd } {
 	    # set graphic mode
 	    # for now, only one tag (standout) understood
 	    set n [get_one_arg $args 0]
-	    if { $n == 7 } {
-		set term_standout 1
-	    } else {
+	    if { $n == 0 } {
 		set term_standout 0
+		set term_strikethru 0
+		set term_underline 0
+	    } elseif { $n == 4 } {
+		set term_underline 1
+	    } elseif { $n == 7 } {
+		set term_standout 1
+	    } elseif { $n == 9 } {
+		set term_strikethru 1
+	    } elseif { $n == 24 } {
+		set term_underline 0
+	    } elseif { $n == 27 } {
+		set term_standout 0
+	    } elseif { $n == 29 } {
+		set term_strikethru 0
 	    }
 	}
 	default {
