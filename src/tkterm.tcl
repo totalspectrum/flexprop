@@ -116,12 +116,15 @@ proc term_cursor_changed {} {
 #############################################
 # End of things of interest
 #############################################
+set term_pipe ""        ;# I/O with remote
 
 set term_standout 0	;# if in standout mode or not
 set term_strikethru 0   ;# if in strikethrough mode or not
 set term_underline 0    ;# if in underline mode or not
 set term_isblink   0    ;# if in blink mode or not
-set term_pipe ""        ;# I/O with remote
+set term_bold      0
+set term_fgcolor   0
+set term_bgcolor   15
 
 proc graphicsGet {} {
     variable graphics
@@ -146,6 +149,26 @@ menu .popup_term -tearoff 0
 .popup_term add command -label "Copy" -command {event generate [focus] <<Copy>>}
 .popup_term add command -label "Paste" -command {event generate [focus] <<Paste>>}
 
+proc term_reset_graphics {} {
+    variable term_blink_on
+    variable term_standout
+    variable term_strikethru
+    variable term_underline
+    variable term_isblink
+    variable term_bold
+    variable term_fgcolor
+    variable term_bgcolor
+
+    set term_standout 0	;# if in standout mode or not
+    set term_strikethru 0   ;# if in strikethrough mode or not
+    set term_underline 0    ;# if in underline mode or not
+    set term_isblink   0    ;# if in blink mode or not
+    set term_bold      0
+    set term_fgcolor   0
+    set term_bgcolor   15
+    set term_blink_on 1
+}
+
 # this shouldn't be needed if Ousterhout fixes text bug
 proc term_create {} {
     variable toplev
@@ -153,7 +176,6 @@ proc term_create {} {
     variable cols
     variable rows
     variable sb
-    variable term_blink_on
     global config
 
     if { $config(internal_term) eq "ansi" } {
@@ -167,7 +189,7 @@ proc term_create {} {
     text $term \
 	-yscroll "$sb set" \
 	-relief sunken -bd 1 -width $cols -height $rows -wrap none -setgrid 1 \
-	-font InternalTermFont
+	-font InternalTermFont -foreground black -background white
 
     # bind right mouse click to popup menu
     if {[tk windowingsystem]=="aqua"} {
@@ -185,17 +207,86 @@ proc term_create {} {
     grid rowconfigure $toplev 0 -weight 1
     grid columnconfigure $toplev 1 -weight 1
 
-    $term tag configure standout -background  black -foreground white
     $term tag configure strikethru -overstrike true
     $term tag configure underline -underline true
 
-    set term_blink_on 1
+#    $term tag configure fg0 -foreground #000000
+    $term tag configure fg0 -foreground black
+    $term tag configure fg1 -foreground #800000
+    $term tag configure fg2 -foreground #008000
+    $term tag configure fg3 -foreground #808000
+    $term tag configure fg4 -foreground #000080
+    $term tag configure fg5 -foreground #800080
+    $term tag configure fg6 -foreground #008080
+    $term tag configure fg7 -foreground #C0C0C0
+    $term tag configure fg8 -foreground #808080
+    $term tag configure fg9 -foreground #FF0000
+    $term tag configure fg10 -foreground #00FF00
+    $term tag configure fg11 -foreground #FFFF00
+    $term tag configure fg12 -foreground #0000FF
+    $term tag configure fg13 -foreground #FF00FF
+    $term tag configure fg14 -foreground #00FFFF
+#    $term tag configure fg15 -foreground #FFFFFF
+    $term tag configure fg15 -foreground white
+    
+#    $term tag configure bg0 -background #000000
+    $term tag configure bg0 -background black
+    $term tag configure bg1 -background #800000
+    $term tag configure bg2 -background #008000
+    $term tag configure bg3 -background #808000
+    $term tag configure bg4 -background #000080
+    $term tag configure bg5 -background #800080
+    $term tag configure bg6 -background #008080
+    $term tag configure bg7 -background #C0C0C0
+    $term tag configure bg8 -background #808080
+    $term tag configure bg9 -background #FF0000
+    $term tag configure bg10 -background #00FF00
+    $term tag configure bg11 -background #FFFF00
+    $term tag configure bg12 -background #0000FF
+    $term tag configure bg13 -background #FF00FF
+    $term tag configure bg14 -background #00FFFF
+#    $term tag configure bg15 -background #FFFFFF
+    $term tag configure bg15 -background white
+
+    term_reset_graphics
+    
     term_timer
+}
+
+proc term_active_tags {} {
+    variable term_standout
+    variable term_strikethru
+    variable term_underline
+    variable term_isblink
+    variable term_bold
+    variable term_fgcolor
+    variable term_bgcolor
+
+    set tag_list {}
+    
+    if {$term_underline} {
+	lappend tag_list "underline"
+    }
+    if {$term_strikethru} {
+	lappend tag_list "strikethru"
+    }
+    if {$term_isblink} {
+	lappend tag_list "blink"
+    }
+    if {$term_standout} {
+	lappend tag_list "fg$term_bgcolor"
+	lappend tag_list "bg$term_fgcolor"
+    } else {
+	lappend tag_list "fg$term_fgcolor"
+	lappend tag_list "bg$term_bgcolor"
+    }
+    return $tag_list
 }
 
 proc term_clear {} {
     variable term
 
+    term_reset_graphics
     $term delete 1.0 end
     term_init
 }
@@ -229,16 +320,17 @@ proc term_clear_to_eos {} {
     # save current col/row
     set col $cur_col
     set row $cur_row
-
+    set tag_list [term_active_tags]
+    
     # clear rest of this line
     set space_rem_on_line [expr {$cols - $cur_col}]
-    term_insert [format %[set space_rem_on_line]s ""]
+    term_insert [format %[set space_rem_on_line]s ""] $tag_list
 
     # now clear remaining rows
     set blankline [format %*s $cols ""]\n
     for {set i [expr {$cur_row + 1}]} {$i <= $cols} {incr i} {
 	$term delete $i.0 $i.end
-	$term insert $i.0 $blankline
+	$term insert $i.0 $blankline $tag_list
     }
 }
 
@@ -251,10 +343,13 @@ proc term_init {} {
     variable term
     variable rowsDumb
 
+    term_reset_graphics
+    set tag_list [term_active_tags]
+    
     # initialize it with blanks to make insertions later more easily
     set blankline [format %*s $cols ""]\n
     for {set i 1} {$i <= $rows} {incr i} {
-	$term insert $i.0 $blankline
+	$term insert $i.0 $blankline $tag_list
     }
 
     set cur_row 1
@@ -275,10 +370,11 @@ proc term_resize {rowsNew colsNew} {
     variable cols
     variable term
 
+    set tag_list [term_active_tags]
     foreach {set r 1} {$r < $rows} {incr r} {
 	if {$colsNew > $cols} {
 	    # add columns
-	    $term insert $i.$column $blanks
+	    $term insert $i.$column $blanks $tag_list
 	} elseif {$colsNew < $cols} {
 	    # remove columns
 	    # ?
@@ -302,6 +398,7 @@ proc term_down {} {
     if {$cur_row < $rows} {
 	incr cur_row
     } else {
+	set tag_list [term_active_tags]
 	if {[graphicsGet]} {
 	    # in graphics mode
 
@@ -309,7 +406,7 @@ proc term_down {} {
 	    $term delete 1.0 "1.end + 1 chars"
 
 	    # recreate line at end
-	    $term insert end [format %*s $cols ""]\n
+	    $term insert end [format %*s $cols ""]\n $tag_list
 	} else {
 	    # in dumb mode
 	    incr cur_row
@@ -318,7 +415,7 @@ proc term_down {} {
 		set rowsDumb $cur_row
 	    }
 
-	    $term insert $cur_row.0 [format %*s $cols ""]\n
+	    $term insert $cur_row.0 [format %*s $cols ""]\n $tag_list
 	    $term see $cur_row.0
 	}
     }
@@ -351,24 +448,16 @@ proc term_insert {s} {
     variable term_strikethru
     variable term_underline
     variable term_isblink
-    
-    set tag_list {}
+    variable term_bold
+    variable term_fgcolor
+    variable term_bgcolor
+
+    set tag_list [term_active_tags]
     
     set chars_rem_to_write [string length $s]
     set space_rem_on_line [expr {$cols - $cur_col}]
 
-    if {$term_standout} {
-	lappend tag_list "standout"
-    }
-    if {$term_underline} {
-	lappend tag_list "underline"
-    }
-    if {$term_strikethru} {
-	lappend tag_list "strikethru"
-    }
-    if {$term_isblink} {
-	lappend tag_list "blink"
-    }
+    # puts $tag_list
     
     ##################
     # write first line
@@ -525,6 +614,9 @@ proc process_ansi_csi { args cmd } {
     variable term_strikethru
     variable term_underline
     variable term_isblink
+    variable term_bold
+    variable term_fgcolor
+    variable term_bgcolor
     
     switch $cmd {
 	"A" {
@@ -592,10 +684,11 @@ proc process_ansi_csi { args cmd } {
 		set n [lindex $sgr_args 0]
 		set sgr_args [lrange $sgr_args 1 end]
 		if { $n == 0 } {
-		    set term_standout 0
-		    set term_strikethru 0
-		    set term_underline 0
-		    set term_isblink 0
+		    term_reset_graphics
+		} elseif { $n == 1 } {
+		    set term_bold 1
+		} elseif { $n == 2 } {
+		    set term_bold 0
 		} elseif { $n == 4 } {
 		    set term_underline 1
 		} elseif { $n == 5 } {
@@ -604,6 +697,8 @@ proc process_ansi_csi { args cmd } {
 		    set term_standout 1
 		} elseif { $n == 9 } {
 		    set term_strikethru 1
+		} elseif { $n == 22 } {
+		    set term_bold 0
 		} elseif { $n == 24 } {
 		    set term_underline 0
 		} elseif { $n == 25 } {
@@ -612,6 +707,13 @@ proc process_ansi_csi { args cmd } {
 		    set term_standout 0
 		} elseif { $n == 29 } {
 		    set term_strikethru 0
+		} elseif { ($n >= 30) && ($n <= 37) } {
+		    set term_fgcolor [expr $n - 30]
+		    if { $term_bold } {
+			set term_fgcolor [expr $term_fgcolor + 8]
+		    }
+		} elseif { ($n >= 40) && ($n <= 47) } {
+		    set term_bgcolor [expr $n - 40]
 		}
 	    }
 	}
