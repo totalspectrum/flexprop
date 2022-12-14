@@ -1032,11 +1032,9 @@ proc term_timer {} {
 	if { $term_blink_on } {
 	    set term_blink_on 0
 	    $term tag configure blink -foreground black
-	    puts "blink on"
 	} else {
 	    set term_blink_on 1
 	    $term tag configure blink -foreground white
-	    puts "blink off"
 	}
 	after 1000 ::TkTerm::term_timer
 	update idle
