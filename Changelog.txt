@@ -1,7 +1,7 @@
 Version 5.9.22
 
-- Make the built in terminal use the runtime character set encoding
-  set specified in Options
+- Make the built in terminal use the runtime character set encoding set specified in Options
+- Expanded the ANSI control code support to include color and some effects
 
 Version 5.9.20
 
