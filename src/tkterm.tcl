@@ -123,8 +123,12 @@ set term_strikethru 0   ;# if in strikethrough mode or not
 set term_underline 0    ;# if in underline mode or not
 set term_isblink   0    ;# if in blink mode or not
 set term_bold      0
-set term_fgcolor   0
-set term_bgcolor   15
+
+set default_fgcolor 0
+set default_bgcolor 15
+
+set term_fgcolor $default_fgcolor
+set term_bgcolor $default_bgcolor
 
 proc graphicsGet {} {
     variable graphics
@@ -158,14 +162,16 @@ proc term_reset_graphics {} {
     variable term_bold
     variable term_fgcolor
     variable term_bgcolor
-
+    variable default_fgcolor
+    variable default_bgcolor
+    
     set term_standout 0	;# if in standout mode or not
     set term_strikethru 0   ;# if in strikethrough mode or not
     set term_underline 0    ;# if in underline mode or not
     set term_isblink   0    ;# if in blink mode or not
     set term_bold      0
-    set term_fgcolor   0
-    set term_bgcolor   15
+    set term_fgcolor   $default_fgcolor
+    set term_bgcolor   $default_bgcolor
     set term_blink_on 1
 }
 
@@ -617,6 +623,8 @@ proc process_ansi_csi { args cmd } {
     variable term_bold
     variable term_fgcolor
     variable term_bgcolor
+    variable default_fgcolor
+    variable default_bgcolor
     
     switch $cmd {
 	"A" {
@@ -712,8 +720,12 @@ proc process_ansi_csi { args cmd } {
 		    if { $term_bold } {
 			set term_fgcolor [expr $term_fgcolor + 8]
 		    }
+		} elseif { $n == 39 } {
+		    set term_fgcolor $default_fgcolor
 		} elseif { ($n >= 40) && ($n <= 47) } {
 		    set term_bgcolor [expr $n - 40]
+		} elseif { $n == 49 } {
+		    set term_bgcolor $default_bgcolor
 		}
 	    }
 	}
@@ -1134,7 +1146,7 @@ proc term_timer {} {
     variable toplev
     variable term
     variable term_blink_on
-
+    
     if { [winfo exists $toplev] } {
 	if { $term_blink_on } {
 	    set term_blink_on 0
