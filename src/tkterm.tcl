@@ -195,6 +195,8 @@ proc term_create {} {
     text $term \
 	-yscroll "$sb set" \
 	-relief sunken -bd 1 -width $cols -height $rows -wrap none -setgrid 1 \
+	-exportselection 1 \
+	-selectforeground white -selectbackground blue \
 	-font InternalTermFont -foreground black -background white
 
     # bind right mouse click to popup menu
@@ -254,8 +256,14 @@ proc term_create {} {
 #    $term tag configure bg15 -background #FFFFFF
     $term tag configure bg15 -background white
 
+
+    # after all tag configuration, make sure the selection tag is highest priority
+    $term tag raise sel
+
+    # reset graphics config
     term_reset_graphics
-    
+
+    # start timer for blinking text
     term_timer
 }
 
@@ -1146,7 +1154,7 @@ proc term_timer {} {
     variable toplev
     variable term
     variable term_blink_on
-    
+
     if { [winfo exists $toplev] } {
 	if { $term_blink_on } {
 	    set term_blink_on 0
