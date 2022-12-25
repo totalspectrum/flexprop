@@ -338,7 +338,7 @@ proc term_clear_to_eos {} {
     
     # clear rest of this line
     set space_rem_on_line [expr {$cols - $cur_col}]
-    term_insert [format %[set space_rem_on_line]s ""] $tag_list
+    term_insert [format %[set space_rem_on_line]s ""]
 
     # now clear remaining rows
     set blankline [format %*s $cols ""]\n
