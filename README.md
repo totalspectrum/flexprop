@@ -89,9 +89,9 @@ At the moment you'll have to build from source on Linux. Instructions are given 
 
 ### Linux
 
-#### Ubuntu
+#### Ubuntu (and other Debian based Linuxes, such as Mint)
 
-Here are complete steps for building from scratch on a generic Ubuntu based platform. Note that the first few steps (setting up a directory for the source code) may be tweaked to suit your wishes. Also note that the steps involving `texlive-latex-recommended` and `pandoc` are only required for formatting the documentation; if you only want the binaries you may skip these.
+Here are complete steps for building from scratch on a generic Debian based platform such as Ubuntu. Note that the first few steps (setting up a directory for the source code) may be tweaked to suit your wishes. Also note that the steps involving `texlive-latex-recommended` and `pandoc` are only required for formatting the documentation; if you only want the binaries you may skip these.
 ```
 cd $HOME
 mkdir -p src
