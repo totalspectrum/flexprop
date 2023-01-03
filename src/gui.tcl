@@ -1623,6 +1623,8 @@ menu .mbar.options.charset
 .mbar.run add command -label "Compile and flash" -accelerator "$CTRL_PREFIX-E" -command { doCompileFlash }
 .mbar.run add command -label "Flash binary file..." -command { doLoadFlash }
 .mbar.run add separator
+.mbar.run add command -label "Create zip archive" -command { doCreateZip }
+.mbar.run add separator
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
 .mbar.run add command -label "Choose P2 flash program..." -command { pickFlashProgram }
 
@@ -1932,7 +1934,7 @@ proc get_includepath {} {
 }
 
 # translate % escapes in our command line strings
-proc mapPercent {str} {
+proc mapPercentEx {str extraOpts} {
     global filenames
     global BINFILE
     global ROOTDIR
@@ -1967,8 +1969,12 @@ proc mapPercent {str} {
 	set ourfixed ""
     }
     
-#    set fulloptions "$OPT $ourwarn $COMPRESS"
-    set fulloptions "$OPT $ourwarn $ourdebug $ourfixed $ourcharset"
+    #    set fulloptions "$OPT $ourwarn $COMPRESS"
+    if { "$extraOpts" ne "" } {
+	set fulloptions "$extraOpts"
+    } else {
+	set fulloptions "$OPT $ourwarn $ourdebug $ourfixed $ourcharset"
+    }
     if { $COMPORT ne " " } {
 	set fullcomport "$COMPORT"
     } else {
@@ -1983,6 +1989,10 @@ proc mapPercent {str} {
     set percentmap [ list "%%" "%" "%#" $runprefix "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%F" $config(flashprogram) "%r" $config(baud) "%t" $config(tabwidth)]
     set result [string map $percentmap $str]
     return $result
+}
+
+proc mapPercent {str} {
+    return [mapPercentEx "$str" ""]
 }
 
 ### utility: make a window read only
@@ -2078,6 +2088,50 @@ proc doCompile {} {
     }
     return $status
 }
+
+### utility: create a Zip file
+
+proc doCreateZip {} {
+    global config
+    global BINFILE
+    global filenames
+    
+    set status 0
+    clearAllSearchTags
+    saveFilesForCompile
+    set cmdstr [mapPercentEx $config(compilecmd) "--zip"]
+    set runcmd [list exec -ignorestderr]
+    set runcmd [concat $runcmd $cmdstr]
+    lappend runcmd 2>@1
+    if {[catch $runcmd errout options]} {
+	set status 1
+    }
+    .p.bot.txt replace 1.0 end "$cmdstr\n"
+    .p.bot.txt insert 2.0 $errout
+    .p.bot.txt insert end "\nFinished at "
+    set now [clock seconds]
+    .p.bot.txt insert end [clock format $now -format %c]
+##    .p.bot.txt insert end " on [info hostname]"
+    tagerrors .p.bot.txt
+    if { $status != 0 } {
+	if { [fileNotFoundErrors .p.bot.txt] } {
+	    tk_messageBox -icon error -type ok -message "Compilation failed" -detail "Some files were not found. Check your library directory."
+	} else {
+	    tk_messageBox -icon error -type ok -message "Compilation failed" -detail "See compiler output window for details."
+	}
+	set BINFILE ""
+    } else {
+	set BINFILE [file rootname $filenames([.p.nb select])]
+	set BINFILE "$BINFILE.binary"
+	# load the listing if a listing window is open
+	if {[winfo exists .list]} {
+	    doListing
+	}
+    }
+    return $status
+}
+
+# open a listing file
 
 proc doListing {} {
     global filenames
