@@ -8,11 +8,15 @@
 // specifies which pin it should blink, and how long to wait between
 // blinks. This can be changed "on the fly".
 //
+
+// declare the clock frequency; this is best done *before* including propeller.h
+#define FREQ 180000000
+enum {
+    _clkfreq = FREQ,
+};
+
 #include <stdio.h>
 #include <propeller2.h>
-
-#define FREQ 160000000
-#define MODE 0x010007f8
 
 // the assembly code below is written C style, in an __asm block,
 // rather than Spin style in a __pasm block
@@ -79,10 +83,6 @@ void update_mbox(volatile mailbox *box, int pin, unsigned delay)
 // main program
 void main()
 {
-    // set up CLOCK and serial frequency
-    _clkset(MODE+3, FREQ);
-    _setbaud(230400);
-
     printf("LED test server...");
     // start up our COGS
     int cog1 = _cognew(&entry, &mbox1);
