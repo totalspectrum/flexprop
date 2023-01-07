@@ -78,6 +78,8 @@ void update_mbox(volatile mailbox *box, int pin, unsigned delay)
 // main program
 void main()
 {
+    unsigned int FREQ = _clockfreq();
+    
     printf("LED test server...");
     // start up our COGS
     int cog1 = _cognew(&entry, &mbox1);
