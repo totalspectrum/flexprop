@@ -2,7 +2,7 @@
 '' hello world for Spin
 '' cheats and uses C library
 ''
-OBJ c : "libc.a"
+OBJ c : "libc"
 
 PUB demo
   ' we cannot use \n because the C compiler is what translates that to
