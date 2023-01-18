@@ -1,5 +1,5 @@
 # Simple GUI for Spin
-# Copyright 2018-2022 Total Spectrum Software
+# Copyright 2018-2023 Total Spectrum Software
 # Distributed under the terms of the MIT license;
 # see License.txt for details.
 #
@@ -14,7 +14,7 @@ set DOT_CONFIG ".flexprop.config.1"
 set aboutMsg "
 GUI tool for FlexSpin
 Version $spin2gui_version
-Copyright 2018-2022 Total Spectrum Software Inc.
+Copyright 2018-2023 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
 output will be correct.   
