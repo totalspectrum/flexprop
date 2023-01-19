@@ -1,0 +1,34 @@
+'
+' host_read.spin2
+' example of reading data from a host file in Spin2
+' should print its own source code, with line numbers
+'
+
+CON
+  BUFSIZE = 1024
+
+VAR
+  BYTE buf[BUFSIZE]
+
+' include the C standard library
+OBJ c: "libc"
+
+PUB main() | f, r, n
+  c.mount(@"/host", c._vfs_open_host())
+  f := c.fopen(@"/host/host_read.spin2", @"r")
+  if f == 0
+    c.perror(@"fopen")
+    return
+  n := 1
+  c.puts(@"--- file data:")
+  repeat
+    r := c.fgets(@buf, BUFSIZE, f)
+    if r <= 0
+      c.puts(@"--- EOF")
+      quit
+    c.printf(@"%04d: %s", r, n++, @buf)
+  c.fclose(f)
+  c.puts(@"--- all done")
+  c.sleep(1)
+  
+  
