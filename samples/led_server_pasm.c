@@ -13,6 +13,10 @@
 #include <stdio.h>
 #include <propeller2.h>
 
+//
+// Here is the block of code that will be loaded into the
+// helper COG (using _cognew). The code starts at &entry.
+//
 // the assembly code below is written Spin style, in a __pasm block,
 // rather than C style in a __asm block
 
@@ -82,6 +86,10 @@ void main()
     
     printf("LED test server...");
     // start up our COGS
+    // first parameter is the code to launch (the PASM code written
+    //   above, starting at `entry`
+    // second parameter is the pointer to information passed to the
+    //   COG, in this case our mailbox
     int cog1 = _cognew(&entry, &mbox1);
     int cog2 = _cognew(&entry, &mbox2);
     printf("started cogs %d and %d\n", cog1, cog2);
