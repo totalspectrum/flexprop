@@ -20,22 +20,6 @@ There is no warranty and no guarantee that
 output will be correct.   
 "
 
-# warnings about experimental features
-set bcversion 1
-set bcMsg "
-ROM bytecode is designed for Spin 1 only. \
-Some features in other languages are unimplemented and/or may not \
-work properly.
-"
-
-# warnings about experimental features
-set nuversion 1
-set nuMsg "
-P2 bytecode is still under heavy development. \
-Performance (both size/speed) is not in final state yet. \
-Some features may be unimplemented or not work properly.
-"
-
 # some Tcl/Tk config
 # make sure tcl_wordchars is set
 catch {tcl_endOfWord}
@@ -145,13 +129,6 @@ set config(autoindent) 1
 #set savedips [ list [list "localhost" "127.0.0.1" ] ]
 set config(savedips) [ list ]
 
-# we provide some warnings to the user about experimental features
-# start the version off at 0, and provide a popup when we find the
-# current note version is > the version
-
-set config(note_nuversion) 1
-set config(note_bcversion) 0
-
 #
 # filenames($w) gives the file name in window $w, for all of the various tabs
 # filetimes($w) gives the last modified time for that file
@@ -189,18 +166,12 @@ proc setShadowP1BytecodeDefaults {} {
     global ROOTDIR
     global EXE
     global config
-    global bcversion
-    global bcMsg
 
     # set up normal defaults
     setShadowP1Defaults
 
     # override compile command
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --interp=rom --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
-    if { $config(note_bcversion) != $bcversion } {
-	set config(note_bcversion) $bcversion
-	tk_messageBox -icon warning -type ok -message $bcMsg
-    }
 }
 proc setShadowP2Defaults {} {
     global shadow
@@ -230,19 +201,12 @@ proc setShadowP2NuDefaults {} {
     global shadow
     global ROOTDIR
     global EXE
-    global nuversion
-    global nuMsg
 
     # set up regular defaults
     setShadowP2Defaults
 
     # and adjust for nucode compilation
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2nu -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-
-    if { $config(note_nuversion) != $nuversion } {
-	set config(note_nuversion) $nuversion
-	tk_messageBox -icon warning -type ok -message $nuMsg
-    }
 }
 proc copyShadowToConfig {} {
     global config
