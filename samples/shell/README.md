@@ -2,7 +2,7 @@
 
 ## Description
 
-This is a simple C program to allow copying of files between host and SD card.
+This is a simple C program to allow copying of files between host and SD card or flash.
 
 The commands available may be shown by typing "help" at the prompt. They are:
 ```
@@ -17,15 +17,20 @@ help          :  show this help
 mkdir <d>     :  create new directory <d>
 rmdir <d>     :  remove directory <d>
 type  <f>     :  show file <f> on the terminal
+mount <d>     :  mount flash (d=/flash) or SD card (d=/sd)
+unmount <d>   :  unmount flash or SD
+mkfs /flash   :  format flash with little fs
 ```
 
-The SD card (if found) is mounted as "/sd", and the host file system mounted as "/host".
+
+The host file system is automatically mounted as `/host`. The user may then choose to mount either the FAT formatted SD card (as `/sd`) or the littlefs formatted flash drive (as `/flash`. Only 6 MB of the flash, starting at the 2 MB mark, is used for the file system, the rest is free for other uses (such as storing boot code). If the flash is not properly formatted it will automatically be formatted on mount.
 
 Communication with the host PC is done using the 9P file system protocol, running over the serial line. This is set to the default baud rate of 230400, which is rather slow.
 
 ### Example: copying a file from host to SD
 
 ```
+mount /sd
 copy /host/myfile.txt /sd/myfile.txt
 dir /sd
 ```
@@ -36,6 +41,7 @@ After the "dir /sd" command you should see MYFILE.TXT on the SD card (the FAT fi
 
 In this example "log.txt" is copied from the SD card directory "logs" to the host, and renamed as "log-current.txt"
 ```
+mount /sd
 copy /sd/logs/log.txt /host/log-current.txt
 ```
 
@@ -45,7 +51,6 @@ No wildcards are supported (so "copy *.txt /sd" will not work).
 
 Only one file at a time may be copied.
 
-There's no way to see the contents of the fake "root" directory /.
 
 ## Parts Used
 

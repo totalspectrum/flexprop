@@ -2,7 +2,7 @@
 // A very simple command line shell for the P2
 // useful for copying files between host and SD card,
 // for example.
-// Copyright 2021 Total Spectrum Software Inc.
+// Copyright 2021-2023 Total Spectrum Software Inc.
 // MIT Licensed, see LICENSE.txt for details.
 //
 #include <stdio.h>
@@ -58,6 +58,7 @@ void do_dir(const char *filename)
     }
     if ( 0 == (d = opendir(filename)) ) {
         printf("ERROR: unable to read directory %s\n", filename);
+        perror(filename);
         return;
     }
     getcwd(tempdir, sizeof(tempdir));
@@ -93,6 +94,7 @@ void do_copy(const char *src, const char *dest)
     const char *basename;
     FILE *inf, *outf;
     int c;
+    int count = 0;
     
     if (is_directory(src)) {
         printf("Cannot copy whole directories yet\n");
@@ -130,21 +132,42 @@ void do_copy(const char *src, const char *dest)
         c = fgetc(inf);
         if (c < 0) break;
         fputc(c, outf);
+        count++;
     }
     
     fclose(inf);
-    if (dest) fclose(outf);
+    if (dest) {
+        fclose(outf);
+        printf("copied %d bytes\n", count);
+    }
 }
 
-// mount SD
+// format FLASH
+void do_mkfs(const char *dirname)
+{
+    int r = 0;
+    if ( strcmp(dirname, "/flash") == 0 ) {
+        r = _mkfs_littlefs_flash(0);
+    } else {
+        printf("Unknown mount point %s\n", dirname);
+    }
+    if (r != 0) {
+        printf("ERROR: got error %d during mount\n", r);
+        perror(dirname);
+    }
+}
+
+// mount SD or FLASH
 void do_mount(const char *dirname)
 {
-    int r;
-//    if ( strcmp(dirname, "/sd") != 0 ) {
-//        printf("ERROR: only /sd may be mounted (not %s)\n", dirname);
-//        return;
-//    }
-    r = mount(dirname, _vfs_open_sdcard());
+    int r = 0;
+    if ( strcmp(dirname, "/sd") == 0 ) {
+        r = mount(dirname, _vfs_open_sdcard());
+    } else if ( strcmp(dirname, "/flash") == 0 ) {
+        r = mount(dirname, _vfs_open_littlefs_flash());
+    } else {
+        printf("Unknown mount point %s\n", dirname);
+    }
     if (r != 0) {
         printf("ERROR: got error %d during mount\n", r);
     }
@@ -174,8 +197,9 @@ void do_help(void)
     printf("mkdir <d>     :  create new directory d\n");
     printf("rmdir <d>     :  remove directory d\n");
     printf("type <f>      :  type file on console\n");
-    printf("umount /sd    :  unmount SD card\n");
-    printf("mount  /sd    :  remount SD card\n");
+    printf("mount  <d>    :  mount SD card (/sd) or LFS flash (/flash)\n");
+    printf("umount <d>    :  unmount SD card (/sd) or LFS flash (/flash)\n");
+    printf("mkfs /flash   :  format flash with little fs\n");
 }
 
 // parse a command line into the command and up to 2 optional arguments
@@ -229,18 +253,19 @@ void main()
     int r;
     
     // initialize the file systems
+#if 0    
     r = mount("/sd", _vfs_open_sdcard());
     if (r == 0) {
         printf("mounted SD card as /sd\n");
     }
-
+#endif
     // start off on the host side
     r = mount("/host", _vfs_open_host());
     if (r == 0) {
         printf("mounted host file system as /host\n");
         chdir("/host");
     } else {
-        chdir("/sd");
+        chdir("/");
     }
 
     for(;;) {
@@ -286,10 +311,12 @@ void main()
             if (r) perror(arg1);
         } else if (!strcmp(cmd, "type") || !strcmp(cmd, "cat")) {
             do_copy(arg1, NULL);  // print to stdout
+        } else if (!strcmp(cmd, "mkfs")) {
+            do_mkfs(arg1);       // format flash
         } else if (!strcmp(cmd, "mount")) {
-            do_mount(arg1);  // print to stdout
+            do_mount(arg1);      // mount drive/flash
         } else if (!strcmp(cmd, "umount") || !strcmp(cmd, "unmount")) {
-            do_umount(arg1);  // print to stdout
+            do_umount(arg1);  // unmount drive/flash
         } else {
             printf("Unknown command: %s\n", cmd);
             do_help();
