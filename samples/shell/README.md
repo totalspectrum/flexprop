@@ -51,7 +51,7 @@ No wildcards are supported (so "copy *.txt /sd" will not work).
 
 Only one file at a time may be copied.
 
-Flash and SD may not be mounted at the same time. In fact at present mounting flash is impossible after SD has ever been mounted; it may be possible to relax this a bit, but the two file systems use the same pins so cannot be used simultaneously.
+Flash and SD may not be mounted at the same time.
 
 ## Parts Used
 
