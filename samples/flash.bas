@@ -7,16 +7,14 @@
 #error "This demo requires a P2"
 #endif
 
-const HEAPSIZE=32768
-
 ' flash configuration
 ' this is the default config, but change it if you want
-dim shared as ulong(9) flashcfg = { _
-  256,       /' page size for writes '/ _
-  65536,     /' block size for erases '/ _
-  2*1024*1024, /' starting address (must be a multiple of erase block size) '/ _
-  6*1024*1024, /' size of file system (must be a multiple of erase block size) '/ _
-  0, 0, 0, 0 /' reserved '/ _
+dim shared as ulong(9) flashcfg = {
+  256,          ' page size for writes
+  65536,        ' block size for erases
+  2*1024*1024,  ' starting address (must be a multiple of erase block size)
+  6*1024*1024,  ' size of file system (must be a multiple of erase block size)
+  0, 0, 0, 0    ' reserved
 }
 
 dim as integer choice
