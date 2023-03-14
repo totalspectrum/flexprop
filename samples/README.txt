@@ -13,6 +13,7 @@ cdemo.c:        C program to blink a pin and print a message on the terminal
 c_time.c:       C program to illustrate settimeofday/gettimeofday
 fibo.bas:       Recursive Fibonacci in BASIC
 fibo.spin:      Recursive Fibonacci in Spin
+flash.bas:      Example of programming LittleFS flash file from BASIC
 hello.spin:     Print "Hello world" on the terminal
 host_write.spin2:  Writes data to the host file system from Spin2  
 interact_pin.bas:  Interactive pin setter, in BASIC
