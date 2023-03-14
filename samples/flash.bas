@@ -15,7 +15,7 @@ const AUTO_FORMAT_YES = 1   ' format flash if necessary
 ' this is the default config used by C (6MB starting at offset 2MB),
 ' change it if you want
 
-dim shared as ulong(9) flashcfg = {
+dim shared as ulong(8) flashcfg = {
   256,          ' page size for writes
   65536,        ' block size for erases
   2*1024*1024,  ' starting address (must be a multiple of erase block size)
