@@ -39,7 +39,7 @@ pub start
 pub stop
     if cognum
         cogstop(cognum-1)
-	cognum := 0
+        cognum := 0
 
 ' utility function; find the next valid index
 ' in the buffer
