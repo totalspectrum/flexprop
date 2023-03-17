@@ -1,3 +1,8 @@
+Version 6.0.0
+
+- Changed the shell example to allow mounting of flash or SD
+- Disabled warnings about bytecode
+
 Version 5.9.24
 
 - Added option to create zip archive
