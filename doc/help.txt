@@ -8,6 +8,10 @@ Menus
 
 The File menu should be pretty self explanatory. You can create a new file in a new tab with "New File" or open an existing file with "Open Spin file...". If you use "Open file..." with the current tab holding an empty, unmodified new file, the file will be opened in that tab, otherwise it will be opened in a new tab.
 
+"Save File" and "Save File As..." do pretty much what one would expect.
+
+"New Project..." creates a new, empty project; see the section below on how projects work. "Create Project From Files..." creates a new project from a set of existing files, selected by the user.
+
 The default configuration always creates a listing file (.lst), which you can load into a window by selecting "Open Listing File" under the File menu. If the listing file window is open it will automatically be updated on every recompile.
 
 The "Library directories..." entry allows you to pick a directories that will be searched for OBJ declarations and include files automatically.  The directories are searched in the order in which they are listed.
@@ -129,3 +133,10 @@ Settings for flexprop are saved in a file called `.flexprop6.config`. This is se
 (3) If no HOME environment variable is found, the directory where `flexprop.exe` is installed is used as the home for `.flexprop6.config`.
 
 If something gets really messed up, deleting the `.flexprop6.config` file will restore flexprop to its default state.
+
+Project Files
+-------------
+
+Project files have an extension of `.fpide` or `.side`. They consist of a list of files, one per line, followed by definitions on lines starting with `>`. Any lines starting with a `#` are ignored as comments. These are regular text files, and may be edited like normal. One interesting feature is that if you add a file name to a `.fpide` project file and then click on the link leading to that name, the file will be created if it does not already exist.
+
+When a project is opened, then the "Compile" and "Compile & Run" commands will work on that project file, regardless of which tab is selected. When the tab containing the project file is closed, the behavior will revert to the usual one of compiling the currently selected tab.

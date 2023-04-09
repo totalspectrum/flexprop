@@ -1,3 +1,7 @@
+Version 6.1.0
+
+- Added a basic kind of support for project files.
+
 Version 6.0.0
 
 - Changed the shell example to allow mounting of flash or SD
