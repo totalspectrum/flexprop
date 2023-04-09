@@ -2,6 +2,40 @@
 # code for creating project (.fpide) files
 #
 
+# test for file types
+proc is_c_file {name} {
+    if { [string match -nocase "*.\[ch\]" $name] } {
+	return 1
+    }
+    if { [string match -nocase "*.cc" $name] } {
+	return 1
+    }
+    if { [string match -nocase "*.\[ch\]pp" $name] } {
+	return 1
+    }
+    return 0
+}
+
+proc is_proj_file {name} {
+    if { [string match -nocase "*.fpide" $name] } {
+	return 1
+    }
+    if { [string match -nocase "*.side" $name] } {
+	return 1
+    }
+    return 0
+}
+
+proc is_basic_file {name} {
+    if { [string match -nocase "*.bas" $name] } {
+	return 1
+    }
+    if { [string match -nocase "*.bi" $name] } {
+	return 1
+    }
+    return 0
+}
+
 proc do_proj_cancel {} {
     global newprj_name
     set newprj_name ""
@@ -54,12 +88,9 @@ set project_msg "#
 # it has a list of files, one per line
 # followed by a list of definitions prefixed by >
 # change the file names or add more as appropriate
-#
-\$fileroot.c
->-DPROJNAME=\"\$fileroot\"
-"
+#"
 
-proc createNewProject {} {
+proc createNewProject {existingFiles} {
     global filenames
     global BINFILE
     global SpinTypes
@@ -69,13 +100,13 @@ proc createNewProject {} {
     
     set initdir $config(lastdir)
     set initfilename ""
-
+    
 #    set initdir [tk_chooseDirectory -initialdir $initdir -title "Choose directory for project"]
 #    if { "$initdir" eq "" } {
 #	return
     #    }
     set file_filtervar "Project files"
-    set filename [tk_getSaveFile -filetypes $SpinTypes -defaultextension ".fpide" -initialdir $initdir -initialfile $initfilename -title "New Project" -typevariable file_filtervar]
+    set filename [tk_getSaveFile -filetypes $SpinTypes -defaultextension ".fpide" -initialdir $initdir -initialfile $initfilename -title "New Project File" -typevariable file_filtervar]
 
     if { "$filename" eq "" } {
 	return
@@ -85,28 +116,22 @@ proc createNewProject {} {
     set fileroot [file rootname $filename]
     set BINFILE ""
 
-    set w [newTabName]
-    setupFramedText $w
-    setHighlightingForFile $w.txt $filename
-    setfont $w.txt $config(font)
+    if { $existingFiles } {
+	set fileList [tk_getOpenFile -filetypes $SpinTypes -initialdir $config(lastdir) -title "Select files to include" -multiple true]
+	if { "$fileList" eq "" } {
+	    return
+	}
+    } else {
+	set fileList [concat "$fileroot.c" ">-DPROJNAME=\"$fileroot\""]
+    }
 
-    .p.nb add $w
-    .p.nb tab $w -text [file tail $filename]
-    .p.nb select $w
-    
-    set filenames($w) $filename
+    # write new data to the file
+    set fp [open $filename w]
+    puts $fp $project_msg
+    foreach i $fileList {
+	puts $fp $i
+    }
+    close $fp
 
-    set ourmap [ list "\$fileroot" "$fileroot" ]
-    set msg [string map $ourmap $project_msg]
-    $w.txt insert end $msg
-    saveCurFile
-}
-
-
-proc doNewProject {} {
-    createNewProject
-}
-
-proc addFilesToProject {} {
-    
+    loadSourceFile "$filename" 0
 }

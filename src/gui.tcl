@@ -120,6 +120,7 @@ set DEBUG_OPT "-gnone"
 set CHARSET "utf8"
 set PROP_VERSION ""
 set OPENFILES ""
+set curProj ""
 set config(showlinenumbers) 1
 set config(savesession) 1
 set config(syntaxhighlight) 1
@@ -471,9 +472,14 @@ proc updateOpenFiles { } {
 # close tab
 proc closeTab { } {
     global filenames
+    global curProj
+    
     set w [.p.nb select]
     if { $w ne "" } {
 	checkChanges $w
+	if { "$filenames($w)" eq "$curProj" } {
+	    set curProj ""
+	}
 	set filenames($w) ""
 	.p.nb forget $w
 	destroy $w
@@ -840,7 +846,8 @@ proc findFileOnPath { filename startdir } {
 
 proc loadSourceFile { filename doCreate } {
     global filenames
-
+    global curProj
+    
     # sanity check
     if { ![file exists $filename] } {
 	# if the link was clicked from a .fpide file, we want to create the file
@@ -876,6 +883,9 @@ proc loadSourceFile { filename doCreate } {
     
 	loadFileToTab $w $filename ""
     }
+    if { [is_proj_file $filename] } {
+	set curProj "$filename"
+    }
     return $w
 }
 
@@ -883,7 +893,8 @@ proc doOpenFile {} {
     global config
     global SpinTypes
     global BINFILE
-
+    global curProj
+    
     set filename [tk_getOpenFile -filetypes $SpinTypes -defaultextension $config(spinext) -initialdir $config(lastdir) -title "Open File" ]
     if { [string length $filename] == 0 } {
 	return ""
@@ -891,7 +902,7 @@ proc doOpenFile {} {
     set config(lastdir) [file dirname $filename]
     set config(spinext) [file extension $filename]
     set BINFILE ""
-    
+
     return [loadSourceFile "$filename" 0]
 }
 
@@ -1281,18 +1292,13 @@ proc setHighlightingForFile {w fname} {
 	$w tag delete $t
     }
     ctext::disableComments $w
-    if { $ext eq ".fpide" } {
-	setHighlightingSide $w
-    } elseif { $ext eq ".side" } {
+    if { [is_proj_file $fname] } {
 	setHighlightingSide $w
     } elseif { $config(syntaxhighlight) } {
-	set check1 [lsearch -exact {".c" ".cpp" ".cc" ".h" ".hpp" ".C" ".H"} $ext]
-	#puts "fname=$fname ext=$ext check1 = $check1"
-	if { $check1 >= 0 } {
+	if { [is_c_file $fname] } {
 	    setSyntaxHighlightingC $w
 	} else {
-	    set check1 [lsearch -exact {".bas" ".bi" ".BAS" ".Bas"} $ext]
-	    if { $check1 >= 0 } {
+	    if { [is_basic_file $fname] } {
 		setSyntaxHighlightingBasic $w
 	    } else {
 		setSyntaxHighlightingSpin $w
@@ -1545,7 +1551,8 @@ menu .mbar.help -tearoff 0
 .mbar.file add command -label "Save File" -accelerator "$CTRL_PREFIX-S" -command { saveCurFile }
 .mbar.file add command -label "Save File As..." -command { saveFileAs [.p.nb select] }
 .mbar.file add separator
-.mbar.file add command -label "New Project..." -command { doNewProject }
+.mbar.file add command -label "New Project..." -command { createNewProject 0 }
+.mbar.file add command -label "Create Project From Files..." -command { createNewProject 1 }
 .mbar.file add separator
 .mbar.file add command -label "Open listing file" -accelerator "$CTRL_PREFIX-L" -command { doListing }
 .mbar.file add separator
@@ -1939,7 +1946,8 @@ proc mapPercentEx {str extraOpts} {
     global COMPORT
     global WINPREFIX
     global config
-
+    global curProj
+    
     set ourwarn $WARNFLAGS
     set ourdebug $DEBUG_OPT
     set ourfixed $FIXEDREAL
@@ -1973,7 +1981,9 @@ proc mapPercentEx {str extraOpts} {
 	set fullcomport ""
     }
     set bindir [file dirname $BINFILE]
-    if { [.p.nb select] ne "" } {
+    if { "$curProj" ne "" } {
+	set srcfile "$curProj"
+    } elseif { [.p.nb select] ne "" } {
 	set srcfile $filenames([.p.nb select])
     } else {
 	set srcfile "undefined"
