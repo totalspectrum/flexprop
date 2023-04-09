@@ -149,6 +149,17 @@ proc getWindowFile { w } {
     return ""
 }
 
+# return the current file name to use for output and building
+proc currentFile { } {
+    global filenames
+    global curProj
+
+    if { "$curProj" ne "" } {
+	return $curProj
+    }
+    return $filenames([.p.nb select])
+}
+
 # provide some default settings
 proc setShadowP1Defaults {} {
     global shadow
@@ -1174,7 +1185,7 @@ proc doClickOnError { w coord } {
 	set line [string range $linedata [expr $colonptr + 1] end]
     }
     if { $fname != "" } {
-	set startdir $filenames([.p.nb select])
+	set startdir [currentFile]
 	if { $startdir != "" } {
 	    set startdir [file dirname $startdir]
 	} else {
@@ -1220,7 +1231,7 @@ proc doClickOnLink { w coord } {
     set fname "$linedata"
     set line ""
     if { $fname != "" } {
-	set startdir $filenames([.p.nb select])
+	set startdir [currentFile]
 	if { $startdir != "" } {
 	    set startdir [file dirname $startdir]
 	} else {
@@ -1981,13 +1992,7 @@ proc mapPercentEx {str extraOpts} {
 	set fullcomport ""
     }
     set bindir [file dirname $BINFILE]
-    if { "$curProj" ne "" } {
-	set srcfile "$curProj"
-    } elseif { [.p.nb select] ne "" } {
-	set srcfile $filenames([.p.nb select])
-    } else {
-	set srcfile "undefined"
-    }
+    set srcfile [currentFile]
     set percentmap [ list "%%" "%" "%#" $runprefix "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%F" $config(flashprogram) "%r" $config(baud) "%t" $config(tabwidth)]
     set result [string map $percentmap $str]
     return $result
@@ -2055,6 +2060,7 @@ proc doCompile {} {
     global config
     global BINFILE
     global filenames
+    global curProj
     
     set status 0
     clearAllSearchTags
@@ -2081,7 +2087,7 @@ proc doCompile {} {
 	}
 	set BINFILE ""
     } else {
-	set BINFILE [file rootname $filenames([.p.nb select])]
+	set BINFILE [file rootname [currentFile]]
 	set BINFILE "$BINFILE.binary"
 	# load the listing if a listing window is open
 	if {[winfo exists .list]} {
@@ -2123,7 +2129,7 @@ proc doCreateZip {} {
 	}
 	set BINFILE ""
     } else {
-	set BINFILE [file rootname $filenames([.p.nb select])]
+	set BINFILE [file rootname [currentFile]]
 	set BINFILE "$BINFILE.binary"
 	# load the listing if a listing window is open
 	if {[winfo exists .list]} {
@@ -2139,7 +2145,7 @@ proc doListing {} {
     global filenames
     set w [.p.nb select]
     if { $w ne "" } {
-	set LSTFILE [file rootname $filenames($w)]
+	set LSTFILE [file rootname [currentFile]]
 	set LSTFILE "$LSTFILE.lst"
 	loadListingFile $LSTFILE
 	# makeReadOnly .list.f.txt # too much trouble

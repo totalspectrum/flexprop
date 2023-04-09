@@ -74,15 +74,6 @@ proc do_proj_create {} {
 }
 
 
-proc createNewProjectOld {} {
-    if { [winfo exists .newprj] } {
-	raise .newprj
-    } else {
-	do_proj_create
-	wm title .newprj "New Project"
-    }
-}
-
 set project_msg "#
 # this is a FlexProp project file
 # it has a list of files, one per line
@@ -100,11 +91,18 @@ proc createNewProject {existingFiles} {
     
     set initdir $config(lastdir)
     set initfilename ""
+    set fileList ""
     
-#    set initdir [tk_chooseDirectory -initialdir $initdir -title "Choose directory for project"]
-#    if { "$initdir" eq "" } {
-#	return
-    #    }
+    if { $existingFiles } {
+	set fileList [tk_getOpenFile -filetypes $SpinTypes -initialdir $config(lastdir) -title "Select files to include" -multiple true]
+	if { "$fileList" eq "" } {
+	    return
+	}
+	set firstfile [lindex $fileList 0]
+	set initdir [file dirname $firstfile]
+	set config(spinext) [file extension $firstfile]
+    }
+    
     set file_filtervar "Project files"
     set filename [tk_getSaveFile -filetypes $SpinTypes -defaultextension ".fpide" -initialdir $initdir -initialfile $initfilename -title "New Project File" -typevariable file_filtervar]
 
@@ -112,16 +110,10 @@ proc createNewProject {existingFiles} {
 	return
     }
     set config(lastdir) [file dirname $filename]
-    set config(spinext) [file extension $filename]
     set fileroot [file rootname $filename]
     set BINFILE ""
 
-    if { $existingFiles } {
-	set fileList [tk_getOpenFile -filetypes $SpinTypes -initialdir $config(lastdir) -title "Select files to include" -multiple true]
-	if { "$fileList" eq "" } {
-	    return
-	}
-    } else {
+    if { "$fileList" eq "" } {
 	set fileList [concat "$fileroot.c" ">-DPROJNAME=\"$fileroot\""]
     }
 
