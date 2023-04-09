@@ -40,7 +40,7 @@ proc do_proj_create {} {
 }
 
 
-proc createNewProject {} {
+proc createNewProjectOld {} {
     if { [winfo exists .newprj] } {
 	raise .newprj
     } else {
@@ -49,31 +49,59 @@ proc createNewProject {} {
     }
 }
 
-proc createNewProjectWindow {name} {
+set project_msg "#
+# this is a FlexProp project file
+# it has a list of files, one per line
+# followed by a list of definitions prefixed by >
+# change the file names or add more as appropriate
+#
+\$fileroot.c
+>-DPROJNAME=\"\$fileroot\"
+"
+
+proc createNewProject {} {
     global filenames
+    global BINFILE
+    global SpinTypes
     global config
-    global tabEnterScript
-    global tabLeaveScript
-    global newprj_name
+    global project_msg
+    global file_filtervar
+    
+    set initdir $config(lastdir)
+    set initfilename ""
 
-    set fname "$name.fpide"
+#    set initdir [tk_chooseDirectory -initialdir $initdir -title "Choose directory for project"]
+#    if { "$initdir" eq "" } {
+#	return
+    #    }
+    set file_filtervar "Project files"
+    set filename [tk_getSaveFile -filetypes $SpinTypes -defaultextension ".fpide" -initialdir $initdir -initialfile $initfilename -title "New Project" -typevariable file_filtervar]
+
+    if { "$filename" eq "" } {
+	return
+    }
+    set config(lastdir) [file dirname $filename]
+    set config(spinext) [file extension $filename]
+    set fileroot [file rootname $filename]
+    set BINFILE ""
+
     set w [newTabName]
-    
-    #.p.bot.txt delete 1.0 end
-    set filenames($w) "$fname"
     setupFramedText $w
-    setHighlightingForFile $w.txt "$fname"
+    setHighlightingForFile $w.txt $filename
     setfont $w.txt $config(font)
-    .p.nb add $w
-    .p.nb tab $w -text "$fname"
-    
-    .p.nb select $w
 
-    bind $w <Enter> $tabLeaveScript
-    bind $w <Leave> $tabEnterScript
+    .p.nb add $w
+    .p.nb tab $w -text [file tail $filename]
+    .p.nb select $w
     
-    return $w
+    set filenames($w) $filename
+
+    set ourmap [ list "\$fileroot" "$fileroot" ]
+    set msg [string map $ourmap $project_msg]
+    $w.txt insert end $msg
+    saveCurFile
 }
+
 
 proc doNewProject {} {
     createNewProject

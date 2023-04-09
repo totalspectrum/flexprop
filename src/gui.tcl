@@ -838,13 +838,21 @@ proc findFileOnPath { filename startdir } {
     return $filename
 }
 
-proc loadSourceFile { filename } {
+proc loadSourceFile { filename doCreate } {
     global filenames
 
     # sanity check
     if { ![file exists $filename] } {
-	tk_messageBox -icon error -type ok -message "$filename\nis not found"
-	return
+	# if the link was clicked from a .fpide file, we want to create the file
+	if { $doCreate } {
+	    set ext [file extension $filename]
+	    set fp [open $filename w]
+	    puts $fp ""
+	    close $fp
+	} else {
+	    tk_messageBox -icon error -type ok -message "$filename\nis not found"
+	    return
+	}
     }
     
     # fetch
@@ -884,7 +892,7 @@ proc doOpenFile {} {
     set config(spinext) [file extension $filename]
     set BINFILE ""
     
-    return [loadSourceFile $filename]
+    return [loadSourceFile "$filename" 0]
 }
 
 proc openLastFiles {} {
@@ -893,7 +901,7 @@ proc openLastFiles {} {
     set t $OPENFILES
     set w [lindex $t $i]
     while { $w ne "" } {
-	loadSourceFile [file normalize $w]
+	loadSourceFile [file normalize $w] 0
 	set i [expr "$i + 1"]
 	set w [lindex $t $i]
     }
@@ -1162,7 +1170,7 @@ proc doClickOnError { w coord } {
 	    set startdir [file normalize "."]
 	}
 	set fname [findFileOnPath $fname $startdir]
-	set w [loadSourceFile $fname ]
+	set w [loadSourceFile "$fname" 0]
 	if { $w == "" } {
 	    return
 	}
@@ -1208,7 +1216,7 @@ proc doClickOnLink { w coord } {
 	    set startdir [file normalize "."]
 	}
 	set fname [findFileOnPath $fname $startdir]
-	set w [loadSourceFile $fname ]
+	set w [loadSourceFile "$fname" 1]
 	if { $w == "" } {
 	    return
 	}
@@ -1538,7 +1546,6 @@ menu .mbar.help -tearoff 0
 .mbar.file add command -label "Save File As..." -command { saveFileAs [.p.nb select] }
 .mbar.file add separator
 .mbar.file add command -label "New Project..." -command { doNewProject }
-.mbar.file add command -label "Add Files to Project..." -command {addFilesToProject }
 .mbar.file add separator
 .mbar.file add command -label "Open listing file" -accelerator "$CTRL_PREFIX-L" -command { doListing }
 .mbar.file add separator
@@ -2506,7 +2513,7 @@ if { [tk windowingsystem] == "aqua" } {
     }
     proc ::tk::mac::OpenDocument {args} {
 	foreach f $args {
-	    loadSourceFile $f
+	    loadSourceFile "$f" 0
 	}
     }
     proc tkAboutDialog {} {
@@ -2517,7 +2524,7 @@ if { [tk windowingsystem] == "aqua" } {
 # main code
 if { $::argc > 0 } {
     foreach argx $argv {
-        loadSourceFile [file normalize $argx]
+        loadSourceFile [file normalize $argx] 0
     }
 } elseif { $config(savesession) && [llength $OPENFILES] } {
     openLastFiles
