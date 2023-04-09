@@ -1,7 +1,7 @@
 #!/usr/bin/env wish
 #
 # Simple GUI for Spin
-# Copyright 2018-2021 Total Spectrum Software
+# Copyright 2018-2023 Total Spectrum Software
 # Distributed under the terms of the MIT license;
 # see License.txt for details.
 #
@@ -27,6 +27,7 @@ source $ROOTDIR/src/balloon.tcl
 source $ROOTDIR/src/debugwin.tcl
 source $ROOTDIR/src/tkterm.tcl
 source $ROOTDIR/src/ipval.tcl
+source $ROOTDIR/src/project.tcl
 source $ROOTDIR/src/gui.tcl
 
 namespace import ::choosefont::choosefont

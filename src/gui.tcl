@@ -571,9 +571,10 @@ proc tagerrors { w } {
 }
 
 set SpinTypes {
-    {{FlexSpin files}   {.bas .bi .c .cc .cpp .h .spin2 .spin .spinh} }
+    {{FlexSpin files}   {.bas .bi .c .cc .cpp .h .spin2 .spin .spinh .side .fpide} }
     {{Interpreter files}   {.py .lsp .fth} }
     {{C/C++ files}   {.c .cpp .cxx .cc .h .hh .hpp} }
+    {{Project files} {.fpide .side} }
     {{All files}    *}
 }
 
@@ -1272,7 +1273,11 @@ proc setHighlightingForFile {w fname} {
 	$w tag delete $t
     }
     ctext::disableComments $w
-    if { $config(syntaxhighlight) } {
+    if { $ext eq ".fpide" } {
+	setHighlightingSide $w
+    } elseif { $ext eq ".side" } {
+	setHighlightingSide $w
+    } elseif { $config(syntaxhighlight) } {
 	set check1 [lsearch -exact {".c" ".cpp" ".cc" ".h" ".hpp" ".C" ".H"} $ext]
 	#puts "fname=$fname ext=$ext check1 = $check1"
 	if { $check1 >= 0 } {
@@ -1285,9 +1290,8 @@ proc setHighlightingForFile {w fname} {
 		setSyntaxHighlightingSpin $w
 	    }
 	}
+	setHighlightingIncludes $w
     }
-    setHyperLinkResponse $w doClickOnLink
-    setHighlightingIncludes $w
 }
 
 #
@@ -1302,6 +1306,20 @@ proc setHighlightingIncludes {w} {
     set implRE {(?:_IMPL\([^\"]*\")([^\"]+)}
 
     set fullRE "$include1RE|$include2RE|$implRE|$using1RE|$using2RE"
+    setHyperLinkResponse $w doClickOnLink
+    ctext::addHighlightClassForRegexp $w hyperlink $color(hyperlink) $fullRE
+    $w tag configure hyperlink -underline true
+}
+
+#
+# project file (.side) highlighting
+#
+proc setHighlightingSide {w} {
+    global color
+
+#    set fullRE {^([^\->#]+)}
+    set fullRE {^([^\->#].*)}
+    setHyperLinkResponse $w doClickOnLink
     ctext::addHighlightClassForRegexp $w hyperlink $color(hyperlink) $fullRE
     $w tag configure hyperlink -underline true
 }
@@ -1518,6 +1536,9 @@ menu .mbar.help -tearoff 0
 .mbar.file add command -label "Open File..." -accelerator "$CTRL_PREFIX-O" -command { doOpenFile }
 .mbar.file add command -label "Save File" -accelerator "$CTRL_PREFIX-S" -command { saveCurFile }
 .mbar.file add command -label "Save File As..." -command { saveFileAs [.p.nb select] }
+.mbar.file add separator
+.mbar.file add command -label "New Project..." -command { doNewProject }
+.mbar.file add command -label "Add Files to Project..." -command {addFilesToProject }
 .mbar.file add separator
 .mbar.file add command -label "Open listing file" -accelerator "$CTRL_PREFIX-L" -command { doListing }
 .mbar.file add separator
