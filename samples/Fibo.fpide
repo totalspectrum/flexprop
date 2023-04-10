@@ -1,0 +1,11 @@
+#
+# this is a FlexProp project file
+# it has a list of files, one per line
+# followed by a list of definitions prefixed by >
+# change the file names or add more as appropriate
+#
+cell.h
+lisp.c
+lisplib.c
+lisplib.h
+>-DPROJECT_NAME="PropLisp"
