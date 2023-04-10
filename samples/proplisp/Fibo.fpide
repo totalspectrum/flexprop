@@ -5,7 +5,7 @@
 # change the file names or add more as appropriate
 #
 cell.h
-lisp.c
+fibo.c
 lisplib.c
 lisplib.h
->-DPROJECT_NAME="PropLisp"
+>-DPROJECT_NAME="Fibo"
