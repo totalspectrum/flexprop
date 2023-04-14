@@ -76,6 +76,8 @@ The Commands menu allow you to compile, run a binary, or both compile and run. T
 
 "Compile and Flash" and "Flash binary file..." are like the run options, but program the binary into the device.
 
+"Create zip archive" creates a .zip file containing all of the files used to build the binary.
+
 ### Ports
 
 Presents a menu of serial ports that may be selected.  The default is to tell the loader program (loadp2 or proploader) to scan for a port to use. But you may override this by selecting a specific serial port.
