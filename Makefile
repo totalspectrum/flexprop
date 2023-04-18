@@ -96,8 +96,9 @@ NATIVETK_LIBS=-ltk8.6 -ltcl8.6 $(XLIBS) -lz -ldl -lpthread -lm
 endif
 ifeq ($(OS),macosx)
 # These are locations as specified by Homebrew
-NATIVETK_INC =-I/usr/local/opt/tcl-tk/include
-NATIVETK_LIBS=-L/usr/local/opt/tcl-tk/lib -ltk8.6 -ltcl8.6 -lz -lpthread -lm
+BREW_TK_PREFIX := $(shell brew --prefix tcl-tk)
+NATIVETK_INC =-I$(BREW_TK_PREFIX)/include -I$(BREW_TK_PREFIX)/include/tcl-tk
+NATIVETK_LIBS=-L$(BREW_TK_PREFIX)/lib -ltk8.6 -ltcl8.6 -lz -lpthread -lm
 endif
 
 VPATH=.:spin2cpp/doc
