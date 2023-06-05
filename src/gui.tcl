@@ -6,7 +6,7 @@
 
 # base name for config file
 # change this if an incompatible change to config info is made
-set DOT_CONFIG ".flexprop.config.1"
+set DOT_CONFIG ".flexprop.config.2"
 
 #
 # The guts of the IDE GUI
@@ -166,8 +166,8 @@ proc setShadowP1Defaults {} {
     global ROOTDIR
     global EXE
     
-    set shadow(serialcmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -r \"-9%b\" -q"
-    set shadow(wificmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -r \"-9%b\" -q"
+    set shadow(serialcmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -r %9 -q"
+    set shadow(wificmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -r %9 -q"
     set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -D baud-rate=%r %P \"%B\" -e"
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
     set shadow(baud) 115200
@@ -191,8 +191,8 @@ proc setShadowP2Defaults {} {
     global EXE
     
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
-    set shadow(serialcmd) "\"%D/bin/loadp2$EXE\" -k %P -b%r \"%B\" \"-9%b\" -t"
-    set shadow(wificmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -r \"-9%b\" -q"
+    set shadow(serialcmd) "\"%D/bin/loadp2$EXE\" -k %P -b%r \"%B\" %9"
+    set shadow(wificmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -r %9 -q"
     set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" -k %P -b%r \"@0=%F,@8000+%B\" -t"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(baud) 230400
@@ -1623,6 +1623,7 @@ menu .mbar.options.charset
 .mbar.options add radiobutton -label "Use internal PST terminal" -variable config(internal_term) -value "pst"
 .mbar.options add radiobutton -label "Use internal ANSI terminal" -variable config(internal_term) -value "ansi"
 .mbar.options add radiobutton -label "Use external terminal" -variable config(internal_term) -value "0"
+.mbar.options add radiobutton -label "No terminal" -variable config(internal_term) -value "none"
 
 
 .mbar add cascade -menu .mbar.run -label Commands
@@ -1962,6 +1963,7 @@ proc mapPercentEx {str extraOpts} {
     set ourwarn $WARNFLAGS
     set ourdebug $DEBUG_OPT
     set ourfixed $FIXEDREAL
+
     if { "$CHARSET" ne "" } {
 	set ourcharset "--charset=$CHARSET"
     } else {
@@ -1993,7 +1995,8 @@ proc mapPercentEx {str extraOpts} {
     }
     set bindir [file dirname $BINFILE]
     set srcfile [currentFile]
-    set percentmap [ list "%%" "%" "%#" $runprefix "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%F" $config(flashprogram) "%r" $config(baud) "%t" $config(tabwidth)]
+    set fileServer "\"-9$bindir\""
+    set percentmap [ list "%%" "%" "%#" $runprefix "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%F" $config(flashprogram) "%r" $config(baud) "%t" $config(tabwidth) "%9" $fileServer]
     set result [string map $percentmap $str]
     return $result
 }
@@ -2180,14 +2183,31 @@ proc doJustRun {extraargs} {
 	set PORT_IS_WIFI 0
     }
     if { $PORT_IS_WIFI } {
-	set cmdstr [mapPercent $config(wificmd)]
+	set runConfig $config(wificmd)
     } else {
-	set cmdstr [mapPercent $config(serialcmd)]
+	set runConfig $config(serialcmd)
     }
+
+    if { $config(internal_term) eq "none" } {
+	# remove the -9 option, no terminal I/O available
+	puts "orig ($runConfig)"
+	set runConfig [string map { " %9" "" " -k" "" } $runConfig]
+	puts "new ($runConfig)"
+    }
+    set cmdstr [mapPercent $runConfig]
+    
     if { $extraargs ne "" } {
 	set cmdstr [concat "$cmdstr" " " "$extraargs"]
     }
-    if { $config(internal_term) ne "0" } {
+    if { $config(internal_term) eq "none" } {
+	set runcmd [list exec -ignorestderr]
+	set runcmd [concat $runcmd $cmdstr]
+	lappend runcmd 2>@1
+	puts "External Running: $runcmd"
+	if {[catch $runcmd errout options]} {
+	    set status 1
+	}
+    } elseif { $config(internal_term) ne "0" } {
 	#puts "Internal Running: $runcmd"
 	::TkTerm::RunInWindow $cmdstr
     } else {
