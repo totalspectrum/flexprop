@@ -1,5 +1,5 @@
 %define orgname drwonky
-%define branch rpm_spec
+%define branch rpm_spec_opt
 %global install_path /opt
 Name: flexprop
 Version: 6.1.5
@@ -31,8 +31,10 @@ cd %{name}
 %install
 %{__mkdir_p} %{buildroot}%{_datadir}/%{name}
 %{__mkdir_p} %{buildroot}%{_docdir}/%{name}
+%{__mkdir_p} %{buildroot}%{_sysconfdir}/profile.d/
 %{__mkdir_p} %{buildroot}%{install_path}/%{name}/bin/
 %{__mkdir_p} %{buildroot}%{_bindir}
+%{__install} -p -m 0644 %{_builddir}/%{name}/SPECS/flexprop.sh %{buildroot}%{_sysconfdir}/profile.d/
 %{__install} -p -m 0644 %{_builddir}/%{name}/License.txt %{buildroot}%{_docdir}/%{name}
 %{__install} -p -m 0644 %{_builddir}/%{name}/README.md %{buildroot}%{_docdir}/%{name}
 %{__cp} -r %{_builddir}/%{name}/doc %{buildroot}%{_docdir}/%{name}/
