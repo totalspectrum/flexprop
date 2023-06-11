@@ -1,5 +1,6 @@
 %define orgname drwonky
 %define branch rpm_spec
+%global install_path /opt
 Name: flexprop
 Version: 6.1.5
 Release: 1%{?dist}
@@ -18,8 +19,8 @@ FlexProp is a GUI for Parallax Propeller development. It is a cross-platform
 
 
 %prep
-#%{__rm} -rf %{name}
-#%{__git} clone --recursive --depth 1 --branch %{branch} --single-branch %{url}
+%{__rm} -rf %{name}
+%{__git} clone --recursive --depth 1 --branch %{branch} --single-branch %{url}
 
 
 %build
@@ -30,17 +31,18 @@ cd %{name}
 %install
 %{__mkdir_p} %{buildroot}%{_datadir}/%{name}
 %{__mkdir_p} %{buildroot}%{_docdir}/%{name}
-%{__mkdir_p} %{buildroot}%{_bindir}/
+%{__mkdir_p} %{buildroot}%{install_path}/%{name}/bin/
+%{__mkdir_p} %{buildroot}%{_bindir}
 %{__install} -p -m 0644 %{_builddir}/%{name}/License.txt %{buildroot}%{_docdir}/%{name}
 %{__install} -p -m 0644 %{_builddir}/%{name}/README.md %{buildroot}%{_docdir}/%{name}
 %{__cp} -r %{_builddir}/%{name}/doc %{buildroot}%{_docdir}/%{name}/
-%{__install} -p -m 0755 %{_builddir}/%{name}/%{name}.bin %{buildroot}%{_bindir}/%{name}
-%{__install} -p -m 0755 %{_builddir}/%{name}/bin/* %{buildroot}%{_bindir}/
-%{__cp} -r %{_builddir}/%{name}/%{name}/include %{buildroot}%{_datadir}/%{name}/
-%{__cp} -r %{_builddir}/%{name}/%{name}/board %{buildroot}%{_datadir}/%{name}/
-%{__cp} -r %{_builddir}/%{name}/%{name}/samples %{buildroot}%{_datadir}/%{name}/
-%{__cp} -r %{_builddir}/%{name}/%{name}/src %{buildroot}%{_datadir}/%{name}/
-%{__cp} -r %{_builddir}/%{name}/tcl_library %{buildroot}%{_datadir}/%{name}/
+%{__install} -p -m 0755 %{_builddir}/%{name}/%{name}.bin %{buildroot}%{install_path}/%{name}/%{name}
+%{__install} -p -m 0755 %{_builddir}/%{name}/bin/* %{buildroot}%{install_path}/%{name}/bin/
+%{__cp} -r %{_builddir}/%{name}/%{name}/include %{buildroot}%{install_path}/%{name}/
+%{__cp} -r %{_builddir}/%{name}/%{name}/board %{buildroot}%{install_path}/%{name}/
+%{__cp} -r %{_builddir}/%{name}/%{name}/samples %{buildroot}%{install_path}/%{name}/
+%{__cp} -r %{_builddir}/%{name}/%{name}/src %{buildroot}%{install_path}/%{name}/
+%{__cp} -r %{_builddir}/%{name}/tcl_library %{buildroot}%{install_path}/%{name}/
 
 
 %files
@@ -48,11 +50,7 @@ cd %{name}
 %doc %{_docdir}/%{name}/doc/
 %{_docdir}/%{name}/README.md
 %{_datadir}/%{name}/
-%{_bindir}/%{name}
-%{_bindir}/flexcc
-%{_bindir}/flexspin
-%{_bindir}/loadp2
-%{_bindir}/proploader
+%{install_path}/%{name}/
 
 
 %changelog
