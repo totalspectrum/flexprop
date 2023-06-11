@@ -30,6 +30,11 @@
 extern Tcl_PackageInitProc Tktest_Init;
 #endif /* TK_TEST */
 
+/* define the system-wide LSN dir for install */
+#ifndef LSN_DIR
+#define LSN_DIR "/usr/share/flexprop"
+#endif
+
 /*
  * The following #if block allows you to change the AppInit function by using
  * a #define of TCL_LOCAL_APPINIT instead of rewriting this entire file. The
@@ -208,6 +213,20 @@ getProgramPath(char **argv, char *path, int size)
       path[r] = 0;
     else
       return -1;
+    
+    char *src_dir = dyn_strcat(path, "/src");
+    char *lsn_dir = dyn_strcat(LSN_DIR, "/src");
+
+    if (access(src_dir, F_OK) != 0) {
+        if (access(lsn_dir, F_OK) == 0) {
+            if (strlen(LSN_DIR) >= size)
+                return -1;
+            strncpy(path, LSN_DIR, size);
+        } else {
+            return -1;
+        }
+    }
+
 #elif defined(__OSX__)
     uint32_t bufsize = size - 1;
     int r = _NSGetExecutablePath(path, &bufsize);

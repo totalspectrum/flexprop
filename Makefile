@@ -55,6 +55,8 @@ WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe bin/proploader.mac
 #WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe
 NATIVE_BINARIES=bin/flexspin bin/flexcc bin/loadp2 bin/proploader
 
+build: flexprop_base flexprop.bin $(NATIVE_BINARIES)
+
 install: check_dir flexprop_base flexprop.bin $(NATIVE_BINARIES)
 	mkdir -p $(INSTALL)
 	mkdir -p flexprop/bin
@@ -63,6 +65,12 @@ install: check_dir flexprop_base flexprop.bin $(NATIVE_BINARIES)
 	cp -r flexprop/* $(INSTALL)
 	cp -rp flexprop.bin $(INSTALL)/flexprop
 	cp -rp tcl_library $(INSTALL)/
+
+list_install: build
+	find $(NATIVE_BINARIES) -print
+	find flexprop/ -print
+	find flexprop.bin -print
+	find tcl_library -print
 
 check_dir:
 	if test -f $(INSTALL)/Makefile; then echo "ERROR: Install directory contains a Makefile (possibly installing to original source)"; exit 1; fi
