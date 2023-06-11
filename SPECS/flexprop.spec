@@ -7,13 +7,13 @@ Release: 1%{?dist}
 Summary: Flexprop GUI for Parallax Propeller development
 License: MIT        
 URL: https://github.com/%{orgname}/%{name}
-Source0: https://github.com/%{orgname}/%{name}/archive/refs/heads/master.tar.gz
+Source0: https://github.com/%{orgname}/%{name}/archive/refs/heads/%{branch}.tar.gz
 
 BuildRequires: gcc-c++ tk-devel texlive-latex pandoc libXScrnSaver-devel
 Requires: bzip2-libs fontconfig freetype glib2 glibc graphite2 harfbuzz libbrotli libpng libX11 libXau libxcb libXext libXft libxml2 libXrender libXScrnSaver pcre tcl tk xz-libs zlib libgcc libstdc++
 
 %description
-FlexProp is a GUI for Parallax Propeller development. It is a cross-platform
+FlexProp is a GUI for Parallax Propeller development.
 
 # TODO: It would be ideal if we could use spectool with a tarball, but with recursive
 # submodules, it doesn't work
@@ -52,7 +52,7 @@ cd %{name}
 %{_docdir}/%{name}/README.md
 %{_datadir}/%{name}/
 %{install_path}/%{name}/
-%{_sysconfdir}/profile.d/
+%{_sysconfdir}/profile.d/flexprop.sh
 
 
 %changelog
