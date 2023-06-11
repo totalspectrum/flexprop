@@ -1,5 +1,5 @@
-%define orgname drwonky
-%define branch rpm_spec_opt
+%define orgname totalspectrum
+%define branch master
 %global install_path /opt
 Name: flexprop
 Version: 6.1.5
@@ -8,8 +8,6 @@ Summary: Flexprop GUI for Parallax Propeller development
 License: MIT        
 URL: https://github.com/%{orgname}/%{name}
 Source0: https://github.com/%{orgname}/%{name}/archive/refs/heads/master.tar.gz
-#URL: https://github.com/totalspectrum/flexprop
-#Source: https://github.com/totalspectrum/flexprop.git
 
 BuildRequires: gcc-c++ tk-devel texlive-latex pandoc libXScrnSaver-devel
 Requires: bzip2-libs fontconfig freetype glib2 glibc graphite2 harfbuzz libbrotli libpng libX11 libXau libxcb libXext libXft libxml2 libXrender libXScrnSaver pcre tcl tk xz-libs zlib libgcc libstdc++
@@ -17,12 +15,13 @@ Requires: bzip2-libs fontconfig freetype glib2 glibc graphite2 harfbuzz libbrotl
 %description
 FlexProp is a GUI for Parallax Propeller development. It is a cross-platform
 
-
+# TODO: It would be ideal if we could use spectool with a tarball, but with recursive
+# submodules, it doesn't work
 %prep
 %{__rm} -rf %{name}
 %{__git} clone --recursive --depth 1 --branch %{branch} --single-branch %{url}
 
-
+# We can't use %{make_build} because this won't compile with parallel Makes running
 %build
 cd %{name}
 %{__make} build
@@ -53,6 +52,7 @@ cd %{name}
 %{_docdir}/%{name}/README.md
 %{_datadir}/%{name}/
 %{install_path}/%{name}/
+%{_sysconfdir}/profile.d/
 
 
 %changelog
