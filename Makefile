@@ -55,7 +55,9 @@ WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe bin/proploader.mac
 #WIN_BINARIES=$(EXEBINFILES) bin/proploader.exe
 NATIVE_BINARIES=bin/flexspin bin/flexcc bin/loadp2 bin/proploader
 
-install: check_dir flexprop_base flexprop.bin $(NATIVE_BINARIES)
+build: flexprop_base flexprop.bin $(NATIVE_BINARIES)
+
+install: check_dir build
 	mkdir -p $(INSTALL)
 	mkdir -p flexprop/bin
 	cp -r $(NATIVE_BINARIES) flexprop/bin
