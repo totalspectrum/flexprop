@@ -225,9 +225,7 @@ bin/loadp2: loadp2/build/loadp2
 	mkdir -p bin
 	cp $< $@
 
-spin2cpp/build/flexspin:
-	$(MAKE) -C spin2cpp OPT=-O1
-spin2cpp/build/flexcc:
+spin2cpp/build/flexspin spin2cpp/build/flexcc:
 	$(MAKE) -C spin2cpp OPT=-O1
 
 proploader-$(OS)-build/bin/proploader: bin/flexspin
@@ -264,9 +262,7 @@ bin/loadp2.exe: loadp2/build-win32/loadp2.exe
 	$(SIGNPC) bin/loadp2
 	mv bin/loadp2.signed.exe bin/loadp2.exe
 
-spin2cpp/build-win32/flexspin.exe:
-	$(MAKE) -C spin2cpp CROSS=win32
-spin2cpp/build-win32/flexcc.exe:
+spin2cpp/build-win32/flexspin.exe spin2cpp/build-win32/flexcc.exe:
 	$(MAKE) -C spin2cpp CROSS=win32
 
 ifneq ($(OS),msys)
@@ -307,9 +303,7 @@ bin/flexcc.mac: spin2cpp/build-macosx/flexcc
 	cp $< $@
 	$(SIGNMAC) $@
 
-spin2cpp/build-macosx/flexspin:
-	$(MAKE) -C spin2cpp CROSS=macosx
-spin2cpp/build-macosx/flexcc:
+spin2cpp/build-macosx/flexspin spin2cpp/build-macosx/flexcc:
 	$(MAKE) -C spin2cpp CROSS=macosx
 
 loadp2/build-macosx/loadp2:
