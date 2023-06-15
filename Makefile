@@ -106,8 +106,10 @@ endif
 VPATH=.:spin2cpp/doc
 
 ifdef PANDOC_EXISTS
-PDFFILES=spin2cpp/Flexspin.pdf spin2cpp/doc/general.pdf spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
-HTMLFILES=spin2cpp/Flexspin.html spin2cpp/doc/general.html spin2cpp/doc/basic.html spin2cpp/doc/c.html spin2cpp/doc/spin.html
+DOCSTEMS=spin2cpp/Flexspin spin2cpp/doc/general spin2cpp/doc/basic spin2cpp/doc/c spin2cpp/doc/spin
+PDFFILES=$(patsubst %,%.pdf,$(DOCSTEMS))
+HTMLFILES=$(patsubst %,%.html,$(DOCSTEMS))
+YMLFILES=$(patsubst %,%.yml,$(DOCSTEMS))
 endif
 
 #
@@ -154,7 +156,7 @@ clean:
 	rm -rf *.exe *.zip
 	rm -rf bin
 	rm -rf board
-	rm -rf $(BINFILES) $(PDFFILES) $(HTMLFILES)
+	rm -rf $(BINFILES) $(PDFFILES) $(HTMLFILES) $(YMLFILES)
 	rm -rf spin2cpp/build*
 	rm -rf proploader-*-build
 	rm -rf loadp2/build*
@@ -167,10 +169,9 @@ clean:
 	rm -rf samples/*/*.lst samples/*/*.pasm samples/*/*.p2asm
 	rm -rf samples/$(SUBSAMPLES)/*.binary
 	rm -rf $(RESOBJ)
-	rm -rf pandoc.yml
 	rm -rf src/version.tcl
 
-flexprop_base: src/version.tcl src/makepandoc.tcl $(BOARDFILES) $(PDFFILES) $(HTMLFILES)
+flexprop_base: $(BOARDFILES) docs
 	mkdir -p flexprop/bin
 	mkdir -p flexprop/doc
 	mkdir -p flexprop/board
@@ -191,17 +192,21 @@ endif
 
 .PHONY: flexprop_base
 
-# rules for building PDF files
+# rules for building PDF and HTML documentation
 
-%.pdf: %.md
-	$(TCLSH) src/makepandoc.tcl $< > pandoc.yml
-	-$(PANDOC) --metadata-file=pandoc.yml -s --toc -f gfm -t latex -o $@ $<
+docs: $(PDFFILES) $(HTMLFILES)
 
-# rules for building PDF files
+%.pdf: %.md %.yml
+	-$(PANDOC) --metadata-file=$*.yml -s --toc -f gfm -t latex -o $@ $<
 
-%.html: %.md
-	$(TCLSH) src/makepandoc.tcl $< > pandoc.yml
-	-$(PANDOC) --metadata-file=pandoc.yml -s --toc -f gfm -o $@ $<
+%.html: %.md %.yml
+	-$(PANDOC) --metadata-file=$*.yml -s --toc -f gfm -o $@ $<
+
+%.yml: %.md src/makepandoc.tcl src/version.tcl
+	$(TCLSH) src/makepandoc.tcl $< > $@
+
+src/version.tcl: version.inp spin2cpp/version.h
+	cpp -xc++ -DTCL_SRC < version.inp > $@
 
 # rules for native binaries
 
@@ -311,11 +316,6 @@ loadp2/build-macosx/loadp2:
 	make -C loadp2 CROSS=macosx
 
 ## Other rules
-
-src/version.tcl: version.inp spin2cpp/version.h
-	cpp -xc++ -DTCL_SRC < version.inp > $@
-
-docs: $(PDFFILES) $(HTMLFILES)
 
 docker:
 	docker build -t flexpropbuilder .
