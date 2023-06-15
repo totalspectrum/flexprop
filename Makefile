@@ -226,15 +226,15 @@ bin/loadp2: loadp2/build/loadp2
 	cp $< $@
 
 spin2cpp/build/flexspin:
-	make -C spin2cpp OPT=-O1
+	$(MAKE) -C spin2cpp OPT=-O1
 spin2cpp/build/flexcc:
-	make -C spin2cpp OPT=-O1
+	$(MAKE) -C spin2cpp OPT=-O1
 
 proploader-$(OS)-build/bin/proploader: bin/flexspin
-	make -C PropLoader OS=$(OS) SPINCMP="`pwd`/bin/flexspin"
+	$(MAKE) -C PropLoader OS=$(OS) SPINCMP="`pwd`/bin/flexspin"
 
 loadp2/build/loadp2: bin/flexspin
-	make -C loadp2 P2ASM="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include"
+	$(MAKE) -C loadp2 P2ASM="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include"
 
 # rules for Win32 binaries
 
@@ -265,23 +265,23 @@ bin/loadp2.exe: loadp2/build-win32/loadp2.exe
 	mv bin/loadp2.signed.exe bin/loadp2.exe
 
 spin2cpp/build-win32/flexspin.exe:
-	make -C spin2cpp CROSS=win32
+	$(MAKE) -C spin2cpp CROSS=win32
 spin2cpp/build-win32/flexcc.exe:
-	make -C spin2cpp CROSS=win32
+	$(MAKE) -C spin2cpp CROSS=win32
 
 ifneq ($(OS),msys)
 proploader-msys-build/bin/proploader.exe:
-	make -C PropLoader CROSS=win32 SPINCMP="`pwd`/bin/flexspin"
+	$(MAKE) -C PropLoader CROSS=win32 SPINCMP="`pwd`/bin/flexspin"
 endif
 
 ifneq ($(OS),macosx)
 proploader-macosx-build/bin/proploader:
-	make -C PropLoader CROSS=macosx SPINCMP="`pwd`/bin/flexspin"
+	$(MAKE) -C PropLoader CROSS=macosx SPINCMP="`pwd`/bin/flexspin"
 endif
 
 ifneq ($(OS),msys)
 loadp2/build-win32/loadp2.exe:
-	make -C loadp2 CROSS=win32 P2ASM="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include"
+	$(MAKE) -C loadp2 CROSS=win32 P2ASM="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include"
 endif
 
 $(RESOBJ): $(RES_RC)
@@ -308,12 +308,12 @@ bin/flexcc.mac: spin2cpp/build-macosx/flexcc
 	$(SIGNMAC) $@
 
 spin2cpp/build-macosx/flexspin:
-	make -C spin2cpp CROSS=macosx
+	$(MAKE) -C spin2cpp CROSS=macosx
 spin2cpp/build-macosx/flexcc:
-	make -C spin2cpp CROSS=macosx
+	$(MAKE) -C spin2cpp CROSS=macosx
 
 loadp2/build-macosx/loadp2:
-	make -C loadp2 CROSS=macosx
+	$(MAKE) -C loadp2 CROSS=macosx
 
 ## Other rules
 
@@ -327,7 +327,7 @@ board/P2ES_sdcard.bin: board/sdcard/sdboot.binary
 	mv board/sdcard/sdboot.binary board/P2ES_sdcard.bin
 
 board/sdcard/sdboot.binary: bin/flexspin board/sdcard
-	(make -C board/sdcard P2CC="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include")
+	$(MAKE) -C board/sdcard P2CC="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include"
 	rm -f board/sdcard/*.p2asm
 
 board/P2ES_flashloader.spin2: loadp2/board/P2ES_flashloader.spin2
