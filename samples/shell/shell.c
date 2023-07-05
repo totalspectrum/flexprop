@@ -18,24 +18,20 @@
 #define PATH_MAX 256
 #endif
 
-#define RAM_BASEPIN 32
-
 // block device for ramdisk (modify as needed)
-#define RAM_PAGE_SIZE 256
+// RAM_BASEPIN doesn't matter for hubram.spin, and RAM_SIZE will have to be much smaller
+#define RAM_BASEPIN 32
+#define RAM_SIZE (8*1024*1024)
+
 //struct __using("spin/rayslogic_24mb.spin2", BASEPIN = RAM_BASEPIN) xmem;
-//struct __using("spin/hyperram.spin2", BASEPIN = RAM_BASEPIN) xmem;
-struct __using("spin/hubram.spin2") xmem;
+struct __using("spin/hyperram.spin2", BASEPIN = RAM_BASEPIN) xmem;
+//struct __using("spin/hubram.spin2") xmem;
+
+// good default size for littlefs
+#define RAM_PAGE_SIZE 256
 
 static int xmem_blkread(void *hubdata, unsigned long exaddr, unsigned long count) {
     xmem.read(exaddr, hubdata, RAM_PAGE_SIZE);
-#ifdef _DEBUG_LFS
-    char *d = hubdata;
-    __builtin_printf("xmem read: addr=%08x: ", exaddr);
-    for (int i = 0; i < 16; i++) {
-        __builtin_printf("%02x ", d[i]);
-    }
-    __builtin_printf("\n");
-#endif    
     return 0;
 }
 
@@ -46,14 +42,6 @@ static int xmem_blkerase(unsigned long exaddr) {
 
 static int xmem_blkwrite(void *hubsrc, unsigned long exaddr) {
     xmem.write(exaddr, hubsrc, RAM_PAGE_SIZE);
-#ifdef _DEBUG_LFS
-    char *d = hubsrc;
-    __builtin_printf("xmem write: addr=%08x: ", exaddr);
-    for (int i = 0; i < 16; i++) {
-        __builtin_printf("%02x ", d[i]);
-    }
-    __builtin_printf("\n");
-#endif    
     return 0;
 }
 
@@ -67,7 +55,7 @@ _BlockDevice *initRamDevice() {
     dev.blk_read = &xmem_blkread;
     dev.blk_write = &xmem_blkwrite;
     dev.blk_erase = &xmem_blkerase;
-    dev.blk_sync = &xmem.sync;
+    dev.blk_sync = (void *)&xmem.sync;
 
     dev.read_cache = read_buffer;
     dev.write_cache = write_buffer;
@@ -94,7 +82,7 @@ struct littlefs_flash_config ram_config = {
     RAM_PAGE_SIZE,       /* page size */
     RAM_PAGE_SIZE,       /* erase size */
     0,         /* start offset */
-    8*1024*1024, /* used size */
+    RAM_SIZE,  /* used size */
     NULL,      /* driver (NULL for default) */
     15ULL<<RAM_BASEPIN,  /* pin mask */
     0,         /* reserved */

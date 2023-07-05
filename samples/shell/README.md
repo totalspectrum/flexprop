@@ -17,7 +17,7 @@ help          :  show this help
 mkdir <d>     :  create new directory <d>
 rmdir <d>     :  remove directory <d>
 type  <f>     :  show file <f> on the terminal
-mount <d>     :  mount flash (d=/flash) or SD card (d=/sd)
+mount <d>     :  mount flash (d=/flash), SD card (d=/sd), or ramdisk (d=/ram)
 unmount <d>   :  unmount flash or SD
 mkfs /flash   :  format flash with little fs
 ```
@@ -26,6 +26,8 @@ mkfs /flash   :  format flash with little fs
 The host file system is automatically mounted as `/host`. The user may then choose to mount either the FAT formatted SD card (as `/sd`) or the littlefs formatted flash drive (as `/flash`. Only 6 MB of the flash, starting at the 2 MB mark, is used for the file system, the rest is free for other uses (such as storing boot code). If the flash is not properly formatted it will automatically be formatted on mount.
 
 Communication with the host PC is done using the 9P file system protocol, running over the serial line. This is set to the default baud rate of 230400, which is rather slow.
+
+The ramdisk configuration may be changed by editing shell.c and changing the defines and structs at the top. This only matters if the ramdisk is actually used (via mount /ram).
 
 ### Example: copying a file from host to SD
 
