@@ -1,3 +1,11 @@
+Version 6.2.1
+
+- Applied some fixes for PropLoader from upstream and from @Wuerfel21
+
+Version 6.2.0
+
+- Added "no terminal" option
+
 Version 6.1.0
 
 - Added a basic kind of support for project files.
