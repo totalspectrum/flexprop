@@ -21,22 +21,24 @@
 // block device for ramdisk (modify as needed)
 
 // size of RAM disk
-//#define RAM_SIZE (128*1024)  // for HUB
-#define RAM_SIZE (8*1024*1024)
+//#define RAMDISK_SIZE (64*1024)  // for HUB
+#define RAMDISK_SIZE (8*1024*1024)
+
+#pragma exportdef RAMDISK_SIZE
 
 // base pin to use for RAMDISK
 #define RAM_BASEPIN 32
 
 // driver to use for RAM disk
-struct __using("spin/hyperram.spin2", BASEPIN = RAM_BASEPIN) xmem; // P2 HyperRam/Flash add-on card
+//struct __using("spin/hyperram.spin2", BASEPIN = RAM_BASEPIN) xmem; // P2 HyperRam/Flash add-on card
 //struct __using("spin/hubram.spin2") xmem; // plain HUB memory; adjust RAM_SIZE!
-//struct __using("spin/psram.spin2") xmem;  // P2-EC32MB Edge board
+struct __using("spin/psram.spin2") xmem;  // P2-EC32MB Edge board
 
 // good default size for littlefs
 #define RAM_PAGE_SIZE 256
 
 static int xmem_blkread(void *hubdata, unsigned long exaddr, unsigned long count) {
-    xmem.read(exaddr, hubdata, RAM_PAGE_SIZE);
+    xmem.read(hubdata, exaddr, RAM_PAGE_SIZE);
 #ifdef _DEBUG_LFS
     const char *ptr = hubdata;
     __builtin_printf("blkread: exaddr=%x data=[%x %x %x %x ...]\n",
@@ -59,7 +61,7 @@ static int xmem_blkwrite(void *hubsrc, unsigned long exaddr) {
     __builtin_printf("blkwrite: exaddr=%x data=[%x %x %x %x ...]\n",
                      exaddr, ptr[0], ptr[1], ptr[2], ptr[3]);
 #endif    
-    xmem.write(exaddr, hubsrc, RAM_PAGE_SIZE);
+    xmem.write(hubsrc, exaddr, RAM_PAGE_SIZE);
     return 0;
 }
 
@@ -103,7 +105,7 @@ struct littlefs_flash_config ram_config = {
     RAM_PAGE_SIZE,       /* page size */
     RAM_PAGE_SIZE,       /* erase size */
     0,         /* start offset */
-    RAM_SIZE,  /* used size */
+    RAMDISK_SIZE,  /* used size */
     NULL,      /* driver (NULL for default) */
     15ULL<<RAM_BASEPIN,  /* pin mask */
     0,         /* reserved */
