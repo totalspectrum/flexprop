@@ -19,28 +19,46 @@
 #endif
 
 // block device for ramdisk (modify as needed)
-// RAM_BASEPIN doesn't matter for hubram.spin, and RAM_SIZE will have to be much smaller
-#define RAM_BASEPIN 32
+
+// size of RAM disk
+//#define RAM_SIZE (128*1024)  // for HUB
 #define RAM_SIZE (8*1024*1024)
 
-//struct __using("spin/rayslogic_24mb.spin2", BASEPIN = RAM_BASEPIN) xmem;
-struct __using("spin/hyperram.spin2", BASEPIN = RAM_BASEPIN) xmem;
-//struct __using("spin/hubram.spin2") xmem;
+// base pin to use for RAMDISK
+#define RAM_BASEPIN 32
+
+// driver to use for RAM disk
+struct __using("spin/hyperram.spin2", BASEPIN = RAM_BASEPIN) xmem; // P2 HyperRam/Flash add-on card
+//struct __using("spin/hubram.spin2") xmem; // plain HUB memory; adjust RAM_SIZE!
+//struct __using("spin/psram.spin2") xmem;  // P2-EC32MB Edge board
 
 // good default size for littlefs
 #define RAM_PAGE_SIZE 256
 
 static int xmem_blkread(void *hubdata, unsigned long exaddr, unsigned long count) {
     xmem.read(exaddr, hubdata, RAM_PAGE_SIZE);
+#ifdef _DEBUG_LFS
+    const char *ptr = hubdata;
+    __builtin_printf("blkread: exaddr=%x data=[%x %x %x %x ...]\n",
+                     exaddr, ptr[0], ptr[1], ptr[2], ptr[3]);
+#endif    
     return 0;
 }
 
 static int xmem_blkerase(unsigned long exaddr) {
+#ifdef _DEBUG_LFS
+    __builtin_printf("blkerase: exaddr=%x\n", exaddr);
+#endif    
     xmem.fill(exaddr, 0xff, RAM_PAGE_SIZE);
     return 0;
 }
 
 static int xmem_blkwrite(void *hubsrc, unsigned long exaddr) {
+#ifdef _DEBUG_LFS
+    const char *ptr = hubsrc;
+    __builtin_printf("blkwrite: exaddr=%x data=[%x %x %x %x ...]\n",
+                     exaddr, ptr[0], ptr[1], ptr[2], ptr[3]);
+#endif    
     xmem.write(exaddr, hubsrc, RAM_PAGE_SIZE);
     return 0;
 }
@@ -51,6 +69,9 @@ _BlockDevice *initRamDevice() {
     static char write_buffer[RAM_PAGE_SIZE];
     static char lookahead_buffer[RAM_PAGE_SIZE];
     
+#ifdef _DEBUG_LFS
+    __builtin_printf("initRamDevice\n");
+#endif    
     xmem.start();
     dev.blk_read = &xmem_blkread;
     dev.blk_write = &xmem_blkwrite;
