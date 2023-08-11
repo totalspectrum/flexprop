@@ -33,6 +33,7 @@
 //struct __using("spin/hyperram.spin2", BASEPIN = RAM_BASEPIN) xmem; // P2 HyperRam/Flash add-on card
 //struct __using("spin/hubram.spin2") xmem; // plain HUB memory; adjust RAM_SIZE!
 struct __using("spin/psram.spin2") xmem;  // P2-EC32MB Edge board
+//struct __using("spin/rayslogic_24mb.spin2", BASEPIN = RAM_BASEPIN) xmem;  // 
 
 // good default size for littlefs
 #define RAM_PAGE_SIZE 256
