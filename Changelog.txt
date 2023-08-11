@@ -1,3 +1,9 @@
+Version 6.3.0
+
+- Fixed shell sample to work correctly with various ramdisks,
+including P2 Edge 32MB PSRAM, Ray's logic 4 bit PSRAM board, and
+HyperRam
+
 Version 6.2.1
 
 - Applied some fixes for PropLoader from upstream and from @Wuerfel21
