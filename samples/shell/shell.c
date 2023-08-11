@@ -27,13 +27,33 @@
 #pragma exportdef RAMDISK_SIZE
 
 // base pin to use for RAMDISK
-#define RAM_BASEPIN 32
+// use 40 for built in memory on P2-EC32MB Edge board 
+#define RAM_BASEPIN 40
 
 // driver to use for RAM disk
-//struct __using("spin/hyperram.spin2", BASEPIN = RAM_BASEPIN) xmem; // P2 HyperRam/Flash add-on card
-//struct __using("spin/hubram.spin2") xmem; // plain HUB memory; adjust RAM_SIZE!
-struct __using("spin/psram.spin2") xmem;  // P2-EC32MB Edge board
-//struct __using("spin/rayslogic_24mb.spin2", BASEPIN = RAM_BASEPIN) xmem;  // 
+// select one of the following
+
+#if 0
+struct __using("spin/hubram.spin2") xmem; // plain HUB memory; adjust RAM_SIZE!
+#elif 0
+// P2 HyperRam add-on card
+struct __using("spin/hyperram.spin2", BASEPIN = RAM_BASEPIN) xmem;
+#elif 0
+
+// 4 bit wide PSRAM
+#define PSRAM_DRIVER "psram4drv-dualCE" // for Ray's Logic 24 MB board
+#pragma exportdef PSRAM_DRIVER
+
+struct __using("spin/psram.spin2", DATABUS = RAM_BASEPIN, CLK_PIN = RAM_BASEPIN+4, CE_PIN = RAM_BASEPIN+5) xmem;
+
+#else
+// 16 bit wide PSRAM
+#define PSRAM_DRIVER "psram16drv" // for P2-EC32MB Edge board
+#pragma exportdef PSRAM_DRIVER
+
+struct __using("spin/psram.spin2", DATABUS = RAM_BASEPIN, CLK_PIN = RAM_BASEPIN+16, CE_PIN = RAM_BASEPIN + 17) xmem;
+
+#endif
 
 // good default size for littlefs
 #define RAM_PAGE_SIZE 256
