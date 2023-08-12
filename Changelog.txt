@@ -1,5 +1,6 @@
 Version 6.3.0
 
+- Added "Identify Serial Ports" item to "Special" menu
 - Fixed shell sample to work correctly with various ramdisks,
 including P2 Edge 32MB PSRAM, Ray's logic 4 bit PSRAM board, and
 HyperRam
