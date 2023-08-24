@@ -38,7 +38,7 @@ struct __using("spin/hubram.spin2") xmem; // plain HUB memory; adjust RAM_SIZE!
 #elif 0
 // P2 HyperRam add-on card
 struct __using("spin/hyperram.spin2", BASEPIN = RAM_BASEPIN) xmem;
-#elif 0
+#elif 1
 
 // 4 bit wide PSRAM
 #define PSRAM_DRIVER "psram4drv-dualCE" // for Ray's Logic 24 MB board
@@ -278,6 +278,8 @@ void do_mount(const char *dirname)
         r = mount(dirname, _vfs_open_sdcard());
     } else if ( strcmp(dirname, "/flash") == 0 ) {
         r = mount(dirname, _vfs_open_littlefs_flash(1, &flash_config));
+    } else if ( strcmp(dirname, "/pfs") == 0 ) {
+        r = mount(dirname, _vfs_open_parallaxfs());
     } else if ( strcmp(dirname, "/ram") == 0 ) {
         ram_config.dev = initRamDevice();
         r = mount(dirname, _vfs_open_littlefs_flash(1, &ram_config));
@@ -313,9 +315,15 @@ void do_help(void)
     printf("mkdir <d>     :  create new directory d\n");
     printf("rmdir <d>     :  remove directory d\n");
     printf("type <f>      :  type file on console\n");
-    printf("mount  <d>    :  mount SD card (/sd) or LFS flash (/flash)\n");
-    printf("umount <d>    :  unmount SD card (/sd) or LFS flash (/flash)\n");
-    printf("mkfs /flash   :  format flash with little fs\n");
+    printf("mount  <d>    :  mount file system on mount point (see below)\n");
+    printf("umount <d>    :  unmount file system (see below)\n");
+    printf("mkfs <d>      :  format flash or RAM with little fs\n");
+    printf("\nBuilt in mount points:\n");
+    printf("    /host:  Host PC file system over serial (mounted by default)\n");
+    printf("    /sd:    FAT32 on SD card (not compatible with any flash file system)\n");
+    printf("    /flash: littlefs on built in flash\n");
+    printf("    /pfs:   parallax file system on built in flash\n");
+    printf("    /ram:   littlefs on RAM disk\n");
 }
 
 // parse a command line into the command and up to 2 optional arguments
