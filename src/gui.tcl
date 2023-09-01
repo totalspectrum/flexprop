@@ -2449,10 +2449,31 @@ proc do_indent {w} {
 # simple search and replace widget by Richard Suchenwirth, from wiki.tcl.tk
 #
 proc searchrep {t {replace 1}} {
-   global replacesDone
-   set w .sr
-   set replacesDone 0 
-   if ![winfo exists $w] {
+    global replacesDone
+    set w .sr
+    set replacesDone 0
+
+    # if searching on the frame, use the currently selected tab
+    if { [string match "*.nb" $t] } {
+	set t [$t select]
+    }
+    #puts "search window: $t"
+    # make sure we are doing the search on a .txt
+    if { ![string match "*.txt" $t ] } {
+	set subw [winfo children $t]
+	#puts "subwindows: $subw"
+	foreach ch $subw {
+	    if { [string match "*.txt" $ch] } {
+		set t $ch
+		break
+	    }
+	}
+    }
+    if { ![string match "*.txt" $t] } {
+	return
+    }
+    
+    if ![winfo exists $w] {
        toplevel $w
        wm title $w "Search"
        grid [label $w.1 -text Find:] [entry $w.f -textvar Find] \
@@ -2474,12 +2495,12 @@ proc searchrep {t {replace 1}} {
        $t tag config hilite -background yellow
        focus $w.f
        $w.f selection range 0 end
-   } else {
+    } else {
        raise $w.f
        focus $w
        $w.f icursor end
        $w.f selection range 0 end
-   }
+    }
     bind $w <Destroy> "searchrep'done $t"
 }
 
