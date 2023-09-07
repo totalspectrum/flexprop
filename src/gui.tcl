@@ -2470,9 +2470,13 @@ proc searchrep {t {replace 1}} {
 	}
     }
     if { ![string match "*.txt" $t] } {
+	# use whatever the currently selected tab is
+	set t [.p.nb select].txt
+    }
+    if ![winfo exists $t] {
+	# avoid crashing
 	return
     }
-    
     if ![winfo exists $w] {
        toplevel $w
        wm title $w "Search"
