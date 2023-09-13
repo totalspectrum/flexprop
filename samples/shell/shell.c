@@ -262,6 +262,8 @@ void do_mkfs(const char *dirname)
     int r = 0;
     if ( strcmp(dirname, "/flash") == 0 ) {
         r = _mkfs_littlefs_flash(0);
+    } else if ( strcmp(dirname, "/pfs") == 0 ) {
+        r = _mkfs_parallaxfs();
     } else {
         printf("Unknown mount point %s\n", dirname);
     }
