@@ -25,8 +25,8 @@ stack
 PUB demo | cognum, delay
   delay := clkfreq
   repeat cognum from 7 to 1
-    delay -= clkfreq / 10
     coginit(cognum, doblink(cognum, delay), @stack[cognum*4])
+    delay -= clkfreq / 10
   doblink(0, delay)
   
 PUB doblink(id, delay) | pin
