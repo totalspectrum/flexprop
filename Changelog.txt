@@ -1,3 +1,8 @@
+Version 6.5.0
+
+- Shell sample works with Parallax flash file system ("/pfs")
+- Updated blink_all_cogs sample with nicer delay
+
 Version 6.4.0
 
 - Tried to make search&replace a bit more robust
