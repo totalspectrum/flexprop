@@ -315,6 +315,7 @@ void do_help(void)
     printf("exec <f>      :  execute file <f> (never returns)\n");
     printf("help          :  show this help\n");
     printf("mkdir <d>     :  create new directory d\n");
+    printf("ren <f> <new> :  change the name of file <f> to <new>\n");
     printf("rmdir <d>     :  remove directory d\n");
     printf("type <f>      :  type file on console\n");
     printf("mount  <d>    :  mount file system on mount point (see below)\n");
@@ -431,6 +432,9 @@ void main()
             perror(arg1);
         } else if (!strcmp(cmd, "mkdir") || !strcmp(cmd, "md")) {
             r = mkdir(arg1, 0755);
+            if (r) perror(arg1);
+        } else if (!strcmp(cmd, "ren") || !strcmp(cmd, "mv")) {
+            r = rename(arg1, arg2);
             if (r) perror(arg1);
         } else if (!strcmp(cmd, "rmdir") || !strcmp(cmd, "rd")) {
             r = rmdir(arg1);

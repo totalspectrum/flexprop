@@ -15,12 +15,14 @@ dir <d>       :  display contents of directory <d>
 exec <f>      :  execute file <f> (never returns)
 help          :  show this help
 mkdir <d>     :  create new directory <d>
+ren <f> <new> :  rename file <f> to <new>
 rmdir <d>     :  remove directory <d>
 type  <f>     :  show file <f> on the terminal
 mount <d>     :  mount flash, SD card, or ramdisk
 unmount <d>   :  unmount flash, SD, or ramdisk
 mkfs /flash   :  format flash with little fs
 mkfs /ram     :  format RAM disk with little fs
+mkfs /pfs     :  format flash with Parallax flash file system
 ```
 
 Known mount points:
