@@ -1,4 +1,4 @@
-# Simple GUI for Spin
+# Simple GUI for Flexspin
 # Copyright 2018-2023 Total Spectrum Software
 # Distributed under the terms of the MIT license;
 # see License.txt for details.
@@ -7,6 +7,7 @@
 # base name for config file
 # change this if an incompatible change to config info is made
 set DOT_CONFIG ".flexprop.config.2"
+set CONFIG_VERSION 2
 
 #
 # The guts of the IDE GUI
@@ -185,6 +186,12 @@ proc setShadowP1BytecodeDefaults {} {
     # override compile command
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" --interp=rom --tabs=%t -D_BAUD=%r -l %O %I \"%S\""
 }
+
+#
+# old flash commands that we should override if we see them
+#
+set oldconfig_v1(flashcmd) "\"%D/bin/loadp2$EXE\" -k %P -b%r \"@0=%F,@8000+%B\" -t"
+
 proc setShadowP2Defaults {} {
     global shadow
     global ROOTDIR
@@ -193,7 +200,7 @@ proc setShadowP2Defaults {} {
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
     set shadow(serialcmd) "\"%D/bin/loadp2$EXE\" -k %P -b%r \"%B\" %9"
     set shadow(wificmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -r %9 -q"
-    set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" -k %P -b%r \"@0=%F,@8000+%B\" -t"
+    set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" -SPI -k %P -b%r \"%B\" -t"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(baud) 230400
 }
@@ -313,6 +320,7 @@ proc config_open {} {
     global COMPORT
     global CHARSET
     global OPENFILES
+    global oldconfig_v1
     
     if {[file exists $CONFIG_FILE]} {
 	set fp [open $CONFIG_FILE r]
@@ -320,48 +328,55 @@ proc config_open {} {
 	checkPropVersion
 	return 0
     }
+
+    set config_version 0
     
     # read config values
     while {![eof $fp]} {
 	set data [gets $fp]
-	switch [lindex $data 0] {
+	set nm [lindex $data 0]
+	set val [lindex $data 1]
+	switch $nm {
 	    \# {
 		# ignore the comment
 	    }
+	    version {
+		set config_version $val
+	    }
 	    geometry {
 		# restore last position on screen
-		wm geometry [winfo toplevel .] [lindex $data 1]
+		wm geometry [winfo toplevel .] $val
 	    }
 	    opt {
 		# set optimize level
-		set OPT [lindex $data 1]
+		set OPT $val
 	    }
 	    compress {
 		# set compression level
-		set COMPRESS [lindex $data 1]
+		set COMPRESS $val
 	    }
 	    warnflags {
 		# set warning flags
-		set WARNFLAGS [lindex $data 1]
+		set WARNFLAGS $val
 	    }
 	    runtime_charset {
 		# set warning flags
-		set CHARSET [lindex $data 1]
+		set CHARSET $val
 		if { [string equal -length 10 $CHARSET "--charset="] } {
 		    set CHARSET [string range $CHARSET 10 end]
 		}
 	    }
 	    fixedreal {
 		# set warning flags
-		set FIXEDREAL [lindex $data 1]
+		set FIXEDREAL $val
 	    }
 	    debugopt {
 		# set warning flags
-		set DEBUG_OPT [lindex $data 1]
+		set DEBUG_OPT $val
 	    }
 	    comport {
 		# set default port level
-		set COMPORT [lindex $data 1]
+		set COMPORT $val
 		# convert old COMPORT entries
 		if { $COMPORT ne " " && [string index "$COMPORT" 0] ne "-" } {
 		    set COMPORT "-p $COMPORT"
@@ -369,10 +384,16 @@ proc config_open {} {
 	    }
 	    openfiles {
 		# record open files
-		set OPENFILES [lindex $data 1]
+		set OPENFILES $val
 	    }
 	    default {
-		set config([lindex $data 0]) [lindex $data 1]
+		if { $config_version < 1 && [info exists oldconfig_v1($nm)] } {
+		    if { $oldconfig_v1($nm) ne $val } {
+			set config($nm) $val
+		    }
+		} else {
+		    set config($nm) $val
+		}
 	    }
 	}
     }
@@ -408,12 +429,14 @@ proc config_save {} {
     global COMPORT
     global OPENFILES
     global CHARSET
+    global CONFIG_VERSION
     
     updateLibraryList
     updateOpenFiles
     set config(sash) [.p sash coord 0]
     set fp [open $CONFIG_FILE w]
     puts $fp "# flexprop config info"
+    puts $fp "version\t$CONFIG_VERSION"
     puts $fp "geometry\t[winfo geometry [winfo toplevel .]]"
     puts $fp "opt\t\{$OPT\}"
     puts $fp "compress\t\{$COMPRESS\}"
@@ -2200,9 +2223,9 @@ proc doJustRun {extraargs} {
 
     if { $config(internal_term) eq "none" } {
 	# remove the -9 option, no terminal I/O available
-	puts "orig ($runConfig)"
+	#puts "orig ($runConfig)"
 	set runConfig [string map { " %9" "" " -k" "" } $runConfig]
-	puts "new ($runConfig)"
+	#puts "new ($runConfig)"
     }
     set cmdstr [mapPercent $runConfig]
     
@@ -2213,7 +2236,7 @@ proc doJustRun {extraargs} {
 	set runcmd [list exec -ignorestderr]
 	set runcmd [concat $runcmd $cmdstr]
 	lappend runcmd 2>@1
-	puts "External Running: $runcmd"
+	#puts "External Running: $runcmd"
 	if {[catch $runcmd errout options]} {
 	    set status 1
 	}

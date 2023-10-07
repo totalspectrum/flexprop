@@ -1,3 +1,8 @@
+Version 6.5.3
+
+- Switched flash programming on P2 to use new loadp2 -SPI command by default
+- Updated loadp2 and proploader to fix 9P rename code
+
 Version 6.5.0
 
 - Shell sample works with Parallax flash file system ("/pfs")
