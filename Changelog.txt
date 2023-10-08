@@ -1,7 +1,9 @@
-Version 6.5.3
+Version 6.5.4
 
 - Switched flash programming on P2 to use new loadp2 -SPI command by default
+- Updated shell sample to add rename command
 - Updated loadp2 and proploader to fix 9P rename code
+
 
 Version 6.5.0
 
