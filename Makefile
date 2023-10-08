@@ -67,7 +67,7 @@ install: check_dir build
 	cp -rp tcl_library $(INSTALL)/
 
 check_dir:
-	if test -f $(INSTALL)/Makefile; then echo "ERROR: Install directory contains a Makefile (possibly installing to original source)"; exit 1; fi
+	@if test -f $(INSTALL)/Makefile; then echo "ERROR: Install directory contains a Makefile (possibly installing to original source)"; exit 1; fi
 
 # where the Tcl and Tk source code are checked out (side by side)
 TCLROOT ?= /home/ersmith/src/Tcl
