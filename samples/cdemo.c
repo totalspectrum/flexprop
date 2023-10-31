@@ -6,6 +6,18 @@
 // _xtalfreq
 // do this *before* including propeller.h
 
+// example:  (board with a 25 MHz crystal)
+// enum {
+//    _xtlfreq = 25_000_000,
+//    _clkfreq = 180000000,
+//};
+
+// example:  (using a buffered crystal oscillator instead of a raw crystal)    
+// enum {
+//    _xinfreq = 25_000_000,
+//    _clkfreq = 180000000,
+//};
+
 enum {
     _clkfreq = 180'000'000,
 };
