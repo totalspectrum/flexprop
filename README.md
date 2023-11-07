@@ -94,7 +94,7 @@ At the moment you'll have to build from source on Linux. Instructions are given 
 Here are complete steps for building from scratch on a generic Debian based platform such as Ubuntu. Note that the first few steps (setting up a directory for the source code) may be tweaked to suit your wishes. Also note that the steps involving `texlive-latex-recommended` and `pandoc` are only required for formatting the documentation; if you only want the binaries you may skip these.
 ```
 sudo apt-get update
-sudo apt-get install build-essential
+sudo apt-get install build-essential xxd
 sudo apt-get install bison git tk8.6-dev
 sudo apt-get install texlive-latex-recommended pandoc
 cd $HOME
