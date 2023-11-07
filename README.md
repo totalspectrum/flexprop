@@ -125,7 +125,7 @@ sudo dnf install @development-tools
 sudo dnf install gcc-c++
 sudo dnf install tk-devel
 sudo dnf install texlive-latex
-sudo dnf install pandoc
+sudo dnf install pandoc vim-common
 sudo dnf install libXScrnSaver-devel
 cd $HOME
 mkdir -p src
