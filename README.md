@@ -107,6 +107,7 @@ make install INSTALL=~/flexprop
 cd ~/flexprop
 ./flexprop
 ```
+At each step if you are prompted to accept the installation make sure to say yes (`Y`).
 
 Once the build is finished, the final flexprop installation will be in $HOME/flexprop. You can change this to another directory by adding an `INSTALL=<dir>` in the `make install` step, e.g.
 ```
