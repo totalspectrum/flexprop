@@ -1,5 +1,5 @@
 # Simple GUI for Flexspin
-# Copyright 2018-2023 Total Spectrum Software
+# Copyright 2018-2024 Total Spectrum Software
 # Distributed under the terms of the MIT license;
 # see License.txt for details.
 #
@@ -15,7 +15,7 @@ set CONFIG_VERSION 2
 set aboutMsg "
 GUI tool for FlexSpin
 Version $spin2gui_version
-Copyright 2018-2023 Total Spectrum Software Inc.
+Copyright 2018-2024 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
 output will be correct.   
@@ -1692,7 +1692,7 @@ set comport_last [.mbar.comport index end]
 .mbar.special add command -label "Enter P2 ROM TAQOZ" -command { doSpecial "-xTAQOZ" "" }
 .mbar.special add command -label "Load current buffer into TAQOZ" -command { doSpecial "-xTAQOZ" [scriptSendCurFile] }
 .mbar.special add separator
-.mbar.special add command -label "Command shell for P2" -command { doSpecial "samples/shell/shell.binary" "" }
+#.mbar.special add command -label "Command shell for P2" -command { doSpecial "samples/shell/shell.binary" "" }
 #.mbar.special add command -label "Load current buffer into uPython on P2" -command { doSpecial "samples/upython/upython.binary" [scriptSendCurFile] }
 .mbar.special add separator
 .mbar.special add command -label "Run proplisp on P2" -command { doSpecial "samples/proplisp/lisp.binary" "" }
