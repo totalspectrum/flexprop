@@ -1,3 +1,7 @@
+Version 6.9.2
+
+- Fixed restore of compiler output font
+
 Version 6.9.0
 
 - Removed shell sample from menu

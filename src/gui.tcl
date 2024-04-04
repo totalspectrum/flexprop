@@ -415,6 +415,7 @@ proc config_open {} {
     }
 
     resetTerminalFont $config(term_font)
+    resetBottomFont $config(botfont)
     return 1
 }
 
