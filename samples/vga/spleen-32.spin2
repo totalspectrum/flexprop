@@ -11,6 +11,6 @@ DAT
 fontdata
   file "spleen-16x32.fnt"
 
-PUB getfont()
+PUB getfont() : r
   return @fontdata
 

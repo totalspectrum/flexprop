@@ -13,5 +13,5 @@ DAT
 fontdata
   file "unscii-16.fnt"
 
-PUB getfont()
+PUB getfont() : r
   return @fontdata

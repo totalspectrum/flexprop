@@ -39,7 +39,7 @@ VAR
 OBJ
     vga: "vga_tile_driver.spin2"
 
-PUB start(pinbase) | x, fontptr, fontheight
+PUB start(pinbase) : x | fontptr, fontheight
   fontptr := fnt.getfont()
   if FONT_HEIGHT == 15
     fontptr += 256 * FONT_WIDTH / 8  ' skip a row
