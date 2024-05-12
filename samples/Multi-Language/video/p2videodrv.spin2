@@ -660,7 +660,7 @@ PUB hex(value, digits)
 
   value <<= (8 - digits) << 2
   repeat digits
-    out(lookupz((value <-= 4) & $F : "0".."9", "A".."F"))
+    out(lookupz((value ROL= 4) & $F : "0".."9", "A".."F"))
 
 
 PUB bin(value, digits)
@@ -669,7 +669,7 @@ PUB bin(value, digits)
 
   value <<= 32 - digits
   repeat digits
-    out((value <-= 1) & 1 + "0")
+    out((value ROL= 1) & 1 + "0")
 
 '----------------------------------------------------------------------------------
 
