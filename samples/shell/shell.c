@@ -38,7 +38,7 @@ struct __using("spin/hubram.spin2") xmem; // plain HUB memory; adjust RAM_SIZE!
 #elif 0
 // P2 HyperRam add-on card
 struct __using("spin/hyperram.spin2", BASEPIN = RAM_BASEPIN) xmem;
-#elif 1
+#elif 0
 
 // 4 bit wide PSRAM
 #define PSRAM_DRIVER "psram4drv-dualCE" // for Ray's Logic 24 MB board
