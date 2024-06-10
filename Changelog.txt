@@ -1,3 +1,7 @@
+Version 6.9.9
+
+- Added .elf files to list of binary types
+
 Version 6.9.2
 
 - Fixed restore of compiler output font
