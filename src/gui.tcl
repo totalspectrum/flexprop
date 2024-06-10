@@ -620,7 +620,7 @@ set SpinTypes {
 }
 
 set BinTypes {
-    {{Binary files}   {.binary .bin .bin2} }
+    {{Binary files}   {.binary .bin .bin2 .elf} }
     {{All files}    *}
 }
 
