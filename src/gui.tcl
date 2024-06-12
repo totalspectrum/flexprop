@@ -200,7 +200,7 @@ proc setShadowP2Defaults {} {
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
     set shadow(serialcmd) "\"%D/bin/loadp2$EXE\" -k %P -b%r \"%B\" %9"
     set shadow(wificmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -r %9 -q"
-    set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" -SPI -k %P -b%r \"%B\" -t"
+    set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" -FLASH -k %P -b%r \"%B\" -t"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(baud) 230400
 }
@@ -2367,6 +2367,7 @@ set cmddialoghelptext {
     %r = Replace with current baud rate
     %S = Replace with current source file name
     %t = Replace with tab width
+    %9 = Replace with command to activate 9P file server
     %% = Insert a % character
 }
 proc copyShadowClose {w} {
