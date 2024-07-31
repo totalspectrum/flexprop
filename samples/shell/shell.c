@@ -2,7 +2,7 @@
 // A very simple command line shell for the P2
 // useful for copying files between host and SD card,
 // for example.
-// Copyright 2021-2023 Total Spectrum Software Inc.
+// Copyright 2021-2024 Total Spectrum Software Inc.
 // MIT Licensed, see LICENSE.txt for details.
 //
 #include <stdio.h>
@@ -28,7 +28,7 @@
 
 // base pin to use for RAMDISK
 // use 40 for built in memory on P2-EC32MB Edge board 
-#define RAM_BASEPIN 40
+#define RAM_BASEPIN 8
 
 // driver to use for RAM disk
 // select one of the following
@@ -38,7 +38,7 @@ struct __using("spin/hubram.spin2") xmem; // plain HUB memory; adjust RAM_SIZE!
 #elif 0
 // P2 HyperRam add-on card
 struct __using("spin/hyperram.spin2", BASEPIN = RAM_BASEPIN) xmem;
-#elif 0
+#elif 1
 
 // 4 bit wide PSRAM
 #define PSRAM_DRIVER "psram4drv-dualCE" // for Ray's Logic 24 MB board
@@ -88,9 +88,6 @@ static int xmem_blkwrite(void *hubsrc, unsigned long exaddr) {
 
 _BlockDevice *initRamDevice() {
     static _BlockDevice dev;
-    static char read_buffer[RAM_PAGE_SIZE];
-    static char write_buffer[RAM_PAGE_SIZE];
-    static char lookahead_buffer[RAM_PAGE_SIZE];
     
 #ifdef _DEBUG_LFS
     __builtin_printf("initRamDevice\n");
@@ -100,10 +97,6 @@ _BlockDevice *initRamDevice() {
     dev.blk_write = &xmem_blkwrite;
     dev.blk_erase = &xmem_blkerase;
     dev.blk_sync = (void *)&xmem.sync;
-
-    dev.read_cache = read_buffer;
-    dev.write_cache = write_buffer;
-    dev.lookahead_cache = lookahead_buffer;
 
     return &dev;
 }
