@@ -1,3 +1,7 @@
+Version 7.0.0
+
+- Added hyperlinks for Spin objects
+
 Version 6.9.9
 
 - Added .elf files to list of binary types

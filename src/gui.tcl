@@ -200,7 +200,7 @@ proc setShadowP2Defaults {} {
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
     set shadow(serialcmd) "\"%D/bin/loadp2$EXE\" -k %P -b%r \"%B\" %9"
     set shadow(wificmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -r %9 -q"
-    set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" -FLASH -k %P -b%r \"%B\" -t"
+    set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" -SPI -k %P -b%r \"%B\" -t"
     set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(baud) 230400
 }
@@ -620,7 +620,7 @@ set SpinTypes {
 }
 
 set BinTypes {
-    {{Binary files}   {.binary .bin .bin2 .elf} }
+    {{Binary files}   {.binary .bin .bin2} }
     {{All files}    *}
 }
 
@@ -861,6 +861,8 @@ proc loadFileToTab {w filename title} {
 proc findFileOnPath { filename startdir } {
     global config
     # normalize file name
+    set found ""
+    #puts "findFileOnPath $filename $startdir"
     if { [file pathtype $filename] != "absolute" } {
 	# first check startdir
 	set s [file join $startdir $filename]
@@ -871,8 +873,40 @@ proc findFileOnPath { filename startdir } {
 	foreach d $config(liblist) {
 	    set s [file join $d $filename]
 	    if { [file exists $s] } {
-		set filename [file normalize $s]
+		set found [file normalize $s]
 		break
+	    }
+	}
+    } else {
+	set found $filename
+    }
+    if { $found != "" && [file exists $found] } {
+	return $found
+    }
+    if { [file extension $filename] == "" } {
+	# if file was given without an extension, try
+	# an appropriate one based on the current file
+	#puts "findFileOnPath try with extension"
+	set x [file extension [currentFile]]
+	switch -glob $x {
+	    .c* {
+		return [findFileOnPath "$filename.h" $startdir]
+	    }
+	    .h* {
+		return [findFileOnPath "$filename.h" $startdir]
+	    }
+	    .spin2 {
+		set x [findFileOnPath "$filename.spin2" $startdir]
+		if { file exists $x } {
+		    return $x
+		}
+		set x [findFileOnPath "$filename.spin" $startdir]
+		if { file exists $x } {
+		    return $x
+		}
+	    }
+	    default {
+		return [findFileOnPath "$filename.spin" $startdir]
 	    }
 	}
     }
@@ -1340,14 +1374,16 @@ proc setHighlightingForFile {w fname} {
     } elseif { $config(syntaxhighlight) } {
 	if { [is_c_file $fname] } {
 	    setSyntaxHighlightingC $w
+	    setHighlightingIncludes $w
 	} else {
 	    if { [is_basic_file $fname] } {
 		setSyntaxHighlightingBasic $w
+		setHighlightingIncludes $w
 	    } else {
 		setSyntaxHighlightingSpin $w
+		setHighlightingSpinObj $w
 	    }
 	}
-	setHighlightingIncludes $w
     }
 }
 
@@ -1380,6 +1416,21 @@ proc setHighlightingSide {w} {
     ctext::addHighlightClassForRegexp $w hyperlink $color(hyperlink) $fullRE
     $w tag configure hyperlink -underline true
 }
+
+proc setHighlightingSpinObj {w} {
+    global color
+    set include1RE {(?:#include\ [^\"]*\")([^\"]+)}
+    set objRE {(?:^(\s)+[a-zA-Z0-9_\[\]]+\s*:[^\"]*\")([^\"]+)}
+
+    set fullRE "$include1RE|$objRE"
+    setHyperLinkResponse $w doClickOnLink
+    ctext::addHighlightClassForRegexp $w hyperlink $color(hyperlink) $fullRE
+    $w tag configure hyperlink -underline true
+}
+
+#
+# Spin file (.spin*) highlighting
+#
 
 #
 # C language highlighting
@@ -2367,7 +2418,6 @@ set cmddialoghelptext {
     %r = Replace with current baud rate
     %S = Replace with current source file name
     %t = Replace with tab width
-    %9 = Replace with command to activate 9P file server
     %% = Insert a % character
 }
 proc copyShadowClose {w} {
