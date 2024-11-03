@@ -19,6 +19,7 @@ ren <f> <new> :  rename file <f> to <new>
 rmdir <d>     :  remove directory <d>
 type  <f>     :  show file <f> on the terminal
 mount <d>     :  mount flash, SD card, or ramdisk
+mountfat <d> <f> : mount a FAT file system image named <f> on point <d>
 unmount <d>   :  unmount flash, SD, or ramdisk
 mkfs /flash   :  format flash with little fs
 mkfs /ram     :  format RAM disk with little fs
@@ -36,7 +37,7 @@ Known mount points:
 
 The host file system is automatically mounted as `/host`. The user may then choose to mount either the FAT formatted SD card (as `/sd`) or the littlefs formatted flash drive (as `/flash`). Only 6 MB of the flash, starting at the 2 MB mark, is used for the file system, the rest is free for other uses (such as storing boot code). If the flash is not properly formatted it will automatically be formatted on mount.
 
-The ramdisk configuration may be changed by editing shell.c and changing the defines and structs at the top. This only matters if the ramdisk is actually used (via `mount /ram`).
+The ramdisk configuration may be changed by editing shell.c and changing the defines and structs at the top. This only matters if the ramdisk is actually used (via `mount /ram`). The default is for the 32MB RAM on the P2-EC32MB Edge board.
 
 Communication with the host PC is done using the 9P file system protocol, running over the serial line. This is set to the default baud rate of 230400, which is rather slow.
 
@@ -68,7 +69,7 @@ Flash and SD may not be mounted at the same time.
 
 ## Parts Used
 
-P2 Eval board. (Probably any P2 board would work, actually!)
+P2-EC32MB (Probably any P2 board would work, actually!)
 
 ## Source Code
 
@@ -76,7 +77,7 @@ See attached.
 
 ## Programming Language
 
-FlexC (needs FlexProp version 5.1.1-beta or later)
+FlexC (needs FlexProp version 7.0.0-beta or later)
 
 ## Tools and Operating System
 

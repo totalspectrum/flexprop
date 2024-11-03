@@ -27,8 +27,9 @@
 #pragma exportdef RAMDISK_SIZE
 
 // base pin to use for RAMDISK
-// use 40 for built in memory on P2-EC32MB Edge board 
-#define RAM_BASEPIN 8
+// use 40 for built in memory on P2-EC32MB Edge board
+#define RAM_BASEPIN 40
+//#define RAM_BASEPIN 8
 
 // driver to use for RAM disk
 // select one of the following
@@ -38,7 +39,7 @@ struct __using("spin/hubram.spin2") xmem; // plain HUB memory; adjust RAM_SIZE!
 #elif 0
 // P2 HyperRam add-on card
 struct __using("spin/hyperram.spin2", BASEPIN = RAM_BASEPIN) xmem;
-#elif 1
+#elif 0
 
 // 4 bit wide PSRAM
 #define PSRAM_DRIVER "psram4drv-dualCE" // for Ray's Logic 24 MB board
@@ -58,46 +59,65 @@ struct __using("spin/psram.spin2", DATABUS = RAM_BASEPIN, CLK_PIN = RAM_BASEPIN+
 // good default size for littlefs
 #define RAM_PAGE_SIZE 256
 
-static int xmem_blkread(void *hubdata, unsigned long exaddr, unsigned long count) {
-    xmem.read(hubdata, exaddr, RAM_PAGE_SIZE);
+static unsigned long xmem_pos = 0;
+
+static int xmem_read(vfs_file_t *handle, void *hubdata, unsigned long count) {
+    unsigned long exaddr = xmem_pos;
+
+    xmem.read(hubdata, exaddr, count);
 #ifdef _DEBUG_LFS
     const char *ptr = hubdata;
     __builtin_printf("blkread: exaddr=%x data=[%x %x %x %x ...]\n",
                      exaddr, ptr[0], ptr[1], ptr[2], ptr[3]);
-#endif    
-    return 0;
+#endif
+    xmem_pos += count;
+    return count;
 }
 
-static int xmem_blkerase(unsigned long exaddr) {
-#ifdef _DEBUG_LFS
-    __builtin_printf("blkerase: exaddr=%x\n", exaddr);
-#endif    
-    xmem.fill(exaddr, 0xff, RAM_PAGE_SIZE);
-    return 0;
-}
-
-static int xmem_blkwrite(void *hubsrc, unsigned long exaddr) {
+static int xmem_write(vfs_file_t *handle, void *hubsrc, unsigned long count) {
+    unsigned long exaddr = xmem_pos;
 #ifdef _DEBUG_LFS
     const char *ptr = hubsrc;
     __builtin_printf("blkwrite: exaddr=%x data=[%x %x %x %x ...]\n",
                      exaddr, ptr[0], ptr[1], ptr[2], ptr[3]);
 #endif    
-    xmem.write(hubsrc, exaddr, RAM_PAGE_SIZE);
+    xmem.write(hubsrc, exaddr, count);
+    xmem_pos += count;
+    return count;
+}
+
+static off_t xmem_lseek(vfs_file_t *handle, off_t off, int req) {
+    if (req == 0) {
+        xmem_pos = (unsigned)off;
+    } else if (req == 1) {
+        xmem_pos += (int)off;
+    } else {
+        return -1;
+    }
+    return xmem_pos;
+}
+
+static int xmem_flush(vfs_file_t *handle) {
+    xmem.sync();
     return 0;
 }
 
-_BlockDevice *initRamDevice() {
-    static _BlockDevice dev;
+static int xmem_ioctl(vfs_file_t *handle, int req, void *buf) {
+    return -1;
+}
+
+vfs_file_t *initRamDevice() {
+    static vfs_file_t dev;
     
 #ifdef _DEBUG_LFS
     __builtin_printf("initRamDevice\n");
 #endif    
     xmem.start();
-    dev.blk_read = &xmem_blkread;
-    dev.blk_write = &xmem_blkwrite;
-    dev.blk_erase = &xmem_blkerase;
-    dev.blk_sync = (void *)&xmem.sync;
-
+    dev.read = &xmem_read;
+    dev.write = &xmem_write;
+    dev.lseek = &xmem_lseek;
+    dev.flush = &xmem_flush;
+    dev.ioctl = &xmem_ioctl;
     return &dev;
 }
 
@@ -185,7 +205,7 @@ void do_dir(const char *filename)
             printf("%8s %s\n", "<dir>", ent->d_name);
         } else {
             // not a directory, print the size
-            printf("%8u %s\n", sbuf.st_size, ent->d_name);
+            printf("%8u %s\n", (unsigned)sbuf.st_size, ent->d_name);
         }
     }
     // all done, close the directory
@@ -276,11 +296,20 @@ void do_mount(const char *dirname)
     } else if ( strcmp(dirname, "/pfs") == 0 ) {
         r = mount(dirname, _vfs_open_parallaxfs());
     } else if ( strcmp(dirname, "/ram") == 0 ) {
-        ram_config.dev = initRamDevice();
+        ram_config.handle = initRamDevice();
         r = mount(dirname, _vfs_open_littlefs_flash(1, &ram_config));
     } else {
         printf("Unknown mount point %s\n", dirname);
     }
+    if (r != 0) {
+        printf("ERROR: got error %d during mount\n", r);
+    }
+}
+
+// mount FAT on a file
+void do_mountfat(const char *dirname, const char *imgfile)
+{
+    int r = mount(dirname, _vfs_open_fat_file(imgfile));
     if (r != 0) {
         printf("ERROR: got error %d during mount\n", r);
     }
@@ -312,6 +341,7 @@ void do_help(void)
     printf("rmdir <d>     :  remove directory d\n");
     printf("type <f>      :  type file on console\n");
     printf("mount  <d>    :  mount file system on mount point (see below)\n");
+    printf("mountfat <d> <f> : mount FAT image file f on point d\n");
     printf("umount <d>    :  unmount file system (see below)\n");
     printf("mkfs <d>      :  format flash or RAM with little fs\n");
     printf("\nBuilt in mount points:\n");
@@ -438,6 +468,8 @@ void main()
             do_mkfs(arg1);       // format flash
         } else if (!strcmp(cmd, "mount")) {
             do_mount(arg1);      // mount drive/flash
+        } else if (!strcmp(cmd, "mountfat")) {
+            do_mountfat(arg1, arg2);
         } else if (!strcmp(cmd, "umount") || !strcmp(cmd, "unmount")) {
             do_umount(arg1);  // unmount drive/flash
         } else {
