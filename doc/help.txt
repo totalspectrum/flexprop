@@ -118,10 +118,6 @@ Opens a terminal window connected to the built in P2 ROM debug monitor.
 
 Opens a terminal window. Does not scan for a P2, so the port to use must be explicitly set in the `Port` menu.
 
-#### Identify Serial Ports
-
-Checks for the Propeller version on each attached serial port, and shows a dialog box with the result.
-
 Configuring Commands
 --------------------
 

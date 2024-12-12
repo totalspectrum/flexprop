@@ -1195,13 +1195,14 @@ proc doHelp { name } {
     }
 }
 
-proc doIdentify { } {
-    global ROOTDIR
-    global EXE
-    set ports [exec -ignorestderr $ROOTDIR/bin/proploader$EXE -v -P]
-
-    tk_messageBox -icon info -type ok -message "Serial Ports" -detail "$ports"
-}
+# old code that does not work properly
+#proc doIdentify { } {
+#    global ROOTDIR
+#    global EXE
+#    set ports [exec -ignorestderr $ROOTDIR/bin/proploader$EXE -v -P]
+#
+#    tk_messageBox -icon info -type ok -message "Serial Ports" -detail "$ports"
+#}
 
 proc doSpecial {name extraargs} {
     global ROOTDIR
@@ -1752,8 +1753,8 @@ set comport_last [.mbar.comport index end]
 .mbar.special add separator
 .mbar.special add command -label "Enter P2 ROM monitor" -command { doSpecial "-xDEBUG" "" }
 .mbar.special add command -label "Terminal only" -command { doSpecial "-xTERM" "-t" }
-.mbar.special add separator
-.mbar.special add command -label "Identify Serial Ports" -command doIdentify
+#.mbar.special add separator
+#.mbar.special add command -label "Identify Serial Ports" -command doIdentify
 
 .mbar add cascade -menu .mbar.help -label Help
 .mbar.help add command -label "GUI" -command { doGuiHelp }
