@@ -4,7 +4,7 @@
 # Options:
 # make install INSTALL=dir
 #    Makes for Linux or Mac; requires Tcl/Tk to already be installed
-# make zip SIGN=sign_script
+# make zip SIGNPC=pc_sign_script SIGNMAC=mac_sign_script
 #    Makes for Windows, linking against prebuild Tcl/Tk libraries in $(TCLROOT)
 #    Final output is in flexprop.zip
 #
