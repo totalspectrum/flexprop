@@ -13,9 +13,15 @@ const SCRN_HEIGHT = 240
 ' VGA definitions
 ' this gives the base pin that the A/V Expansion Board is
 ' plugged in to
+' We can define either VGA_BASE_PIN or DVI_BASE_PIN
+#define USE_DVI
 
+#ifdef USE_DVI
+const DVI_BASE_PIN = 0
+#else
 const VGA_BASE_PIN = 48
 const VGA_VSYNC_PIN = VGA_BASE_PIN + 4
+#endif
 
 ' serial definition
 ' _BAUD is defined automatically by flexgui, but for other
@@ -78,10 +84,14 @@ print "done"
 '' creates a 640x480 screen
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''
 sub Setup_Video()
+#ifdef USE_DVI
+  vid.initDisplay(-1, @display1, vid.DVI, DVI_BASE_PIN, 0, vid.RGBHV, @lineBuffer1, LINEBUFSIZE, 0, 0, 0)
+#else
   ' create a VGA display
   var timing = vid.getTiming(vid.RES_640x480)
 
-  vid.initDisplay(@display1, vid.VGA, VGA_BASE_PIN, VGA_VSYNC_PIN, vid.RGBHV, @lineBuffer1, LINEBUFSIZE, timing)
+  vid.initDisplay(-1, @display1, vid.VGA, VGA_BASE_PIN, VGA_VSYNC_PIN, vid.RGBHV, @lineBuffer1, LINEBUFSIZE, timing, 0, 0)
+#endif
 
   if (SCRN_HEIGHT = 480) then
     vid.initRegion(@first, vid.RGB16, 480, 0, 0, 0, 8, @frameBuffer(0), 0)
