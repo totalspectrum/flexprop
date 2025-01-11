@@ -28,7 +28,7 @@ Helper objects:
 
 video:
    Roger Loh's excellent video driver for the P2. Written in Spin. See
-   the various documentation files within the directory.
+   the various files within the directory.
 
 turtle:
    A GPL'd turtle graphics library.

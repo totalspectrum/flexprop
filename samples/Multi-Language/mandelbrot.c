@@ -31,9 +31,14 @@
 #define SCRN_WIDTH 640
 #define SCRN_HEIGHT 480
 
-// VGA definitions
+// VGA (or DVI) definitions
+#if 1
+// DVI
+#define DVI_BASE_PIN 0
+#else
 #define VGA_BASE_PIN 48
 #define VGA_VSYNC_PIN (VGA_BASE_PIN + 4)
+#endif
 
 // enough room for a scanline at full colour bit depth
 #define LINEBUFSIZE (1920*4)
@@ -42,8 +47,8 @@
 struct __using("video/p2videodrv.spin2") vid;
 
 // space for video driver display and region info
-int display1[14];
-int first[14];
+int display1[16];
+int first[16];
 
 // the actual frame and line buffer
 char frameBuffer[SCRN_WIDTH*SCRN_HEIGHT];
@@ -251,7 +256,24 @@ void rendermandel(void *arg)
 
 void Setup_Video()
 {
-    vid.initDisplay(&display1, vid.VGA, VGA_BASE_PIN, VGA_VSYNC_PIN, vid.RGBHV, &lineBuffer[0], LINEBUFSIZE, 0);
+//    vid.initDisplay(&display1, vid.VGA, VGA_BASE_PIN, VGA_VSYNC_PIN, vid.RGBHV, &lineBuffer[0], LINEBUFSIZE, 0);
+#ifdef VGA_BASE_PIN
+    vid.initDisplay(-1, &display1, vid.VGA, VGA_BASE_PIN,
+                    VGA_VSYNC_PIN, 0,
+                    &lineBuffer[0], LINEBUFSIZE,
+                    0, /* user timing */
+                    0, /* memory mbox */
+                    0 /* region */
+        );
+#else    
+    vid.initDisplay(-1, &display1, vid.DVI, DVI_BASE_PIN,
+                    0, 0,
+                    &lineBuffer[0], LINEBUFSIZE,
+                    0, /* user timing */
+                    0, /* memory mbox */
+                    0 /* region */
+        );
+#endif
 
     vid.initRegion(&first, vid.RGBI, 480, 0, 0, 0, 8, &frameBuffer[0], 0);
   

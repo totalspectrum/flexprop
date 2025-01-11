@@ -1,0 +1,212 @@
+'******************************************************************************
+'*                                                                            *
+'*  VGA/DVI text driver features demo for Propeller P2                        *
+'*  ==================================================                        *
+'*                                                                            *
+'*  This demo shows several of the text driver's features and is configured   *
+'*  to output via VGA or DVI using the CON block constant DVI_VIDEO_TYPE.     *
+'*                                                                            *
+'*  You can also experiment with the flags and enable these options:          *
+'*  DOUBLE_HIGH, DOUBLE_WIDE, FLASH_TEXT                                      *
+'*                                                                            *
+'*  You can assign VGA, SVGA, XGA etc as the desired video resolutions to:    *
+'*  VGA_RES and DVI_RES.                                                      *
+'*                                                                            *
+'*  Note: In this demo DVI will only work up to 800x600 at 50Hz (SVGA_50Hz).  *
+'*                                                                            *
+'*  Adjust the base pins as appropriate for your board setup using:           *
+'*  VGA_BASE_PIN, DVI_BASE_PIN etc                                            *
+'*                                                                            *
+'*  Revision history:                                                         *
+'*  -----------------                                                         *
+'*    0.92b  15 FEB 2021  rogloh       -initial BETA release-                 *
+'*                                                                            *
+'******************************************************************************
+CON
+    ' adjust video output pins accordingly
+    VGA_BASE_PIN  = 0                   ' set to the VGA pin group (HSYNC pin number)
+    VGA_VSYNC_PIN = VGA_BASE_PIN + 4    ' set to the VSYNC pin number
+
+    DVI_BASE_PIN = 8                    ' set to the DVI pin group base pin number
+
+    VGA_RES = vid.XGA ' select a resolution from VGA, SVGA, XGA, (SXGA, FULLHD, WUXGA are mono text only)
+    DVI_RES = vid.WVGA ' or try WVGA or SVGA_50H
+
+    DVI_VIDEO_TYPE = 0  ' set 0 for VGA output, or 1 for DVI output
+
+    ' control optional text screen flags by setting 1 or 0 in multipliers below
+    FLAGS = (0*vid.DOUBLE_HIGH + 0*vid.DOUBLE_WIDE + 1*vid.FLASH_TEXT)
+
+    ' default colours
+
+    FOREGROUND = vid.FOREGROUND
+    BACKGROUND = vid.BACKGROUND
+
+OBJ
+    vid: "p2textdrv"
+
+PUB demo() : id, i, loops, row, col, origfont
+' initialize the display
+  if DVI_VIDEO_TYPE
+    id := vid.initDvi(-1, DVI_BASE_PIN, 0, FLAGS, DVI_RES)
+  else
+    id := vid.initVga(-1, VGA_BASE_PIN, VGA_VSYNC_PIN, FLAGS, VGA_RES)
+
+' now we can map SEND to output to the active text region
+  send:=@vid.tx
+
+  ' preserve default font pointer
+  origfont := vid.getFontAddr()
+' now put some text on the screen to demonstrate basic features
+  repeat loops from 1 to 10
+    vid.setTextColours(vid.CYAN, vid.BLACK)
+    send("Simple P2 VGA Text Driver Demo", 13, 10)
+    vid.setTextColours(vid.YELLOW, vid.BLACK)
+    if DVI_VIDEO_TYPE
+      send("Digital video output (DVI)", 13, 10)
+    else
+      send("Analog video output (VGA)",13, 10)
+    send("Current P2 frequency = ")
+    vid.dec(clkfreq)  ' can print simple decimals or hex
+    send(" MHz", 13, 10, "Video driver COGID = ")
+    vid.dec(id)
+    send(13,10,"Total Columns = ")
+    vid.dec(vid.getCurrentColumns())
+    send(13,10,"Total Rows = ")
+    vid.dec(vid.getCurrentRows())
+    send(13,10,"Font Height = ")
+    vid.dec(vid.getFontHeight())
+    waitms(5000)
+
+    vid.setTextColours(FOREGROUND, BACKGROUND)
+    send(13,10, "Slow & Fast Printing tests:",13,10)
+    waitms(800)
+    vid.setCursor(vid.HIDDEN, 0) ' hide primary cursor
+    i:=0
+    ' show text message
+    repeat while byte[@message][i] and i<2000
+      vid.out(byte[@message][i++])
+      waitms(1) ' delay just for slower printing effect
+    ' print faster
+    vid.printStr(@message)
+    vid.printStr(@message)
+    waitms(800)
+
+    ' show character set
+    send(13,10,"P2 Character Set:", 13, 10)
+    vid.setTextColours(vid.LIGHT_RED, BACKGROUND)
+    repeat i from 0 to 255
+      vid.txRaw(i) ' use txRaw to avoid CR/LF/BS/TAB/FF handling when printing
+    waitms(2000)
+
+    ' show the current text palette
+    vid.setTextColours(FOREGROUND, BACKGROUND)
+    send(13, 10, "Sample Palette (VGA):",13, 10)
+    repeat i from 0 to 255
+        vid.setTextColours(i&$f, i/16) ' set foreground and background colours
+        send("*")
+
+    ' do some cursor positioning control
+    vid.setTextColours(FOREGROUND, BACKGROUND)
+    send(13, 10, "Cursor Positioning:", 13, 10)
+    waitms(2000)
+    vid.setCursor(vid.FLASHING_BLOCK, vid.WHITE) ' show primary cursor 0
+    row,col := vid.getTextPos()
+    repeat i from 1 to 4
+        vid.setTextColours(vid.RED+i, BACKGROUND)
+        vid.setTextPos(row, i*8)
+        row,col := vid.getTextPos()
+        vid.dec(col)
+        vid.setTextPos(row-1, 20)
+        vid.setTextColours(FOREGROUND, BACKGROUND)
+        vid.clreol()
+        vid.setTextColours(vid.RED, BACKGROUND)
+        vid.dec(col)
+        send(",")
+        vid.dec(row)
+        waitms(800)
+    vid.setTextPos(row, col)
+
+    ' how to set the primary cursor colour
+    vid.setTextColours(FOREGROUND, BACKGROUND)
+
+    ' do some cursor movement
+    waitms(2000)
+    send(13,10,"Cursor Movement:")
+    waitms(1000)
+    repeat 10
+       vid.cursorUp()
+       waitms(200)
+    repeat 10
+       vid.cursorDown()
+       waitms(200)
+    repeat 10
+       vid.cursorRight()
+       waitms(200)
+    repeat 10
+       vid.cursorLeft()
+       waitms(200)
+
+    send(13,10, "Cursor Types:")
+    vid.setCursor(vid.SOLID_BLOCK, vid.LIGHT_MAGENTA)
+    waitms(2000)
+    vid.setCursor(vid.SOLID_LINE, vid.BLUE)
+    waitms(2000)
+    vid.setCursor(vid.FLASHING_LINE, vid.LIGHT_GREEN)
+    waitms(2000)
+    vid.setCursor(vid.FLASHING_BLOCK, vid.WHITE)
+    waitms(1000)
+
+    ' scroll the screen
+    send(13, 10, "Window Scrolling:")
+    waitms(1000)
+    repeat 8
+       vid.scrollUp()
+       waitms(100)
+    repeat 7
+       vid.scrollDown()
+       waitms(100)
+
+    ' change the font and size
+    waitms(2000)
+    send(13, 10, "Font size change:")
+    waitms(1000)
+    if loops & 1
+        vid.setFont(@customfont, 6)
+    else
+        vid.setFont(origfont, 16)
+
+    ' another way to clear the screen (driver recognizes Form Feed)
+    send(12)
+
+DAT
+
+' some text information to be printed
+message     file    "p2textdrv.spin2"
+            long    0
+
+customfont  file "font6"
+
+{
+LICENSE TERMS
+-------------
+Copyright 2021 Roger Loh
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+}

@@ -1,0 +1,67 @@
+'******************************************************************************
+'*                                                                            *
+'*  DVI text mode demo for Propeller P2                                       *
+'*  ===================================                                       *
+'*                                                                            *
+'*  This demo shows a simple way to setup and get text to output to a screen  *
+'*  in a DVI output format using the text driver.                             *
+'*                                                                            *
+'*  You can experiment with the flags arguments and enable these driver       *
+'*  attributes :                                                              *
+'*  DOUBLE_HIGH, DOUBLE_WIDE, FLASH_TEXT                                      *
+'*                                                                            *
+'*  You can pass in VGA, WVGA, SVGA_50Hz for the resolution.                  *
+'*                                                                            *
+'*  Revision history:                                                         *
+'*  -----------------                                                         *
+'*    0.92b  15 FEB 2021  rogloh       -initial BETA release-                 *
+'*                                                                            *
+'******************************************************************************
+
+CON
+        DVI_BASE_PIN  = 8     ' set to the base pin of the DVI group
+
+OBJ
+        vid: "p2textdrv"
+
+PUB helloworld() | i, j
+' initialize the display to desired resolution (eg, VGA, WVGA etc)
+    vid.initDvi(-1, DVI_BASE_PIN, 0, vid.FLASH_TEXT, vid.WVGA)
+
+' we can choose to map SEND to output to the text region
+    send:=@vid.tx
+
+' print something colourful
+    repeat i from 1 to 255
+        vid.setTextColours(i / 16, i // 16)
+        send("Simple P2 VGA Text Driver says: Hello World! -  ")
+        repeat j from 0 to 127
+          vid.setTextColours(j // 16, i // 8)
+          vid.txRaw(j)
+        vid.nl()
+        waitms(800)
+
+
+{
+LICENSE TERMS
+-------------
+Copyright 2021 Roger Loh
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+}

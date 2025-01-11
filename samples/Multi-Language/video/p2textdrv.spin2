@@ -1,0 +1,389 @@
+'******************************************************************************
+'*                                                                            *
+'*    VGA/DVI text mode driver interface for Propeller P2 video driver        *
+'*   =================================================================        *
+'*                                                                            *
+'*  This driver wraps the underlying video driver with an interface designed  *
+'*  to simplify the display of coloured text to screen directly from the P2.  *
+'*                                                                            *
+'*  Features:                                                                 *
+'*                                                                            *
+'*    - VGA or DVI display output supported                                   *
+'*    - selectable video modes (monochrome text at resolutions over XGA)      *
+'*    - simplifies configuration of screens with single text output region    *
+'*    - 16 colour text, independent foreground and background per character   *
+'*    - enables option double wide and high text                              *
+'*    - output automatically follows screen size                              *
+'*    - supports window scrolling, cursor control, some terminal controls     *
+'*    - built in 16 colour or mono text mode renderer                         *
+'*    - programmable font size (1-256 scanlines), 8 pixel wide font           *
+'*    - up to 240 text columns supported in 1920 pixel wide modes             *
+'*    - optional text blinking attribute (VGA style 16 bit text data format)  *
+'*    - automatic PLL calculations for custom video timing                    *
+'*                                                                            *
+'*  Revision history:                                                         *
+'*  -----------------                                                         *
+'*    0.92b  15 FEB 2021  rogloh       -initial BETA release-                 *
+'*                                                                            *
+'******************************************************************************
+{
+LICENSE TERMS
+-------------
+Copyright 2021 Roger Loh
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+}
+
+CON
+        MAXPIXELS = 1920    ' configure these for your maximum supported resolution 
+        MAXLINES  = 1200    ' or excessive memory will be used!
+
+        MINFONTHEIGHT = 6   ' set to your smallest font's height
+
+        FONTHEIGHT = 16     ' set to the default font's height
+        FONTWIDTH = 8       ' always 8 in this driver
+        MAXROWS = (MAXLINES + (MINFONTHEIGHT-1))/MINFONTHEIGHT
+        MAXCOLS = (MAXPIXELS + (FONTWIDTH-1))/FONTWIDTH
+
+        LINEBUFSIZE = MAXCOLS*4   ' number of bytes required for each scan line buffer (1 pixel = 1 nibble @4bpp)
+        SCREENSIZE  = MAXCOLS*MAXROWS  ' number of words in the screen buffer
+
+        ' default colour mappings for VGA
+        BLACK         = 0
+        BLUE          = 1
+        GREEN         = 2
+        CYAN          = 3
+        RED           = 4
+        MAGENTA       = 5
+        BROWN         = 6
+        LIGHT_GREY    = 7
+        DARK_GREY     = 8
+        LIGHT_BLUE    = 9
+        LIGHT_GREEN   = 10
+        LIGHT_CYAN    = 11
+        LIGHT_RED     = 12
+        LIGHT_MAGENTA = 13
+        YELLOW        = 14
+        WHITE         = 15
+
+        FOREGROUND = GREEN ' default foreground colour at start up
+        BACKGROUND = BLACK ' default background colour at start up
+
+        ' some common resolutions
+        EGA = video.RES_640x350
+        VGA = video.RES_640x480
+        WVGA = video.RES_800x480_DVI ' 60Hz but reduced blanking for working with DVI
+        SVGA_50Hz = video.RES_800x600_DVI ' lower 50Hz refresh to enable over DVI
+        SVGA = video.RES_800x600
+        XGA = video.RES_1024x768
+        SXGA = video.RES_1280x1024 ' this and higher resolutions below will be in monochrome only
+        FULLHD = video.RES_1920x1080
+        WUXGA = video.RES_1920x1200
+
+        ' cursor styles
+        HIDDEN         = 0
+        SOLID_BLOCK    = 1
+        FLASHING_BLOCK = 2
+        SOLID_LINE     = 3
+        FLASHING_LINE  = 4
+
+        ' text region flags
+        DOUBLE_WIDE = video.DOUBLE_WIDE
+        DOUBLE_HIGH = video.DOUBLE_HIGH
+        FLASH_TEXT  = video.FLASH_TEXT
+
+OBJ
+        video: "p2videodrv"                  ' underlying video driver
+
+VAR
+        long region[video.REGION_SIZE/4]     ' text region structure
+        long display[video.DISPLAY_SIZE/4]   ' display structure
+        byte context[video.CONTEXT_SIZE]     ' context data for text region
+        byte lineBuffers[LINEBUFSIZE*2]      ' space for two line buffers
+        word screenbuf[SCREENSIZE]           ' screen buffer size
+        long palette[16]                     ' 16 colour palette
+        long custom[video.TIMING_SIZE/4]     ' custom timing
+
+' ----------------------------------------------------------------------------
+
+PUB top()
+    repeat ' this is not a top level object
+
+' text screen and video driver initialization methods
+' screen will be filled with default background colour and cursor hidden until enabled
+PUB initVga(cog, basePin, vsyncPin, flags, resolution) : r 
+    return init(cog, basePin, vsyncPin, video.VGA, flags, video.getTiming(resolution))
+
+PUB initDvi(cog, basePin, reversedWiring, flags, resolution) : r
+    return init(cog, basePin, reversedWiring, video.DVI, flags, video.getTiming(resolution))
+
+' text printing methods (mostly pass through to underlying video driver)
+
+PUB nl() ' new line
+    video.nl()
+
+PUB crlf() ' alias for new line
+    video.nl()
+
+PUB out(ch) ' print a character
+    video.out(ch)
+
+PUB tx(ch) ' alias for out
+    video.out(ch)
+
+PUB tx16(ch) ' alias for out
+    video.tx16(ch)
+
+PUB txRaw(ch) ' print raw character without intepreting BS/CR/LF/FF/TAB
+    video.txRaw(ch)
+
+PUB hex(val, digits) ' print hex number
+    video.hex(val, digits)
+
+PUB bin(val, digits) ' print binary number
+    video.bin(val, digits)
+
+PUB dec(val) ' print signed decimal number
+    video.dec(val)
+
+PUB printStr(str) ' prints zero terminated string
+    video.printStr(str)
+
+PUB printStr16(str) ' prints zero terminated string (wide font)
+    video.printStr16(str)
+
+' text colour methods
+
+PUB setTextColours(fg, bg)
+    video.setTextColours(fg, bg)
+
+PUB getTextColours() : fg, bg
+    fg, bg := video.getTextColours()
+
+' screen clearing methods
+
+PUB clear() ' clear the screen
+    video.clear()
+
+PUB clreol() | row, col, fg, bg ' clear to end of line
+    row, col := video.getTextPos()
+    fg, bg := video.getTextColours()
+    fg := fg | (bg << 4)
+    wordfill(@screenbuf + 2 * (row * getCurrentColumns() + col), (fg << 8) + 32, getCurrentColumns() - col)
+
+PUB clreos() | row, col, fg, bg ' clear to end of screen
+    row, col := video.getTextPos()
+    fg, bg := video.getTextColours()
+    fg := fg | (bg << 4)
+    wordfill(@screenbuf + 2 * (row * getCurrentColumns() + col), (fg << 8) + 32, getCurrentColumns()*(getCurrentRows() - row) - col)
+
+' cursor positioning methods
+
+PUB home()
+    video.setTextPos(0, 0)
+
+PUB cursorUp() | row, col
+    row, col := video.getTextPos()
+    if row-- > 0
+        video.setTextPos(row, col)
+
+PUB cursorDown() | row, col
+    row, col := video.getTextPos()
+    if ++row < video.getCurrentRows(@display, @region)
+        video.setTextPos(row, col)
+
+PUB cursorLeft() | row, col
+    row, col := video.getTextPos()
+    if col-- > 0
+        video.setTextPos(row, col)
+
+PUB cursorRight() | row, col
+    row, col := video.getTextPos()
+    if ++col < video.getCurrentColumns(@display, @region)
+        video.setTextPos(row, col)
+
+PUB setRow(r) : row, col
+    row, col := video.getTextPos()
+    setTextPos(r, col)
+
+PUB setColumn(c) : row, col
+    row, col := video.getTextPos()
+    setTextPos(row, c)
+
+PUB setTextPos(row, col)
+    if (row +< getCurrentRows()) AND (col +< getCurrentColumns())
+        video.setTextPos(row, col)
+
+PUB getTextPos() : row, col
+    return video.getTextPos()
+
+' scrolling
+
+PUB scrollUp() | rows, cols, fg, bg
+    fg, bg := video.getTextColours()
+    cols := video.getCurrentColumns(@display, @region)
+    rows := video.getCurrentRows(@display, @region) - 1
+    wordmove(@screenbuf, @screenbuf + cols*2, rows*cols)
+    wordfill(@screenbuf+rows*cols*2, ((fg | (bg << 4)) << 8) + 32, cols)
+
+PUB scrollDown() | rows, cols, fg, bg
+    fg, bg := video.getTextColours()
+    cols := video.getCurrentColumns(@display, @region)
+    rows := video.getCurrentRows(@display, @region) - 1
+    wordmove(@screenbuf+cols*2, @screenbuf, rows*cols)
+    wordfill(@screenbuf, ((fg | (bg << 4)) << 8) + 32, cols)
+    
+' TODO - may want to include count argument for repeated scrolls in one go
+' PUB scrollLeft(count)
+' PUB scrollRight(count)
+
+' control the cursor style and colour
+' style is one of: HIDDEN, SOLID_BLOCK, FLASHING_BLOCK, SOLID_LINE, FLASHING_LINE
+
+PUB setCursor(style, colour) | flags
+    flags := lookup(style : video.CURS_ENABLE+video.CURS_SOLID, video.CURS_ENABLE, video.CURS_ENABLE+video.CURS_SOLID+2, video.CURS_ENABLE+2)
+    if flags == 0
+        video.hideCursor(@region, 0)
+    else
+        video.setCursorColour(@region, 0, colour)
+        video.setCursorFlags(@region, 0, flags)
+        video.showCursor(@region, 0)
+
+' palette control methods
+
+PUB getPalette() : addr ' return palette memory address
+    addr := long[@region][5]
+
+PUB setPalette(addr) ' set address of palette
+    video.setPalette(@region, addr)
+
+' font control methods
+
+' sets address and size of font. Warning: be sure to have enough screen buffer memory!
+PUB setFont(fontAddr, size) | lines
+    if size +> 0
+        lines := video.getActiveLines(@display)
+        video.setFont(@region, fontAddr, size)
+        if video.getFlags(@region) & video.DOUBLE_HIGH
+            size := size * 2
+        if lines // size ' truncate to keep complete rows visible
+            video.setSize(@region, lines - (lines // size))
+        else
+            video.setSize(@region, 0) ' text region consumes all scan lines
+
+PUB getFontAddr() : addr ' get current address of font
+    addr := video.getFont(@region)
+
+PUB getFontHeight() : size ' get current height of font
+    size := video.getFontHeight(@region)
+
+' utility methods
+
+PUB getScreenBuffer() : addr ' return screen buffer address for direct writes
+    addr := @screenbuf
+
+PUB getCurrentRows() : rows ' number of rows can change dynamically based on font height
+    rows := video.getCurrentRows(@display, @region)
+
+PUB getCurrentColumns() : cols
+    cols := video.getCurrentColumns(@display, @region)
+
+' advanced methods
+
+PUB wait() ' waits for vsync
+    video.waitForVsync(@display)
+
+PUB activate() ' select this driver's active context if multiple text drivers are being handled by a single COG
+    video.setTextOutput(@context, 1)
+
+' for custom video timing setups (experimental)
+
+PUB initVgaCustom(cog, basePin, vsyncPin, flags, p2freq, divisor, hsyncpol, hfp, hsyncpixels, hbp, hcolumns, vsyncpol, vfp, vsynclines, vbp, vislines) : r
+    return init(cog, basePin, vsyncPin, video.VGA, flags, video.createCustomTiming(@custom, 0, p2freq, divisor, hsyncpol, hfp, hsyncpixels, hbp, hcolumns, vsyncpol, vfp, vsynclines, vbp, vislines, 0, 0, 0))
+
+PUB initDviCustom(cog, basePin, reversedWiring, flags, p2freq, divisor, hsyncpol, hfp, hsyncpixels, hbp, hcolumns, vsyncpol, vfp, vsynclines, vbp, vislines) : r
+    return init(cog, basePin, reversedWiring, video.DVI, flags, video.createCustomTiming(@custom, 0, p2freq, divisor, hsyncpol, hfp, hsyncpixels, hbp, hcolumns, vsyncpol, vfp, vsynclines, vbp, vislines, 0, 0, 0))
+
+' ----------------------------------------------------------------------------
+
+' internal initialization method, sets up region and display information for video driver
+
+PRI init(cog, basePin, vsyncPin, output, flags, timing) : id | displayFlags
+    if output == video.DVI
+        displayFlags := vsyncPin ? video.DVI_REVERSED : 0 ' flag passed in vsyncPin argument
+    else ' assume VGA RGBHV for now, but other sync modes are possible
+        displayFlags := video.RGBHV
+
+    ' load the default palette
+    longmove(@palette, @vgapalette, 16)
+
+' start a VGA display output, pointing it to the first (and only) region for its display list, and auto allocate it a COG
+    id := video.initDisplay(cog,        { the cogid to use (-1 = auto-allocate)
+}                       @display,       { the display structure address in HUB RAM
+}                       output,         { video output type (VGA/DVI etc)
+}                       basePin,        { base pin number (hsync pin) of DVI pin group
+}                       vsyncPin,       { VSYNC pin (not used for DVI)
+}                       displayFlags,   { display flags
+}                       @lineBuffers,   { address of the consecutive two scan line buffers in HUB RAM
+}                       LINEBUFSIZE,    { size of a single scan line buffer in bytes
+}                       timing,         { obtain stock timing to use, (or create custom timing instead)
+}                       0,              { optional external memory mailbox address in HUB RAM (0=none)
+}                       video.initRegion( { setup a single text region as the display list
+}                                      @region,        { region structure address in HUB RAM
+}                                      video.TEXT,     { type of region is text
+}                                      0,              { size of region in scan lines (0=to end of screen)
+}                                      flags,          { region specific flags (if enabled text flashes if BG colour > 7)
+}                                      @palette,       { address of default palette to be used by region
+}                                      @font,          { address of default font to be used by this region
+}                                      FONTHEIGHT,     { number of scan lines in font
+}                                      @screenbuf,     { address of screen buffer in HUB RAM
+}                                      0)              { link to next region, NULL = last region
+}                       )
+
+' force a recomputation of displayed scan lines in the region based on font size and region flags
+  setFont(@font, FONTHEIGHT)
+
+' setup a text output context for the text region and then use it by default when printing
+  video.initTextOutput(@context, @display, @region, FOREGROUND, BACKGROUND, 1, 1)   'also erase region
+
+' ----------------------------------------------------------------------------
+
+DAT
+        orgh
+' a default VGA palette
+vgapalette
+            long    $00_00_00_00   ' 0 = black
+            long    $00_00_AA_00   ' 1 = dark blue
+            long    $00_AA_00_00   ' 2 = dark green
+            long    $00_AA_AA_00   ' 3 = dark cyan
+            long    $AA_00_00_00   ' 4 = dark red
+            long    $AA_00_AA_00   ' 5 = dark magenta
+            long    $AA_55_00_00   ' 6 = brown
+            long    $AA_AA_AA_00   ' 7 = light grey
+            long    $55_55_55_00   ' 8 = dark grey
+            long    $55_55_FF_00   ' 9 = light blue
+            long    $55_FF_55_00   '10 = light green
+            long    $55_FF_FF_00   '11 = light cyan
+            long    $FF_55_55_00   '12 = light red
+            long    $FF_55_FF_00   '13 = light magenta
+            long    $FF_FF_55_00   '14 = yellow
+            long    $FF_FF_FF_00   '15 = white
+
+' a default 16 scan line font for the P2
+font        file    "p2font16"
