@@ -2,6 +2,7 @@ Version 7.0.0
 
 - Added hyperlinks for Spin objects
 - Removed broken "Identify Serial Ports" function
+- Updated p2videodrv in samples to a newer version
 
 Version 6.9.9
 
