@@ -92,6 +92,9 @@ At the moment you'll have to build from source on Linux. Instructions are given 
 #### Ubuntu (and other Debian based Linuxes, such as Mint)
 
 Here are complete steps for building from scratch on a generic Debian based platform such as Ubuntu. Note that the first few steps (setting up a directory for the source code) may be tweaked to suit your wishes. Also note that the steps involving `texlive-latex-recommended` and `pandoc` are only required for formatting the documentation; if you only want the binaries you may skip these.
+
+IMPORTANT: the installation directory (`~/flexprop` by default) must *not* be the same as the source directory (`~/src/flexprop` in the instructions below). If you forget this, you will get an error about the install directory containing a Makefile. In general do not do the git checkout directly in your home directory, use a subdirectory like `~/src` or `~/projects`.
+
 ```
 sudo apt-get update
 sudo apt-get install build-essential xxd
