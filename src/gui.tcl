@@ -201,7 +201,6 @@ proc setShadowP2Defaults {} {
     set shadow(serialcmd) "\"%D/bin/loadp2$EXE\" -k %P -b%r \"%B\" %9"
     set shadow(wificmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -r %9 -q"
     set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" -SPI -k %P -b%r \"%B\" -t"
-    set shadow(flashprogram) "$ROOTDIR/board/P2ES_flashloader.bin"
     set shadow(baud) 230400
 }
 proc setShadowP2aDefaults {} {
@@ -234,7 +233,6 @@ proc copyShadowToConfig {} {
     set config(serialcmd) $shadow(serialcmd)
     set config(wificmd) $shadow(wificmd)
     set config(flashcmd) $shadow(flashcmd)
-    set config(flashprogram) $shadow(flashprogram)
     set config(baud) $shadow(baud)
     checkPropVersion
 }
@@ -987,18 +985,6 @@ proc openLastFiles {} {
     }
 }
 
-proc pickFlashProgram {} {
-    global config
-    global BinTypes
-    global ROOTDIR
-    
-    set filename [tk_getOpenFile -filetypes $BinTypes -initialdir $ROOTDIR/board -title "Select Flash Program"]
-    if { [string length $filename] == 0 } {
-	return
-    }
-    set config(flashprogram) $filename
-}
-
 # check to see if a file has changed externally; if so, re-load it
 proc checkFilesForChanges {} {
     global filenames
@@ -1721,7 +1707,6 @@ menu .mbar.options.charset
 .mbar.run add command -label "Create zip archive" -command { doCreateZip }
 .mbar.run add separator
 .mbar.run add command -label "Configure Commands..." -command { doRunOptions }
-.mbar.run add command -label "Choose P2 flash program..." -command { pickFlashProgram }
 
 .mbar add cascade -menu .mbar.comport -label Ports
 menu .mbar.comport.baud
@@ -2082,7 +2067,7 @@ proc mapPercentEx {str extraOpts} {
     set bindir [file dirname $BINFILE]
     set srcfile [currentFile]
     set fileServer "\"-9$bindir\""
-    set percentmap [ list "%%" "%" "%#" $runprefix "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%F" $config(flashprogram) "%r" $config(baud) "%t" $config(tabwidth) "%9" $fileServer]
+    set percentmap [ list "%%" "%" "%#" $runprefix "%D" $ROOTDIR "%I" [get_includepath] "%L" $config(library) "%S" $srcfile "%B" $BINFILE "%b" $bindir "%O" $fulloptions "%P" $fullcomport "%r" $config(baud) "%t" $config(tabwidth) "%9" $fileServer]
     set result [string map $percentmap $str]
     return $result
 }
@@ -2412,7 +2397,6 @@ set cmddialoghelptext {
     %B = Replace with current binary file name
     %b = Replace with directory containing current binary file
     %D = Replace with directory of flexprop executable
-    %F = Replace with currently selected flash program (sd/flash)
     %I = Replace with all library/include directories
     %O = Replace with optimization level
     %P = Replace with port to use prefixed by -p
