@@ -106,8 +106,10 @@ endif
 VPATH=.:spin2cpp/doc
 
 ifdef PANDOC_EXISTS
-PDFFILES=spin2cpp/Flexspin.pdf spin2cpp/doc/general.pdf spin2cpp/doc/basic.pdf spin2cpp/doc/c.pdf spin2cpp/doc/spin.pdf
-HTMLFILES=spin2cpp/Flexspin.html spin2cpp/doc/general.html spin2cpp/doc/basic.html spin2cpp/doc/c.html spin2cpp/doc/spin.html
+DOCSTEMS=spin2cpp/Flexspin spin2cpp/doc/general spin2cpp/doc/basic spin2cpp/doc/c spin2cpp/doc/spin
+PDFFILES=$(patsubst %,%.pdf,$(DOCSTEMS))
+HTMLFILES=$(patsubst %,%.html,$(DOCSTEMS))
+YMLFILES=$(patsubst %,%.yml,$(DOCSTEMS))
 endif
 
 #
@@ -154,7 +156,7 @@ clean:
 	rm -rf *.exe *.zip
 	rm -rf bin
 	rm -rf board
-	rm -rf $(BINFILES) $(PDFFILES) $(HTMLFILES)
+	rm -rf $(BINFILES) $(PDFFILES) $(HTMLFILES) $(YMLFILES)
 	rm -rf spin2cpp/build*
 	rm -rf proploader-*-build
 	rm -rf loadp2/build*
@@ -167,10 +169,9 @@ clean:
 	rm -rf samples/*/*.lst samples/*/*.pasm samples/*/*.p2asm
 	rm -rf samples/$(SUBSAMPLES)/*.binary
 	rm -rf $(RESOBJ)
-	rm -rf pandoc.yml
 	rm -rf src/version.tcl
 
-flexprop_base: src/version.tcl src/makepandoc.tcl $(BOARDFILES) $(PDFFILES) $(HTMLFILES)
+flexprop_base: $(BOARDFILES) docs
 	mkdir -p flexprop/bin
 	mkdir -p flexprop/doc
 	mkdir -p flexprop/board
@@ -191,17 +192,21 @@ endif
 
 .PHONY: flexprop_base
 
-# rules for building PDF files
+# rules for building PDF and HTML documentation
 
-%.pdf: %.md
-	$(TCLSH) src/makepandoc.tcl $< > pandoc.yml
-	-$(PANDOC) --metadata-file=pandoc.yml -s --toc -f gfm -t latex -o $@ $<
+docs: $(PDFFILES) $(HTMLFILES)
 
-# rules for building PDF files
+%.pdf: %.md %.yml
+	-$(PANDOC) --metadata-file=$*.yml -s --toc -f gfm -t latex -o $@ $<
 
-%.html: %.md
-	$(TCLSH) src/makepandoc.tcl $< > pandoc.yml
-	-$(PANDOC) --metadata-file=pandoc.yml -s --toc -f gfm -o $@ $<
+%.html: %.md %.yml
+	-$(PANDOC) --metadata-file=$*.yml -s --toc -f gfm -o $@ $<
+
+%.yml: %.md src/makepandoc.tcl src/version.tcl
+	$(TCLSH) src/makepandoc.tcl $< > $@
+
+src/version.tcl: version.inp spin2cpp/version.h
+	cpp -xc++ -DTCL_SRC < version.inp > $@
 
 # rules for native binaries
 
@@ -220,16 +225,14 @@ bin/loadp2: loadp2/build/loadp2
 	mkdir -p bin
 	cp $< $@
 
-spin2cpp/build/flexspin:
-	make -C spin2cpp OPT=-O1
-spin2cpp/build/flexcc:
-	make -C spin2cpp OPT=-O1
+spin2cpp/build/flexspin spin2cpp/build/flexcc:
+	$(MAKE) -C spin2cpp OPT=-O1
 
 proploader-$(OS)-build/bin/proploader: bin/flexspin
-	make -C PropLoader OS=$(OS) SPINCMP="`pwd`/bin/flexspin"
+	$(MAKE) -C PropLoader OS=$(OS) SPINCMP="`pwd`/bin/flexspin"
 
 loadp2/build/loadp2: bin/flexspin
-	make -C loadp2 P2ASM="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include"
+	$(MAKE) -C loadp2 P2ASM="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include"
 
 # rules for Win32 binaries
 
@@ -259,24 +262,22 @@ bin/loadp2.exe: loadp2/build-win32/loadp2.exe
 	$(SIGNPC) bin/loadp2
 	mv bin/loadp2.signed.exe bin/loadp2.exe
 
-spin2cpp/build-win32/flexspin.exe:
-	make -C spin2cpp CROSS=win32
-spin2cpp/build-win32/flexcc.exe:
-	make -C spin2cpp CROSS=win32
+spin2cpp/build-win32/flexspin.exe spin2cpp/build-win32/flexcc.exe:
+	$(MAKE) -C spin2cpp CROSS=win32
 
 ifneq ($(OS),msys)
 proploader-msys-build/bin/proploader.exe:
-	make -C PropLoader CROSS=win32 SPINCMP="`pwd`/bin/flexspin"
+	$(MAKE) -C PropLoader CROSS=win32 SPINCMP="`pwd`/bin/flexspin"
 endif
 
 ifneq ($(OS),macosx)
 proploader-macosx-build/bin/proploader:
-	make -C PropLoader CROSS=macosx SPINCMP="`pwd`/bin/flexspin"
+	$(MAKE) -C PropLoader CROSS=macosx SPINCMP="`pwd`/bin/flexspin"
 endif
 
 ifneq ($(OS),msys)
 loadp2/build-win32/loadp2.exe:
-	make -C loadp2 CROSS=win32 P2ASM="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include"
+	$(MAKE) -C loadp2 CROSS=win32 P2ASM="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include"
 endif
 
 $(RESOBJ): $(RES_RC)
@@ -302,20 +303,13 @@ bin/flexcc.mac: spin2cpp/build-macosx/flexcc
 	cp $< $@
 	$(SIGNMAC) $@
 
-spin2cpp/build-macosx/flexspin:
-	make -C spin2cpp CROSS=macosx
-spin2cpp/build-macosx/flexcc:
-	make -C spin2cpp CROSS=macosx
+spin2cpp/build-macosx/flexspin spin2cpp/build-macosx/flexcc:
+	$(MAKE) -C spin2cpp CROSS=macosx
 
 loadp2/build-macosx/loadp2:
-	make -C loadp2 CROSS=macosx
+	$(MAKE) -C loadp2 CROSS=macosx
 
 ## Other rules
-
-src/version.tcl: version.inp spin2cpp/version.h
-	cpp -xc++ -DTCL_SRC < version.inp > $@
-
-docs: $(PDFFILES) $(HTMLFILES)
 
 docker:
 	docker build -t flexpropbuilder .
@@ -327,7 +321,7 @@ board/P2ES_sdcard.bin: board/sdcard/sdboot.binary
 	mv board/sdcard/sdboot.binary board/P2ES_sdcard.bin
 
 board/sdcard/sdboot.binary: bin/flexspin board/sdcard
-	(make -C board/sdcard P2CC="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include")
+	$(MAKE) -C board/sdcard P2CC="`pwd`/bin/flexspin -2 -I`pwd`/spin2cpp/include"
 	rm -f board/sdcard/*.p2asm
 
 board/P2ES_flashloader.spin2: loadp2/board/P2ES_flashloader.spin2
