@@ -1,5 +1,5 @@
 # Simple GUI for Flexspin
-# Copyright 2018-2024 Total Spectrum Software
+# Copyright 2018-2025 Total Spectrum Software
 # Distributed under the terms of the MIT license;
 # see License.txt for details.
 #
@@ -15,7 +15,7 @@ set CONFIG_VERSION 2
 set aboutMsg "
 GUI tool for FlexSpin
 Version $spin2gui_version
-Copyright 2018-2024 Total Spectrum Software Inc.
+Copyright 2018-2025 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
 output will be correct.   
@@ -191,6 +191,7 @@ proc setShadowP1BytecodeDefaults {} {
 # old flash commands that we should override if we see them
 #
 set oldconfig_v1(flashcmd) "\"%D/bin/loadp2$EXE\" -k %P -b%r \"@0=%F,@8000+%B\" -t"
+set oldconfig_v2(flashcmd) "\"%D/bin/loadp2$EXE\" -SPI -k %P -b%r \"%B\" -t"
 
 proc setShadowP2Defaults {} {
     global shadow
@@ -200,7 +201,8 @@ proc setShadowP2Defaults {} {
     set shadow(compilecmd) "\"%D/bin/flexspin$EXE\" -2 -l --tabs=%t -D_BAUD=%r %O %I \"%S\""
     set shadow(serialcmd) "\"%D/bin/loadp2$EXE\" -k %P -b%r \"%B\" %9"
     set shadow(wificmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -r %9 -q"
-    set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" -SPI -k %P -b%r \"%B\" -t"
+#    set shadow(flashcmd) "\"%D/bin/loadp2$EXE\" -FLASH -k %P -b%r \"%B\" -t"
+    set shadow(flashcmd) "\"%D/bin/proploader$EXE\" -k -2 -D baud-rate=%r %P \"%B\" -e"
     set shadow(baud) 230400
 }
 proc setShadowP2aDefaults {} {
@@ -319,6 +321,7 @@ proc config_open {} {
     global CHARSET
     global OPENFILES
     global oldconfig_v1
+    global oldconfig_v2
     
     if {[file exists $CONFIG_FILE]} {
 	set fp [open $CONFIG_FILE r]
@@ -387,6 +390,10 @@ proc config_open {} {
 	    default {
 		if { $config_version < 1 && [info exists oldconfig_v1($nm)] } {
 		    if { $oldconfig_v1($nm) ne $val } {
+			set config($nm) $val
+		    }
+		} elseif { $config_version < 3 && [info exists oldconfig_v2($nm)] } {
+		    if { $oldconfig_v2($nm) ne $val } {
 			set config($nm) $val
 		    }
 		} else {
