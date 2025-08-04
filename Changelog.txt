@@ -1,4 +1,4 @@
-Version 7.4.1b
+Version 7.4.2
 
 - Reverted flash command to use proploader; this flashes better on
   Windows and works over WiFi
