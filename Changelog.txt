@@ -1,3 +1,7 @@
+Version 7.4.3
+
+- Updated loadp2
+
 Version 7.4.2
 
 - Reverted flash command to use proploader; this flashes better on
