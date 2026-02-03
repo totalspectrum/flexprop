@@ -902,11 +902,11 @@ proc findFileOnPath { filename startdir } {
 	    }
 	    .spin2 {
 		set x [findFileOnPath "$filename.spin2" $startdir]
-		if { file exists $x } {
+		if { [file exists $x] } {
 		    return $x
 		}
 		set x [findFileOnPath "$filename.spin" $startdir]
-		if { file exists $x } {
+		if { [file exists $x] } {
 		    return $x
 		}
 	    }

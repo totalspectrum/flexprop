@@ -1,3 +1,7 @@
+Version 7.6.2
+
+- Fixed clicking on object links without extension
+
 Version 7.4.3
 
 - Updated loadp2
