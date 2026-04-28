@@ -342,7 +342,7 @@ proc term_clear_to_eos {} {
 
     # now clear remaining rows
     set blankline [format %*s $cols ""]\n
-    for {set i [expr {$cur_row + 1}]} {$i <= $cols} {incr i} {
+    for {set i [expr {$cur_row + 1}]} {$i <= $rows} {incr i} {
 	$term delete $i.0 $i.end
 	$term insert $i.0 $blankline $tag_list
     }
@@ -397,7 +397,7 @@ proc term_resize {rowsNew colsNew} {
 
     if {$rowsNew > $rows} {
 	# add rows
-    } elseis {$rowsNew < $rows} {
+    } elseif { $rowsNew < $rows } {
 	# remove rows
     }
 }
