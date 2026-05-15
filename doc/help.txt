@@ -56,9 +56,11 @@ The compiler's input is always Unicode (typically encoded as UTF-8), but at runt
 
 "Debug enabled" turns on DEBUG, allowing the DEBUG() statements to be compiled and executed. Note that not all Spin2 DEBUG() commands are supported; see the general documentation for details.
 
-#### Editor Options
+#### Editor & Terminal Options
 
-The "Editor Options..." dialog allows you to change the way the source code editor looks, e.g. changing the font used for the text, or the tab settings. It also lets you change the font used for the compiler output window, and has an option to automatically load files changed by external programs (normally flexprop will prompt you to reload if it notices a change).
+The "Editor & Terminal Options..." dialog allows you to change the way the source code editor looks, e.g. changing the font used for the text, or the tab settings. It also lets you change the font used for the compiler output window, and has an option to automatically load files changed by external programs (normally flexprop will prompt you to reload if it notices a change).
+
+The built-in terminal font and sized are also set in this dialog. Changing the terminal size will cause any existing terminal window to be resized. Note that the "logical" size of the terminal (as set here) is different from the physical size on screen. The physical window may have scroll bars to act as a view onto the logical terminal window.
 
 The "Save session on exit" option, if enabled, causes the editor to reload any previously open files each time it is started.
 

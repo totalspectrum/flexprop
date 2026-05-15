@@ -1,3 +1,9 @@
+Version 7.8.8
+
+- Added terminal width & height settings to editor options dialog, and
+  renamed it to "Editor & Terminal Options".
+- Included FlexProp version in the window title.
+
 Version 7.6.2
 
 - Fixed clicking on object links without extension

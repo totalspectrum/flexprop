@@ -1,5 +1,5 @@
 # Simple GUI for Flexspin
-# Copyright 2018-2025 Total Spectrum Software
+# Copyright 2018-2026 Total Spectrum Software
 # Distributed under the terms of the MIT license;
 # see License.txt for details.
 #
@@ -15,7 +15,7 @@ set CONFIG_VERSION 2
 set aboutMsg "
 GUI tool for FlexSpin
 Version $spin2gui_version
-Copyright 2018-2025 Total Spectrum Software Inc.
+Copyright 2018-2026 Total Spectrum Software Inc.
 ------
 There is no warranty and no guarantee that
 output will be correct.   
@@ -105,8 +105,8 @@ set config(lastdir) [pwd]
 set config(font) "TkFixedFont"
 set config(botfont) "courier 10"
 set config(term_font) "TkFixedFont"
-set config(term_w) 79
-set config(term_h) 24
+set config(term_cols) 80
+set config(term_rows) 25
 set config(sash) ""
 set config(tabwidth) 8
 set config(autoreload) 1
@@ -1687,7 +1687,7 @@ menu .mbar.options.charset
 .mbar.options.charset add radiobutton -label "Shift-JIS" -variable CHARSET -value "shiftjis"
 
 .mbar.options add separator
-.mbar.options add command -label "Editor Options..." -command { doEditorOptions }
+.mbar.options add command -label "Editor & Terminal Options..." -command { doEditorOptions }
 .mbar.options add separator
 
 .mbar.options add radiobutton -label "Debug disabled" -variable DEBUG_OPT -value "-gnone"
@@ -1761,7 +1761,7 @@ set comport_last [.mbar.comport index end]
 .mbar.help add separator
 .mbar.help add command -label "About..." -command { doAbout }
 
-wm title . "FlexProp"
+wm title . "FlexProp $spin2gui_version"
 
 panedwindow .p -orient vertical
 
@@ -1939,11 +1939,12 @@ proc doneAppearance {} {
 
     set config(tabwidth) [.editopts.font.tab.stops get]
     setnbfonts $config(font)
+    ::TkTerm::term_resize $config(term_rows) $config(term_cols)
     wm withdraw .editopts
 }
 
 #
-# editor appearance window
+# editor & terminal appearance window
 #
 proc doEditorOptions {} {
     global config
@@ -1981,6 +1982,13 @@ proc doEditorOptions {} {
     label .editopts.bot.lb -text "Compiler output font " -font BottomCmdFont
     ttk::button .editopts.bot.change -text " Change... " -command doSelectBottomFont
 
+    # frame .editopts.term.sizebox
+    ttk::labelframe .editopts.term.sizebox -text "Terminal size"
+    label .editopts.term.sizebox.wname -text "Width: "
+    entry .editopts.term.sizebox.wval -width 3 -textvariable config(term_cols)
+    label .editopts.term.sizebox.hname -text "Height: "
+    entry .editopts.term.sizebox.hval -width 3 -textvariable config(term_rows)
+    
     label .editopts.term.lb -text "Terminal font " -font InternalTermFont
     ttk::button .editopts.term.change -text " Change... " -command doSelectTerminalFont
 
@@ -2003,8 +2011,9 @@ proc doEditorOptions {} {
     grid .editopts.font.autoreload
     grid .editopts.font.savewindows
     grid .editopts.bot.lb .editopts.bot.change
+    grid .editopts.term.sizebox -sticky nsew
+    grid .editopts.term.sizebox.wname .editopts.term.sizebox.wval .editopts.term.sizebox.hname .editopts.term.sizebox.hval
     grid .editopts.term.lb .editopts.term.change
-    
     grid .editopts.end.ok -sticky nsew
 
     wm title .editopts "Editor Options"

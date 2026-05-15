@@ -1,7 +1,7 @@
 # Name: tkterm - terminal emulator using Expect and Tk text widget, v3.0
 # Author: Don Libes, July '94
 # Modified by: Eric R. Smith, Jan '22
-# Last updated: Feb '22
+# Last updated: May '26
 
 # Adapted by ERS to be a terminal emulator, so many of the useful
 # testing code has been stripped out.
@@ -24,7 +24,7 @@
 # Good-enough-for-starters attributes:
 #   Understands one kind of standout mode (reverse video)
 # Should-be-fixed-soon attributes:
-#   Does not support resize
+#   Does not support resize (ERS: probably does now, but may be buggy)
 # Probably-wont-be-fixed-soon attributes:
 #   Assumes only one terminal exists
 
@@ -181,6 +181,7 @@ proc term_create {} {
     variable term
     variable cols
     variable rows
+    variable rowsDumb
     variable sb
     global config
 
@@ -189,6 +190,11 @@ proc term_create {} {
     } else {
 	set kind "PST"
     }
+
+    set rows $config(term_rows)
+    set cols $config(term_cols)
+    set rowsDumb $rows
+
     toplevel $toplev
     wm title $toplev "FlexProp $kind Terminal"
     
@@ -299,7 +305,7 @@ proc term_active_tags {} {
 
 proc term_clear {} {
     variable term
-
+    
     term_reset_graphics
     $term delete 1.0 end
     term_init
@@ -342,7 +348,7 @@ proc term_clear_to_eos {} {
 
     # now clear remaining rows
     set blankline [format %*s $cols ""]\n
-    for {set i [expr {$cur_row + 1}]} {$i <= $rows} {incr i} {
+    for {set i [expr {$cur_row + 1}]} {$i <= $cols} {incr i} {
 	$term delete $i.0 $i.end
 	$term insert $i.0 $blankline $tag_list
     }
@@ -378,27 +384,87 @@ proc term_init {} {
     doTermBindings
 }
 
-# NOT YET COMPLETE!
 proc term_resize {rowsNew colsNew} {
     variable rows
     variable cols
     variable term
+    variable term_pipe
+    variable rowsDumb
 
-    set tag_list [term_active_tags]
-    foreach {set r 1} {$r < $rows} {incr r} {
-	if {$colsNew > $cols} {
-	    # add columns
-	    $term insert $i.$column $blanks $tag_list
-	} elseif {$colsNew < $cols} {
-	    # remove columns
-	    # ?
-	}
+    # Don't resize if dimensions haven't changed
+    if {$rowsNew == $rows && $colsNew == $cols} {return}
+
+    # Save old dimensions
+    set oldRows $rows
+    set oldCols $cols
+
+    # Update global dimensions
+    set rows $rowsNew
+    set cols $colsNew
+
+    # Resize the text widget to the new dimensions
+    $term configure -width $cols -height $rows
+
+    # Read current screen content (all rows, all columns)
+    set screenData {}
+    for {set r 1} {$r <= $oldRows} {incr r} {
+        if {$r <= [$term index end]} {
+#            set line [$term get $r.0 "$r.end -1 char"]
+            set line [$term get $r.0 $r.end]
+            lappend screenData $line
+        }
     }
 
-    if {$rowsNew > $rows} {
-	# add rows
-    } elseif { $rowsNew < $rows } {
-	# remove rows
+    # Truncate or pad each line to new column width
+    set newData {}
+    foreach line $screenData {
+        if {$colsNew < $oldCols} {
+            # Truncate lines to new width
+            lappend newData [string range $line 0 [expr {$colsNew - 1}]]
+        } else {
+            # Pad lines to new width
+            set spaceNeeded [expr {$colsNew - [string length $line]}]
+            if {$spaceNeeded > 0} {
+                lappend newData [format %-${colsNew}s $line]
+            } else {
+                lappend newData $line
+            }
+        }
+    }
+
+    # Truncate to new row count (handles shrink case)
+    set newData [lrange $newData 0 [expr {$rowsNew - 1}]]
+
+    # If we need more rows, add blank rows
+    set numLines [llength $newData]
+    if {$rowsNew > $oldRows} {
+        set blankline [format %*s $colsNew ""]
+        for {set i $numLines} {$i < $rowsNew} {incr i} {
+            lappend newData $blankline
+        }
+    }
+
+    # Clear and rewrite the screen
+    $term delete 1.0 end
+    set tag_list [term_active_tags]
+    for {set r 0} {$r < [llength $newData]} {incr r} {
+        set lineIdx [expr {$r + 1}]
+        $term insert $lineIdx.0 [lindex $newData $r] $tag_list
+    }
+
+    # Adjust rowsDumb if needed
+    set rowsDumb $rowsNew
+
+    # Reset cursor position if it's out of bounds
+    variable cur_row
+    variable cur_col
+    if {$cur_row > $rowsNew} {set cur_row $rowsNew}
+    if {$cur_col >= $colsNew} {set cur_col [expr {$colsNew - 1}]}
+    term_update_cursor
+
+    # Notify the spawned process of the new window size
+    if {$term_pipe ne ""} {
+        term_send "\033\[8;$rowsNew;${colsNew}t"
     }
 }
 
@@ -1059,17 +1125,24 @@ proc force_close_term {} {
 }
 
 proc doTermBindings {} {
-    variable term
-    variable toplev
+   variable term
+   variable toplev
     
-# New and incomplete!
-#bind $term <Configure> {
-#    scan [wm geometry .] "%dx%dx" rows cols
-#    # stty rows $rows columns $cols < $spawn_out(slave,name)
-#    
-#    # when this is working, uncomment ...
-#    # term_resize $rows $cols
-#}
+#   bind $term <Configure> {
+#        set w [winfo width %W]
+#        set h [winfo height %W]
+#        if {$w > 0 && $h > 0} {
+#            set charHeight [font metrics InternalTermFont -linespace]
+#            set charWidth [font measure InternalTermFont "m"]
+#            if {$charHeight > 0 && $charWidth > 0} {
+#                set newCols [expr {int($w / $charWidth)}]
+#                set newRows [expr {int($h / $charHeight)}]
+#                if {$newCols > 0 && $newRows > 0} {
+#                    ::TkTerm::term_resize $newRows $newCols
+#                }
+#            }
+#        }
+#    }
 
     bind $toplev <Destroy> { ::TkTerm::close_term }
 
