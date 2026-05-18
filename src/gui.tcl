@@ -2016,7 +2016,7 @@ proc doEditorOptions {} {
     grid .editopts.term.lb .editopts.term.change
     grid .editopts.end.ok -sticky nsew
 
-    wm title .editopts "Editor Options"
+    wm title .editopts "Editor & Terminal Options"
 }
 
 proc get_includepath {} {
