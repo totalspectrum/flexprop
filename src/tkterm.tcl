@@ -380,6 +380,9 @@ proc term_init {} {
 
     set rowsDumb $rows
 
+    # start in graphics mode?
+    graphicsSet 1
+    
     # initialize bindings
     doTermBindings
 }
@@ -403,44 +406,31 @@ proc term_resize {colsNew rowsNew} {
     set oldRows $rows
     set oldCols $cols
 
-    # Read current screen content (all rows, all columns)
-    set screenData [list]
+    # Read current screen content into array (avoids Tcl list metacharacter issues)
     for {set r 1} {$r <= $oldRows} {incr r} {
         if {$r <= [$term index end]} {
-            set line [$term get $r.0 $r.end]
-            lappend screenData $line
+            set screenData($r) [$term get $r.0 $r.end]
         }
     }
 
     # Truncate or pad each line to new column width
-    set newData {}
-    foreach line $screenData {
-#	puts "read line is: ** $line **"
-        if {$colsNew < $oldCols} {
-            # Truncate lines to new width
-            lappend newData [string range $line 0 [expr {$colsNew - 1}]]
+    for {set r 1} {$r <= $oldRows} {incr r} {
+        if {[info exists screenData($r)]} {
+            set line $screenData($r)
         } else {
-            # Pad lines to new width
-            set spaceNeeded [expr {$colsNew - [string length $line]}]
-            if {$spaceNeeded > 0} {
-                lappend newData [format %-${colsNew}s $line]
-            } else {
-                lappend newData $line
-            }
+            set line "*/"
+        }
+        if {$colsNew < $oldCols} {
+            set newData($r) [string range $line 0 [expr {$colsNew - 1}]]
+        } else {
+            set newData($r) [format %-${colsNew}s $line]
         }
     }
-    # Truncate to new row count (handles shrink case)
-    set newData [lrange $newData 0 [expr {$rowsNew - 1}]]
 
-    # If we need more rows, add blank rows
-    set numLines [llength $newData]
-    if {$rowsNew > $oldRows} {
-        set blankline [format %*s $colsNew ""]
-        for {set i $numLines} {$i < $rowsNew} {incr i} {
-            lappend newData "$blankline"
-        }
+    # Add blank rows if growing (handles both grow and shrink via row range below)
+    for {set r [expr {$oldRows + 1}]} {$r <= $rowsNew} {incr r} {
+        set newData($r) [format %*s $colsNew ""]
     }
-#    puts "after truncate: $newData"
     
     # Update global dimensions
     set rows $rowsNew
@@ -452,11 +442,8 @@ proc term_resize {colsNew rowsNew} {
     # Clear and rewrite the screen
     $term delete 1.0 end
     set tag_list [term_active_tags]
-    for {set r 0} {$r < [llength $newData]} {incr r} {
-        set lineIdx [expr {$r + 1}]
-	set line [lindex $newData $r]
-#	puts "wrote line $r is ** $line ** "
-        $term insert $lineIdx.0 "$line" $tag_list
+    for {set r 1} {$r <= $rowsNew} {incr r} {
+        $term insert $r.0 "$newData($r)\n" $tag_list
     }
 
     # Adjust rowsDumb if needed
