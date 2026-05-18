@@ -1687,8 +1687,6 @@ menu .mbar.options.charset
 .mbar.options.charset add radiobutton -label "Shift-JIS" -variable CHARSET -value "shiftjis"
 
 .mbar.options add separator
-.mbar.options add command -label "Editor & Terminal Options..." -command { doEditorOptions }
-.mbar.options add separator
 
 .mbar.options add radiobutton -label "Debug disabled" -variable DEBUG_OPT -value "-gnone"
 .mbar.options add radiobutton -label "Print debug" -variable DEBUG_OPT -value "-g"
@@ -1701,6 +1699,8 @@ menu .mbar.options.charset
 .mbar.options add radiobutton -label "Use internal ANSI terminal" -variable config(internal_term) -value "ansi"
 .mbar.options add radiobutton -label "Use external terminal" -variable config(internal_term) -value "0"
 .mbar.options add radiobutton -label "No terminal" -variable config(internal_term) -value "none"
+.mbar.options add separator
+.mbar.options add command -label "Editor & Terminal Options..." -command { doEditorOptions }
 
 
 .mbar add cascade -menu .mbar.run -label Commands
@@ -1939,7 +1939,7 @@ proc doneAppearance {} {
 
     set config(tabwidth) [.editopts.font.tab.stops get]
     setnbfonts $config(font)
-    ::TkTerm::term_resize $config(term_rows) $config(term_cols)
+    ::TkTerm::term_resize $config(term_cols) $config(term_rows)
     wm withdraw .editopts
 }
 

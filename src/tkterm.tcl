@@ -384,32 +384,29 @@ proc term_init {} {
     doTermBindings
 }
 
-proc term_resize {rowsNew colsNew} {
+proc term_resize {colsNew rowsNew} {
     variable rows
     variable cols
     variable term
     variable term_pipe
     variable rowsDumb
 
+    if { [winfo exists $term] == 0 } {
+	return
+    }
     # Don't resize if dimensions haven't changed
-    if {$rowsNew == $rows && $colsNew == $cols} {return}
+    if {$rowsNew == $rows && $colsNew == $cols} {
+	return
+    }
 
     # Save old dimensions
     set oldRows $rows
     set oldCols $cols
 
-    # Update global dimensions
-    set rows $rowsNew
-    set cols $colsNew
-
-    # Resize the text widget to the new dimensions
-    $term configure -width $cols -height $rows
-
     # Read current screen content (all rows, all columns)
-    set screenData {}
+    set screenData [list]
     for {set r 1} {$r <= $oldRows} {incr r} {
         if {$r <= [$term index end]} {
-#            set line [$term get $r.0 "$r.end -1 char"]
             set line [$term get $r.0 $r.end]
             lappend screenData $line
         }
@@ -418,6 +415,7 @@ proc term_resize {rowsNew colsNew} {
     # Truncate or pad each line to new column width
     set newData {}
     foreach line $screenData {
+#	puts "read line is: ** $line **"
         if {$colsNew < $oldCols} {
             # Truncate lines to new width
             lappend newData [string range $line 0 [expr {$colsNew - 1}]]
@@ -431,7 +429,6 @@ proc term_resize {rowsNew colsNew} {
             }
         }
     }
-
     # Truncate to new row count (handles shrink case)
     set newData [lrange $newData 0 [expr {$rowsNew - 1}]]
 
@@ -440,16 +437,26 @@ proc term_resize {rowsNew colsNew} {
     if {$rowsNew > $oldRows} {
         set blankline [format %*s $colsNew ""]
         for {set i $numLines} {$i < $rowsNew} {incr i} {
-            lappend newData $blankline
+            lappend newData "$blankline"
         }
     }
+#    puts "after truncate: $newData"
+    
+    # Update global dimensions
+    set rows $rowsNew
+    set cols $colsNew
+
+    # Resize the text widget to the new dimensions
+    $term configure -width $cols -height $rows
 
     # Clear and rewrite the screen
     $term delete 1.0 end
     set tag_list [term_active_tags]
     for {set r 0} {$r < [llength $newData]} {incr r} {
         set lineIdx [expr {$r + 1}]
-        $term insert $lineIdx.0 [lindex $newData $r] $tag_list
+	set line [lindex $newData $r]
+#	puts "wrote line $r is ** $line ** "
+        $term insert $lineIdx.0 "$line" $tag_list
     }
 
     # Adjust rowsDumb if needed
@@ -1127,6 +1134,8 @@ proc force_close_term {} {
 proc doTermBindings {} {
    variable term
    variable toplev
+
+# this seems to be problematic, there's something else we have to do here
     
 #   bind $term <Configure> {
 #        set w [winfo width %W]
@@ -1138,7 +1147,8 @@ proc doTermBindings {} {
 #                set newCols [expr {int($w / $charWidth)}]
 #                set newRows [expr {int($h / $charHeight)}]
 #                if {$newCols > 0 && $newRows > 0} {
-#                    ::TkTerm::term_resize $newRows $newCols
+#		    puts "resize: $newCols $newRows"
+#                    ::TkTerm::term_resize $newCols $newRows
 #                }
 #            }
 #        }
