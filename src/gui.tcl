@@ -107,6 +107,7 @@ set config(botfont) "courier 10"
 set config(term_font) "TkFixedFont"
 set config(term_cols) 80
 set config(term_rows) 25
+set config(term_dynamic) 0
 set config(sash) ""
 set config(tabwidth) 8
 set config(autoreload) 1
@@ -1988,7 +1989,7 @@ proc doEditorOptions {} {
     entry .editopts.term.sizebox.wval -width 3 -textvariable config(term_cols)
     label .editopts.term.sizebox.hname -text "Height: "
     entry .editopts.term.sizebox.hval -width 3 -textvariable config(term_rows)
-    
+    checkbutton .editopts.term.sizebox.dynamic -text "Dynamic window resize" -variable config(term_dynamic)
     label .editopts.term.lb -text "Terminal font " -font InternalTermFont
     ttk::button .editopts.term.change -text " Change... " -command doSelectTerminalFont
 
@@ -2012,7 +2013,7 @@ proc doEditorOptions {} {
     grid .editopts.font.savewindows
     grid .editopts.bot.lb .editopts.bot.change
     grid .editopts.term.sizebox -sticky nsew
-    grid .editopts.term.sizebox.wname .editopts.term.sizebox.wval .editopts.term.sizebox.hname .editopts.term.sizebox.hval
+    grid .editopts.term.sizebox.wname .editopts.term.sizebox.wval .editopts.term.sizebox.hname .editopts.term.sizebox.hval .editopts.term.sizebox.dynamic
     grid .editopts.term.lb .editopts.term.change
     grid .editopts.end.ok -sticky nsew
 

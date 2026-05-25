@@ -387,6 +387,13 @@ proc term_init {} {
     doTermBindings
 }
 
+proc term_maybe_resize {colsNew rowsNew} {
+    global config
+    if { $config(term_dynamic) } {
+	term_resize $colsNew $rowsNew
+    }
+}
+
 proc term_resize {colsNew rowsNew} {
     variable rows
     variable cols
@@ -1124,22 +1131,22 @@ proc doTermBindings {} {
 
 # this seems to be problematic, there's something else we have to do here
     
-#   bind $term <Configure> {
-#        set w [winfo width %W]
-#        set h [winfo height %W]
-#        if {$w > 0 && $h > 0} {
-#            set charHeight [font metrics InternalTermFont -linespace]
-#            set charWidth [font measure InternalTermFont "m"]
-#            if {$charHeight > 0 && $charWidth > 0} {
-#                set newCols [expr {int($w / $charWidth)}]
-#                set newRows [expr {int($h / $charHeight)}]
-#                if {$newCols > 0 && $newRows > 0} {
-#		    puts "resize: $newCols $newRows"
-#                    ::TkTerm::term_resize $newCols $newRows
-#                }
-#            }
-#        }
-#    }
+   bind $term <Configure> {
+        set w [winfo width %W]
+        set h [winfo height %W]
+        if {$w > 0 && $h > 0} {
+            set charHeight [font metrics InternalTermFont -linespace]
+            set charWidth [font measure InternalTermFont "m"]
+            if {$charHeight > 0 && $charWidth > 0} {
+                set newCols [expr {int($w / $charWidth)}]
+                set newRows [expr {int($h / $charHeight)}]
+                if {$newCols > 0 && $newRows > 0} {
+		    # puts "resize: $newCols $newRows"
+                    ::TkTerm::term_maybe_resize $newCols $newRows
+                }
+            }
+        }
+    }
 
     bind $toplev <Destroy> { ::TkTerm::close_term }
 
