@@ -1129,8 +1129,6 @@ proc doTermBindings {} {
    variable term
    variable toplev
 
-# this seems to be problematic, there's something else we have to do here
-    
    bind $term <Configure> {
         set w [winfo width %W]
         set h [winfo height %W]
@@ -1141,6 +1139,8 @@ proc doTermBindings {} {
                 set newCols [expr {int($w / $charWidth)}]
                 set newRows [expr {int($h / $charHeight)}]
                 if {$newCols > 0 && $newRows > 0} {
+		    # "maybe" resize because it depends on the global
+		    # dynamic terminal resize setting
 		    # puts "resize: $newCols $newRows"
                     ::TkTerm::term_maybe_resize $newCols $newRows
                 }
