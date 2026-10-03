@@ -1,3 +1,7 @@
+Version 7.7.4
+
+- Fixed loading a binary file when no file is open in the IDE
+
 Version 7.6.8
 
 - Added terminal width & height settings to editor options dialog, and

@@ -155,7 +155,11 @@ proc getWindowFile { w } {
 proc currentFile { } {
     global filenames
     global curProj
+    global BINFILE
 
+    if { "$BINFILE" ne "" } {
+	return $BINFILE
+    }
     if { "$curProj" ne "" } {
 	return $curProj
     }
@@ -2376,6 +2380,7 @@ proc doLoadRun {} {
     set BINFILE $filename
     .p.bot.txt delete 1.0 end
     doJustRun ""
+    set BINFILE ""
 }
 
 proc doLoadFlash {} {
@@ -2390,6 +2395,7 @@ proc doLoadFlash {} {
     set BINFILE $filename
     .p.bot.txt delete 1.0 end
     doJustFlash
+    set BINFILE ""
 }
 
 proc doCompileRun {} {
